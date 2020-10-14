@@ -1,0 +1,1451 @@
+!
+! CODE DEVELOPED BY SCOTT E BOYCE
+!                   CONTACT <seboyce@usgs.gov> or <Boyce@engineer.com>
+!
+! MODULE LISTING:
+!
+!   LIST_ARRAY_INPUT_INTERFACE
+!
+MODULE LIST_ARRAY_INPUT_INTERFACE
+  !CHECKS FOR FLAGS LIST/ARRAY AND THEN STATIC/TRANSIENT AND THEN LOADS FIRST LIST/ARRAY
+  USE CONSTANTS
+  USE ULOAD_AND_SFAC_INTERFACE
+  USE, INTRINSIC:: IEEE_ARITHMETIC,      ONLY: IEEE_VALUE, IEEE_QUIET_NAN
+  USE SET_ARRAY_INTERFACE,               ONLY: SET_SEQUENCE
+  USE FILE_IO_INTERFACE,                 ONLY: READ_TO_DATA, MAX_UNCOMMENTED_LINE_LEN
+  USE PARSE_WORD_INTERFACE,              ONLY: PARSE_WORD_UP
+  USE STRINGS,                           ONLY: GET_WORD, GET_INTEGER, GET_NUMBER
+  USE ERROR_INTERFACE,                   ONLY: STOP_ERROR, FILE_IO_ERROR, WARNING_MESSAGE
+  USE NUM2STR_INTERFACE,                 ONLY: NUM2STR
+  USE TRANSIENT_FILE_READER_INSTRUCTION, ONLY: TRANSIENT_FILE_READER
+  USE GENERIC_INPUT_FILE_INSTRUCTION,    ONLY: GENERIC_INPUT_FILE
+  USE IXJ_INSTRUCTION,                   ONLY: IXJ_STRUCTURE
+  USE, INTRINSIC:: ISO_FORTRAN_ENV,      ONLY: REAL32, REAL64, REAL128
+  IMPLICIT NONE
+  !
+  PRIVATE
+  PUBLIC:: GENERIC_LINE_INPUT, LIST_ARRAY_INPUT, LIST_ARRAY_INPUT_INT, LIST_ARRAY_INPUT_STR
+  !
+  ! -------------------------------------------------------------------------------------------------------
+  !
+  TYPE, ABSTRACT:: GENERIC_LINE_INPUT
+        !
+        ! LOADING UNIT IS AT FL%IU
+        ! IF FL%IU IS ZERO THEN CHECK LINE FOR KEYWORD SKIP, CONSTANT, OR REPEAT
+        LOGICAL:: INUSE     = FALSE     ! TRUE WHEN OBJECT HAS BE INITIALIZED
+        LOGICAL:: TRANSIENT = FALSE     ! TRUE WHEN TRANSIENT KEYWORD FOUND
+        LOGICAL:: NO_BINARY = FALSE     ! IS SET TO TRUE WHEN BINARY FILE INPUT IS NOT ALLOWED -- TYPICALLY BECAUSE THERE IS TEXT PROCESSING DONE OUTSIDE OF ROUTINE
+        LOGICAL:: RAN_LOAD=FALSE
+        LOGICAL:: PULL_PARRENT = FALSE
+        LOGICAL:: IS_CONSTANT  = FALSE
+        INTEGER:: IOUT
+        CHARACTER(:), ALLOCATABLE:: TYP
+        CHARACTER(:), ALLOCATABLE:: ERRMSG
+        !
+        TYPE(SFAC_DATA):: SFAC
+        !
+        TYPE(GENERIC_INPUT_FILE):: FL
+        TYPE(TRANSIENT_FILE_READER):: TFR
+        !
+        CONTAINS
+        !
+        PROCEDURE, PASS(GIN):: INIT => INITIALIZE_GENERIC_LINE_INPUT
+        PROCEDURE, PASS(GIN):: NEXT => LOAD_NEXT_GENERIC_LINE_INPUT
+        PROCEDURE, PASS(GIN):: DESTROY_BASE => DEALLOCATE_NEXT_GENERIC_LINE_INPUT
+        !
+        PROCEDURE(DUMMY_GIN_LOAD_ROUTINE ), PASS(GIN), DEFERRED:: LOAD     !=> DUMMY_LOAD_ROUTINE
+        PROCEDURE(DUMMY_GIN_ALLOC_ROUTINE), PASS(GIN), DEFERRED:: ALLOC    !=> DUMMY_GIN_ALLOC_ROUTINE
+        !PROCEDURE(DUMMY_GIN_ROUTINE), PASS(GIN), DEFERRED:: CONSTANT !=> DUMMY_CONSTANT_ROUTINE
+        !
+  END TYPE
+  !
+  ABSTRACT INTERFACE
+                    SUBROUTINE DUMMY_GIN_LOAD_ROUTINE(GIN, LLOC, LINE, IU, WILD_IN, WILD_OUT, WILD_1D_IN, WILD_1D_OUT)
+                      IMPORT:: GENERIC_LINE_INPUT
+                      CLASS(GENERIC_LINE_INPUT),                       INTENT(INOUT):: GIN      !GENERIC_LINE_INPUT DATA TYPE THAT IS EXTENDED TO SPECIFIC TYPE
+                      INTEGER,                                         INTENT(INOUT):: LLOC     !CURRENT LLOC
+                      CHARACTER(*),                                    INTENT(INOUT):: LINE     !CURRENT STORED LINE AND SCRATCH LINE FOR ANY NEEDS
+                      INTEGER,                                         INTENT(IN   ):: IU       !UNIT TO LOAD DATA FROM
+                      CLASS(*),    OPTIONAL,                           INTENT(IN   ):: WILD_IN  !ANY OPTIONAL DATA TYPE THAT MAYBE SET OR NECESSARY TO PASS IN (WILD CARD)
+                      CLASS(*),    OPTIONAL,                           INTENT(INOUT):: WILD_OUT
+                      CLASS(*),    OPTIONAL, DIMENSION(:), CONTIGUOUS, INTENT(IN   ):: WILD_1D_IN  !ANY OPTIONAL DATA TYPE THAT MAYBE SET OR NECESSARY TO PASS IN (WILD CARD)
+                      CLASS(*),    OPTIONAL, DIMENSION(:), CONTIGUOUS, INTENT(INOUT):: WILD_1D_OUT
+                    END SUBROUTINE
+                    !
+                    SUBROUTINE DUMMY_GIN_ALLOC_ROUTINE(GIN, DIM, WILD_IN, WILD_OUT, WILD_1D_IN, WILD_1D_OUT) !EVEN IF NOT USED IT MUST BE DECLAURED AS A DUMMY ROUTINE
+                      IMPORT:: GENERIC_LINE_INPUT
+                      CLASS(GENERIC_LINE_INPUT),                       INTENT(INOUT):: GIN      !GENERIC_LINE_INPUT DATA TYPE THAT IS EXTENDED TO SPECIFIC TYPE
+                      INTEGER,               DIMENSION(:), CONTIGUOUS, INTENT(IN   ):: DIM
+                      CLASS(*),    OPTIONAL,                           INTENT(IN   ):: WILD_IN  !ANY OPTIONAL DATA TYPE THAT MAYBE SET OR NECESSARY TO PASS IN (WILD CARD)
+                      CLASS(*),    OPTIONAL,                           INTENT(INOUT):: WILD_OUT
+                      CLASS(*),    OPTIONAL, DIMENSION(:), CONTIGUOUS, INTENT(IN   ):: WILD_1D_IN  
+                      CLASS(*),    OPTIONAL, DIMENSION(:), CONTIGUOUS, INTENT(INOUT):: WILD_1D_OUT
+                    END SUBROUTINE
+  END INTERFACE
+  !
+  ! -------------------------------------------------------------------------------------------------------
+  !
+  TYPE LIST_ARRAY_INPUT_BASE
+        LOGICAL:: INUSE        = FALSE   ! TRUE WHEN OBJECT HAS BE INITIALIZED
+        LOGICAL:: TRANSIENT    = FALSE   ! TRUE WHEN TRANSIENT KEYWORD FOUND
+        LOGICAL:: LISTLOAD     = FALSE   ! TRUE WHEN LIST KEYWORD IS FOUND
+        LOGICAL:: LISTARRAY    = FALSE   ! TRUE WHEN LIST KEYWORD IS FOUND, BUT LIST IS STORED AS AN ARRAY
+        LOGICAL:: HAS_IXJ      = FALSE   ! TRUE WHEN ARRAY IS LOADED AS A RECORD BASED INPUT
+        LOGICAL:: READ_BYROW   = FALSE   ! TRUE WHEN LIST AND HAS KEYWORD LIST_TRANSPOSE - READ INPUT BY ROW
+        LOGICAL:: NO_BINARY    = FALSE   ! IS SET TO TRUE WHEN BINARY FILE INPUT IS NOT ALLOWED -- TYPICALLY BECAUSE THERE IS TEXT PROCESSING DONE OUTSIDE OF ROUTINE
+        LOGICAL:: PULL_PARRENT = FALSE
+        LOGICAL:: IS_CONSTANT  = FALSE
+        LOGICAL:: STORE_ID     = FALSE
+        CHARACTER(:), ALLOCATABLE:: TYP
+        CHARACTER(:), ALLOCATABLE:: ERRMSG
+        !
+        INTEGER, DIMENSION(:), ALLOCATABLE:: ID
+        !
+        TYPE(TRANSIENT_FILE_READER):: TFR
+        !
+        CONTAINS
+        !
+        PROCEDURE, PASS(LAI):: DESTROY => LIST_ARRAY_INPUT_DEALLOCATE_ALL_TYPES
+        !
+  END TYPE
+  !
+  TYPE, EXTENDS(LIST_ARRAY_INPUT_BASE):: LIST_ARRAY_INPUT
+        !
+        LOGICAL:: NONEG_ALLOWED=FALSE
+        !
+        REAL(REAL64),     DIMENSION(:),   ALLOCATABLE:: LIST
+        REAL(REAL64),     DIMENSION(:,:), ALLOCATABLE:: ARRAY
+        TYPE(IXJ_STRUCTURE),              ALLOCATABLE:: IXJ
+        !LOGICAL:: ERROR = FALSE
+        !
+        TYPE(SFAC_DATA):: SFAC
+        !
+        CONTAINS
+        !
+        GENERIC::              INIT => INITIALIZE_LIST_ARRAY_INPUT,        & !(TYP, LLOC, LINE, IOUT, IN, LDIM1, LDIM2, NROW, NCOL, EX1_DIM, EX1_WORD, EX2_DIM, EX2_WORD, EX3_DIM, EX3_WORD, SCRATCH, NO_TRANSIENT, NO_BINARY, LISTARRAY, CDIM, MSG)
+                                       INITIALIZE_LIST_ARRAY_INPUT_AS_VALUE  !(TYP, VAL, IOUT, IN, LDIM1, LDIM2, NROW, NCOL)
+        !
+        PROCEDURE, PASS(LAI):: NEXT => LOAD_NEXT_INPUT!()
+        PROCEDURE, PASS(LAI):: GET  => GET_VALUE!(LAI, ID, DIM1, DIM2, LDIM2)
+        !
+        PROCEDURE, PASS(LAI), PRIVATE:: INITIALIZE_LIST_ARRAY_INPUT
+        PROCEDURE, PASS(LAI), PRIVATE:: INITIALIZE_LIST_ARRAY_INPUT_AS_VALUE
+        !
+        FINAL:: FINAL_LIST_ARRAY_INPUT
+  END TYPE
+  !
+  TYPE, EXTENDS(LIST_ARRAY_INPUT_BASE):: LIST_ARRAY_INPUT_INT
+        !
+        INTEGER, DIMENSION(:),   ALLOCATABLE:: LIST
+        INTEGER, DIMENSION(:,:), ALLOCATABLE:: ARRAY
+        TYPE(IXJ_STRUCTURE),     ALLOCATABLE:: IXJ
+        !
+        CONTAINS
+        !
+        GENERIC::              INIT => INITIALIZE_LIST_ARRAY_INPUT_INT,        &!(TYP, LLOC, LINE, IOUT, IN, LDIM1, LDIM2, NROW, NCOL, SCRATCH, NO_TRANSIENT)
+                                       INITIALIZE_LIST_ARRAY_INPUT_INT_AS_VALUE !(TYP, VAL, IOUT, IN, LDIM1, LDIM2, NROW, NCOL)
+        PROCEDURE, PASS(LAI):: NEXT => LOAD_NEXT_INPUT_INT!()
+        PROCEDURE, PASS(LAI):: GET  => GET_VALUE_INT!(LAI, ID, DIM1, DIM2, LDIM2)
+        !
+        PROCEDURE, PASS(LAI), PRIVATE:: INITIALIZE_LIST_ARRAY_INPUT_INT
+        PROCEDURE, PASS(LAI), PRIVATE:: INITIALIZE_LIST_ARRAY_INPUT_INT_AS_VALUE
+        !
+        FINAL:: FINAL_LIST_ARRAY_INPUT_INT
+  END TYPE
+  !
+  TYPE, EXTENDS(LIST_ARRAY_INPUT_BASE):: LIST_ARRAY_INPUT_STR
+        !
+        CHARACTER(:), DIMENSION(:),   ALLOCATABLE:: LIST
+        CHARACTER(:), DIMENSION(:,:), ALLOCATABLE:: ARRAY
+        INTEGER:: LINLEN
+        LOGICAL:: TRUNCATED
+        !
+        TYPE(SFAC_DATA):: SFAC
+        !
+        CONTAINS
+        !
+        GENERIC::              INIT => INITIALIZE_LIST_ARRAY_INPUT_STR,        &!(TYP, LLOC, LINE, IOUT, IN, LDIM1, LDIM2, NROW, NCOL,LINLEN, EX1_DIM, EX1_WORD, EX2_DIM, EX2_WORD, EX3_DIM, EX3_WORD, SCRATCH, NO_TRANSIENT, NO_BINARY, ENTIRE_LINE)
+                                       INITIALIZE_LIST_ARRAY_INPUT_STR_AS_VALUE !(TYP, VAL, IOUT, IN, LDIM1, LDIM2, NROW, NCOL, LINLEN)
+        PROCEDURE, PASS(LAI):: NEXT => LOAD_NEXT_INPUT_STR!()
+        PROCEDURE, PASS(LAI):: GET  => GET_VALUE_STR!(ID, DIM1, DIM2, LDIM2)
+        PROCEDURE, PASS(LAI):: GET_LINES => COMBINE_LAI_TO_LINES
+        !
+        PROCEDURE, PASS(LAI), PRIVATE:: INITIALIZE_LIST_ARRAY_INPUT_STR
+        PROCEDURE, PASS(LAI), PRIVATE:: INITIALIZE_LIST_ARRAY_INPUT_STR_AS_VALUE
+        !
+        FINAL:: FINAL_LIST_ARRAY_INPUT_STR
+  END TYPE
+  !
+  ! -------------------------------------------------------------------------------------------------------
+  !
+  CONTAINS
+  !
+  SUBROUTINE INITIALIZE_GENERIC_LINE_INPUT(GIN, TYP, LLOC, LINE, IOUT, IN, EX1_DIM, EX1_WORD, EX2_DIM, EX2_WORD, EX3_DIM, EX3_WORD, SCRATCH, NO_TRANSIENT, NO_BINARY, DIM, WILD_IN, WILD_OUT, WILD_1D_IN, WILD_1D_OUT, MSG)
+    ! TYP   NAME OF LIST_ARRAY
+    ! IN    IS FILE TO LOAD INFORMATION FROM OR TO CLAIM OCCURED AT
+    !
+    ! LDIM1 LENGTHIN OF LIST (row dimension) --SET TO ZERO TO NOT ALLOW LIST LOAD
+    ! LDIM2 NUMBER OF PROPERTIES (col dim)   --If >0 THEN IT WILL ALLOCATE ARRAY, IF =0 THEN IT IT WILL ALLOCATE A LIST WHEN REQUESTED
+    ! NROW  ROWS IN ARRAY                    --SET TO ZERO TO NOT ALLOW ARRAY LOADING
+    ! NCOL  COL IN ARRAY
+    !
+    ! OPTIONAL ARGUMENTS:
+    !                    EX1_DIM, EX1_WORD ARE DIMENSION AND KEYWORD USED FOR SFAC ROUTING  (eg NFARM, 'BYWBS')
+    !                    SCARTCH IS THE UNIT NUMBER TO LOAD INFORMATION FROM, WHEN IN IS ONLY MEANT TO BE USED FOR ERROR REPORTING
+    CLASS(GENERIC_LINE_INPUT),INTENT(INOUT):: GIN
+    CHARACTER(*),             INTENT(IN   ):: TYP
+    CHARACTER(*),             INTENT(IN   ):: LINE
+    INTEGER,                  INTENT(INOUT):: LLOC
+    INTEGER,                  INTENT(IN   ):: IOUT, IN
+    INTEGER,  OPTIONAL,       INTENT(IN   ):: EX1_DIM, EX2_DIM, EX3_DIM
+    CHARACTER(*),OPTIONAL,    INTENT(IN   ):: EX1_WORD,EX2_WORD,EX3_WORD
+    INTEGER,     OPTIONAL,    INTENT(IN   ):: SCRATCH
+    LOGICAL,     OPTIONAL,    INTENT(IN   ):: NO_TRANSIENT, NO_BINARY
+    !
+    INTEGER,     OPTIONAL, DIMENSION(:), CONTIGUOUS, INTENT(IN   ):: DIM
+    CLASS(*),    OPTIONAL,                           INTENT(IN   ):: WILD_IN  !ANY OPTIONAL DATA TYPE THAT MAYBE SET OR NECESSARY TO PASS IN (WILD CARD)
+    CLASS(*),    OPTIONAL,                           INTENT(INOUT):: WILD_OUT
+    CLASS(*),    OPTIONAL, DIMENSION(:), CONTIGUOUS, INTENT(IN   ):: WILD_1D_IN
+    CLASS(*),    OPTIONAL, DIMENSION(:), CONTIGUOUS, INTENT(INOUT):: WILD_1D_OUT
+    !
+    CHARACTER(*),OPTIONAL,  INTENT(IN   ):: MSG
+    !
+    CHARACTER(9):: LAI_KEY
+    INTEGER:: IU,I,N
+    LOGICAL:: ONLY_STATIC, FOUND_TEMPORAL
+    !
+    IF(GIN%INUSE) THEN
+        CALL WARNING_MESSAGE(LINE,IN,IOUT,MSG='LIST-ARRAY INPUT (LAI) PROPERTY "'//TYP//'" IS BEING LOADED A SECOND TIME!!!'//BLN//'¿¿¿MAYBE YOU ACCIDENTALLY SPECIFIED THE SAME KEYWORD TWICE???'//BLN//'THE PREVIOUS LINE THAT THE KEYWORD WAS FOUND WILL BE IGNORED'//NL//'AND THE LINE PRESENTED IN THIS WARNING WILL BE USED INSTEAD.')
+        CALL DEALLOCATE_NEXT_GENERIC_LINE_INPUT(GIN)
+    END IF
+    !
+    GIN%IOUT = IOUT
+    GIN%IS_CONSTANT   = FALSE
+    FOUND_TEMPORAL= FALSE
+    !
+    ONLY_STATIC = FALSE
+    IF(PRESENT(NO_TRANSIENT)) ONLY_STATIC = NO_TRANSIENT
+    IU = Z
+    GIN%INUSE = TRUE
+    ALLOCATE(GIN%TYP, SOURCE = TYP)
+    !
+    IF(PRESENT(MSG)) THEN
+        GIN%ERRMSG=MSG
+    ELSE
+        GIN%ERRMSG=BLNK
+    END IF
+    !
+    IF(PRESENT(DIM)) CALL GIN%ALLOC(DIM, WILD_IN, WILD_OUT, WILD_1D_IN, WILD_1D_OUT)
+    !
+    CALL GIN%TFR%ALLOC_LN()  !Make use of already alloctable ln
+    GIN%TFR%LN(:) = LINE
+    !
+    DO I=ONE, TWO
+      !
+      CALL GET_WORD(LAI_KEY,LINE,LLOC,N)
+      !
+      SELECT CASE (LAI_KEY)
+                                     CASE('TRANSIENT')
+                                                        GIN%TRANSIENT = TRUE
+                                                        FOUND_TEMPORAL= TRUE
+                                     CASE('STATIC')
+                                                        GIN%TRANSIENT = FALSE
+                                                        FOUND_TEMPORAL= TRUE
+                                     CASE('LIST','ARRAY','COMPRESS', 'COMPRESSE','DIM','DIMENSION','AUTO','AUTOCOUNT','AUTO-COUN')
+                                                      CONTINUE
+                                                      !CALL WARNING_MESSAGE(LINE,IN,IOUT,MSG='LIST-ARRAY INPUT (LAI) PROPERTY "'//TYP//'" DOES NOT REQUIRE "'//TRIM(LAI_KEY)//'" KEYWORD.'//BLN//'IT WILL BE IGNORED.'//BLN//'PROGRAM WILL CONTINUE AS IF IT WAS NOT SPECIFIED.', INLINE=TRUE)
+                                     CASE('PARRENT')
+                                                        GIN%PULL_PARRENT = TRUE
+                                                        GIN%TRANSIENT = FALSE
+                                                        LLOC = N
+                                                        CALL GIN%LOAD(LLOC, GIN%TFR%LN, IU, WILD_IN, WILD_OUT, WILD_1D_IN, WILD_1D_OUT)
+                                                        RETURN
+                                     CASE('CONSTANT')
+                                                        GIN%IS_CONSTANT = TRUE
+                                                        LLOC = N
+                                                        EXIT
+                                     CASE('INTERNAL')
+                                                        IF(GIN%TRANSIENT) THEN
+                                                            GIN%TRANSIENT = FALSE
+                                                            CALL WARNING_MESSAGE(LINE,IN,IOUT,MSG='LIST-ARRAY INPUT (LAI) PROPERTY "'//TYP//'" FOUND KEYWORD INTERNAL, BUT THIS ONLY WORKS WITHIN THE STATIC OPTION OR IF TRANSIENT IS USED THEN IT MAY ONLY RESIDE WITHIN THE TRANSIENTE FILE READER (TFR).'//BLN//'THE TEMPORAL INPUT WAS CHANGED TO "STATIC INTERNAL".', INLINE=TRUE)
+                                                        END IF
+                                                        FOUND_TEMPORAL= TRUE
+                                                        LLOC = N
+                                                        EXIT
+                                     CASE DEFAULT
+                                                        LLOC = N
+                                                        EXIT
+      END SELECT
+    END DO
+    !
+    IF(.NOT. GIN%IS_CONSTANT .AND. .NOT. ONLY_STATIC .AND. .NOT. FOUND_TEMPORAL) CALL STOP_ERROR(LINE,IN,IOUT,'LIST-ARRAY INPUT (LAI) PROPERTY '//TYP//'. FOUND KEYWORD THAT SHOULD BE FOLLOWED BY EITHER "TRANSIENT" OR "STATIC" KEYWORD', MSG2=GIN%ERRMSG)
+    !
+    IF(GIN%IS_CONSTANT) GIN%TRANSIENT = FALSE
+    !
+    IF(ONLY_STATIC .AND. GIN%TRANSIENT) CALL WARNING_MESSAGE(LINE,IN,IOUT,MSG='LIST-ARRAY INPUT (LAI) PROPERTY "'//TYP//'" CAN ONLY BE LOADED ONCE, BUT "TRANSIENT" KEYWORD WAS FOUND. PROGRAM WILL CONTINUE AS IF "STATIC" WAS SPECIFIED.')
+    IF(ONLY_STATIC) GIN%TRANSIENT = FALSE
+    !
+    IF(GIN%IS_CONSTANT) THEN
+                                  CALL GIN%LOAD(LLOC, GIN%TFR%LN, IU, WILD_IN, WILD_OUT, WILD_1D_IN, WILD_1D_OUT)  ! IU = Z
+    ELSEIF (.NOT. GIN%TRANSIENT ) THEN
+                                  CALL    ULOAD(GIN%FL, LLOC, GIN%TFR%LN, IOUT, IN, IU, NOID=TRUE, EX1_DIM=EX1_DIM, EX1_WORD=EX1_WORD, EX2_DIM=EX2_DIM, EX2_WORD=EX2_WORD, EX3_DIM=EX3_DIM, EX3_WORD=EX3_WORD, SFAC=GIN%SFAC, SCRATCH=SCRATCH, NO_BINARY=NO_BINARY, MSG=GIN%TYP)
+                                  CALL GIN%LOAD(        LLOC, GIN%TFR%LN, GIN%FL%IU, WILD_IN, WILD_OUT, WILD_1D_IN, WILD_1D_OUT)
+    ELSE
+        CALL GIN%TFR%INIT( LLOC, LINE, IOUT, IN, NOID=TRUE, EX1_DIM=EX1_DIM, EX1_WORD=EX1_WORD, EX2_DIM=EX2_DIM, EX2_WORD=EX2_WORD, EX3_DIM=EX3_DIM, EX3_WORD=EX3_WORD, NO_BINARY=NO_BINARY)
+        !
+        CALL LOAD_NEXT_GENERIC_LINE_INPUT(GIN, WILD_IN, WILD_OUT, WILD_1D_IN, WILD_1D_OUT)
+    END IF
+    !
+    GIN%RAN_LOAD = TRUE
+    !
+  END SUBROUTINE
+  !
+  SUBROUTINE LOAD_NEXT_GENERIC_LINE_INPUT(GIN, WILD_IN, WILD_OUT, WILD_1D_IN, WILD_1D_OUT)
+    CLASS(GENERIC_LINE_INPUT), INTENT(INOUT):: GIN
+    CLASS(*),       OPTIONAL,  INTENT(IN   ):: WILD_IN  !ANY OPTIONAL DATA TYPE THAT MAYBE SET OR NECESSARY TO PASS IN (WILD CARD)
+    CLASS(*),       OPTIONAL,  INTENT(INOUT):: WILD_OUT
+    CLASS(*),    OPTIONAL, DIMENSION(:), CONTIGUOUS, INTENT(IN   ):: WILD_1D_IN
+    CLASS(*),    OPTIONAL, DIMENSION(:), CONTIGUOUS, INTENT(INOUT):: WILD_1D_OUT
+    INTEGER:: LLOC, IU
+    !
+    IF(GIN%TRANSIENT) THEN
+          LLOC = ONE
+          CALL GIN%TFR%NEXT(GIN%FL, GIN%SFAC, MSG=GIN%ERRMSG)
+          !
+          IF(GIN%TFR%REPEAT) THEN  !EITHER PASSS IU=0 TO INDICATE GIN%TFR%LN HOLDS 'REPEAT', 'CONSTANT', OR 'SKIP'
+              IU = Z
+          ELSE                     !OR PASS FILE UNIT TO LOAD DATA FROM
+              IU = GIN%FL%IU
+          END IF
+          !
+          CALL GIN%LOAD(LLOC, GIN%TFR%LN, IU, WILD_IN, WILD_OUT, WILD_1D_IN, WILD_1D_OUT)
+          GIN%RAN_LOAD = TRUE
+    ELSE
+          GIN%RAN_LOAD = FALSE
+    END IF
+  END SUBROUTINE
+  !
+  SUBROUTINE DEALLOCATE_NEXT_GENERIC_LINE_INPUT(GIN)
+    CLASS(GENERIC_LINE_INPUT), INTENT(INOUT):: GIN
+        GIN%INUSE        = FALSE
+        GIN%TRANSIENT    = FALSE
+        GIN%NO_BINARY    = FALSE
+        GIN%RAN_LOAD     = FALSE
+        GIN%PULL_PARRENT = FALSE
+        GIN%IOUT = Z
+        !
+        IF(ALLOCATED(GIN%TYP)) DEALLOCATE(GIN%TYP)
+        !
+        CALL GIN%SFAC%INIT()
+        !
+        CALL GIN%FL%CLOSE()
+        CALL GIN%TFR%DESTROY()
+        !
+  END SUBROUTINE
+  !
+  SUBROUTINE INITIALIZE_LIST_ARRAY_INPUT_AS_VALUE(LAI, TYP, VAL, IOUT, IN, LDIM1, LDIM2, NROW, NCOL,LISTARRAY, STORE_ID)
+    CLASS(LIST_ARRAY_INPUT),INTENT(INOUT):: LAI
+    CHARACTER(*),           INTENT(IN   ):: TYP
+    REAL(REAL64),           INTENT(IN   ):: VAL
+    INTEGER,                INTENT(IN   ):: IOUT, IN, LDIM1, LDIM2, NROW, NCOL
+    LOGICAL, OPTIONAL,      INTENT(IN   ):: LISTARRAY  ! FORCE LISTARRAY EVEN THOUGH LDIM2=1
+    LOGICAL, OPTIONAL,      INTENT(IN   ):: STORE_ID
+    !
+    IF(LAI%INUSE) THEN
+        CALL WARNING_MESSAGE(INFILE=IN,OUTPUT=IOUT,MSG='LIST-ARRAY INPUT PROPERTY "'//TYP//'" IS BEING LOADED A SECOND TIME!!!'//BLN//'¿¿¿MAYBE YOU ACCIDENTALLY SPECIFIED THE SAME KEYWORD TWICE???'//BLN//'THE PREVIOUS LINE THAT THE KEYWORD WAS FOUND WILL BE IGNORED'//NL//'AND THE LINE PRESENTED IN THIS WARNING WILL BE USED INSTEAD.')
+        CALL LIST_ARRAY_INPUT_DEALLOCATE_ALL_TYPES(LAI)
+    END IF
+    !
+    LAI%INUSE = TRUE
+    ALLOCATE(LAI%TYP, SOURCE = TYP)
+    LAI%ERRMSG=BLNK
+    !
+    LAI%NONEG_ALLOWED=FALSE
+    LAI%READ_BYROW = FALSE
+    LAI%TRANSIENT = FALSE
+    LAI%HAS_IXJ = FALSE
+    LAI%LISTARRAY = LDIM2  > ONE  !USED TO BE >Z
+    !
+    IF(PRESENT(LISTARRAY) .AND. LDIM2 > Z) LAI%LISTARRAY = LISTARRAY
+    !
+    IF (LDIM1 > Z) THEN
+            !
+            IF(LAI%LISTARRAY) THEN
+                                   LAI%LISTLOAD  = FALSE
+                                   ALLOCATE(LAI%ARRAY(LDIM2,LDIM1), SOURCE=VAL)
+            ELSE
+                                   LAI%LISTLOAD  = TRUE
+                                   ALLOCATE(LAI%LIST(LDIM1), SOURCE=VAL)
+            END IF
+    ELSE
+                                   LAI%LISTLOAD  = FALSE
+                                   ALLOCATE(LAI%ARRAY(NCOL,NROW), SOURCE=VAL)
+    END IF
+    !
+    IF(PRESENT(STORE_ID)) THEN                  
+                          LAI%STORE_ID = STORE_ID  ! Implied .NOT. NOID
+    ELSE
+                          LAI%STORE_ID = FALSE
+    END IF
+    !
+    IF(LAI%STORE_ID) THEN
+                     IF(LAI%LISTARRAY .OR. LAI%LISTLOAD) THEN
+                                                         ALLOCATE(LAI%ID(LDIM1))
+                                                         CALL SET_SEQUENCE(LDIM1, LAI%ID)
+                     ELSE
+                                                         LAI%STORE_ID = FALSE
+                     END IF
+    END IF
+    !
+  END SUBROUTINE
+  !
+  SUBROUTINE INITIALIZE_LIST_ARRAY_INPUT(LAI, TYP, LLOC, LINE, IOUT, IN, LDIM1, LDIM2, NROW, NCOL, EX1_DIM, EX1_WORD, EX2_DIM, EX2_WORD, EX3_DIM, EX3_WORD, SCRATCH, NO_TRANSIENT, NO_BINARY, LISTARRAY, STORE_ID, CDIM, NONEG, MSG)
+    ! TYP   NAME OF LIST_ARRAY
+    ! IN    IS FILE TO LOAD INFORMATION FROM OR TO CLAIM OCCURED AT
+    !
+    ! LDIM1 LENGTHIN OF LIST (row dimension) --SET TO ZERO TO NOT ALLOW LIST LOAD
+    ! LDIM2 NUMBER OF PROPERTIES (col dim)   --If >0 THEN IT WILL ALLOCATE ARRAY, IF =0 THEN IT IT WILL ALLOCATE A LIST WHEN REQUESTED
+    ! NROW  ROWS IN ARRAY                    --SET TO ZERO TO NOT ALLOW ARRAY LOADING
+    ! NCOL  COL IN ARRAY
+    !
+    ! OPTIONAL ARGUMENTS:
+    !                    EX1_DIM, EX1_WORD ARE DIMENSION AND KEYWORD USED FOR SFAC ROUTING  (eg NFARM, 'BYWBS')
+    !                    SCARTCH IS THE UNIT NUMBER TO LOAD INFORMATION FROM, WHEN IN IS ONLY MEANT TO BE USED FOR ERROR REPORTING
+    CLASS(LIST_ARRAY_INPUT),INTENT(INOUT):: LAI
+    CHARACTER(*),           INTENT(IN   ):: TYP
+    CHARACTER(*),           INTENT(INOUT):: LINE
+    INTEGER,                INTENT(INOUT):: LLOC
+    INTEGER,                INTENT(IN   ):: IOUT, IN, LDIM1, LDIM2, NROW, NCOL
+    INTEGER,     OPTIONAL,  INTENT(IN   ):: EX1_DIM, EX2_DIM, EX3_DIM
+    CHARACTER(*),OPTIONAL,  INTENT(IN   ):: EX1_WORD,EX2_WORD,EX3_WORD
+    INTEGER,  OPTIONAL,     INTENT(IN   ):: SCRATCH
+    LOGICAL, OPTIONAL,      INTENT(IN   ):: NO_TRANSIENT, NO_BINARY, STORE_ID
+    LOGICAL, OPTIONAL,      INTENT(IN   ):: LISTARRAY   ! FORCE LISTARRAY EVEN THOUGH LDIM2=1
+    INTEGER, DIMENSION(:), CONTIGUOUS, OPTIONAL, INTENT(IN):: CDIM ! ALLOW COMPRESSED ARRAY STORAGE
+    LOGICAL, OPTIONAL,      INTENT(IN   ):: NONEG !IF TRUE THEN NEGAVTIVE VALUES ARE SET TO ZERO
+    CHARACTER(*), OPTIONAL, INTENT(IN   ):: MSG
+    CHARACTER(12):: LAI_KEY
+    INTEGER:: IU,ISTART,ISTOP,N, DIM
+    LOGICAL:: NOID, ONLYARRAY, ONLYLIST, ONLYIXJ, ONLY_STATIC, FOUND_TEMPORAL, FOUND_SPATIAL
+    !
+    IF(LAI%INUSE) THEN
+        CALL WARNING_MESSAGE(LINE,IN,IOUT,MSG='LIST-ARRAY INPUT (LAI) PROPERTY "'//TYP//'" IS BEING LOADED A SECOND TIME!!!'//BLN//'¿¿¿MAYBE YOU ACCIDENTALLY SPECIFIED THE SAME KEYWORD TWICE???'//BLN//'THE PREVIOUS LINE THAT THE KEYWORD WAS FOUND WILL BE IGNORED'//NL//'AND THE LINE PRESENTED IN THIS WARNING WILL BE USED INSTEAD.')
+        CALL LIST_ARRAY_INPUT_DEALLOCATE_ALL_TYPES(LAI)
+    END IF
+    !
+    DIM= Z
+    !
+    LAI%IS_CONSTANT = FALSE
+    FOUND_TEMPORAL  = FALSE
+    FOUND_SPATIAL   = FALSE
+    !
+    ONLY_STATIC = FALSE
+    IF(PRESENT(NO_TRANSIENT)) ONLY_STATIC = NO_TRANSIENT
+    IU = Z
+    !
+    LAI%INUSE = TRUE
+    ALLOCATE(LAI%TYP, SOURCE = TYP)
+    !
+    IF(PRESENT(MSG)) THEN
+        LAI%ERRMSG=MSG
+    ELSE
+        LAI%ERRMSG=BLNK
+    END IF
+    !
+    ONLYARRAY     = LDIM1 == Z
+    LAI%LISTARRAY = LDIM2  > ONE  !USED TO BE >Z
+    ONLYLIST      = NROW  == Z
+    LAI%HAS_IXJ   = FALSE
+    LAI%READ_BYROW= FALSE
+    !
+    IF(PRESENT(STORE_ID)) THEN                  
+                          LAI%STORE_ID = STORE_ID  ! Can be overrulled by NOID
+    ELSE
+                          LAI%STORE_ID = FALSE
+    END IF
+    !
+    IF(PRESENT(CDIM)) THEN
+        ONLYIXJ = ANY(CDIM>Z) .AND. LDIM1 == Z .AND. NROW  == Z
+    ELSE
+        ONLYIXJ = FALSE
+    END IF
+    !
+    IF(PRESENT(NONEG)) THEN
+        LAI%NONEG_ALLOWED = NONEG
+    ELSE
+        LAI%NONEG_ALLOWED = FALSE
+    END IF
+    !
+    IF(PRESENT(LISTARRAY) .AND. LDIM2 > Z) LAI%LISTARRAY = LISTARRAY
+    !
+    DO WHILE (.NOT. (FOUND_TEMPORAL .AND. FOUND_SPATIAL) )
+      !
+      CALL GET_WORD(LAI_KEY,LINE,LLOC,N)
+      !
+      SELECT CASE (LAI_KEY)
+                                     CASE('TRANSIENT')
+                                                      LAI%TRANSIENT = TRUE
+                                                      FOUND_TEMPORAL= TRUE
+                                     CASE('STATIC')
+                                                      LAI%TRANSIENT = FALSE
+                                                      FOUND_TEMPORAL= TRUE
+                                     CASE('LIST')
+                                                      LAI%LISTLOAD = TRUE
+                                                      FOUND_SPATIAL= TRUE
+                                                      IF(ONLYARRAY) CALL WARNING_MESSAGE(LINE,IN,IOUT,MSG='LIST-ARRAY INPUT (LAI) PROPERTY '//TYP//' CAN ONLY BE LOADED AS "ARRAY", BUT "LIST" KEYWORD FOUND.'//NL//'PROGRAM WILL CONTINUE AS IF ARRAY WAS SPECIFIED.')
+                                                      !WRITE(IOUT, '(A,/A/)') 'WARNING: FMP PROPERTY '//TYP//' CAN ONLY BE LOADED AS "ARRAY", BUT "LIST" KEYWORD FOUND. PROGRAM WILL CONTINUE AS IF ARRAY WAS SPECIFIED. THE FOLLOWING LINE CONTAINS THE PROBLEM:',TRIM(LINE)
+                                     CASE('ARRAY')
+                                                      LAI%LISTLOAD  = FALSE
+                                                      LAI%LISTARRAY = FALSE
+                                                      FOUND_SPATIAL = TRUE
+                                                      IF(ONLYLIST) CALL WARNING_MESSAGE(LINE,IN,IOUT,MSG='LIST-ARRAY INPUT (LAI) PROPERTY '//TYP//' CAN ONLY BE LOADED AS "LIST", BUT "ARRAY" KEYWORD FOUND. PROGRAM WILL CONTINUE AS IF LIST WAS SPECIFIED.')
+                                                      !WRITE(IOUT, '(A,/A/)') 'WARNING: FMP PROPERTY '//TYP//' CAN ONLY BE LOADED AS LIST, BUT ARRAY KEYWORD FOUND. PROGRAM WILL CONTINUE AS IF LIST WAS SPECIFIED. THE FOLLOWING LINE CONTAINS THE PROBLEM:',TRIM(LINE)
+                                     CASE('NODE', 'IXJ') !'COMPRESSE' ==> 'COMPRESSED' and 'COMPRESSED_ARRAY'
+                                                      !
+                                                      FOUND_SPATIAL = FALSE
+                                                      IF(.NOT. PRESENT(CDIM)) THEN
+                                                          FOUND_SPATIAL = TRUE
+                                                      ELSEIF(ALL(CDIM==Z)) THEN
+                                                          FOUND_SPATIAL = TRUE
+                                                      END IF
+                                                      IF(FOUND_SPATIAL) CALL STOP_ERROR(LINE,IN,IOUT,MSG='LIST-ARRAY INPUT (LAI) PROPERTY '//TYP//' DOES NOT SUPPORT "IXJ" INPUT FORMAT, BUT "'//LAI_KEY//'" KEYWORD WAS FOUND. PROGRAM CANNOT CONITUE WITH A "IXJ" INPUT FORMAT FOR THIS INPUT TYPE. PLEASE CHANGE TO "LIST" OR "ARRAY" STYLE INPUT.', MSG2=MSG)
+                                                      !
+                                                      !IF(ONLYLIST)    CALL STOP_ERROR(LINE,IN,IOUT,MSG='LIST-ARRAY INPUT (LAI) PROPERTY '//TYP//' CAN ONLY BE LOADED AS "LIST", BUT "COMPRESS" KEYWORD FOUND. PROGRAM CANNOT CONITUE WITH A COMPRESS ARRAY INPUT FORMAT FOR THIS INPUT TYPE. PLEASE CHANGE TO "LIST" STYLE INPUT.')
+                                                      !
+                                                      LAI%HAS_IXJ = TRUE
+                                                      LAI%LISTLOAD  = FALSE
+                                                      LAI%LISTARRAY = FALSE
+                                                      FOUND_SPATIAL = TRUE
+                                     CASE('LIST_TRANSPOSE')
+                                                      LAI%READ_BYROW = TRUE
+                                                      LAI%LISTLOAD   = TRUE
+                                                      FOUND_SPATIAL  = TRUE
+                                     CASE ('DIM','DIMENSION')
+                                                       CALL GET_INTEGER(LINE,LLOC,ISTART,ISTOP,IOUT,IN,DIM,MSG='LIST_ARRAY_INPUT (LAI/ULOAD) FOUND KEYWORD "'//TRIM(LAI_KEY)//'", WHICH MUST BE FOLLOWED BY AN INTEGER THAT REPRESENTS THE NUMBER OF ROWS TO LOAD FOR COMPRESS ARRAY STORAGE (YOU MUST ALSO SPECIFY THE "COMPRESS" KEYWORD)')
+                                     CASE ('AUTO','AUTOCOUNT','AUTO-COUNT')
+                                                       DIM=Z
+                                     CASE('PARRENT')
+                                                        LAI%PULL_PARRENT = TRUE
+                                                        LAI%TRANSIENT = FALSE
+                                                        RETURN
+                                     CASE('INTERNAL')
+                                                        IF(LAI%TRANSIENT) THEN
+                                                            LAI%TRANSIENT = FALSE
+                                                            CALL WARNING_MESSAGE(LINE,IN,IOUT,MSG='LIST-ARRAY INPUT (LAI) PROPERTY "'//TYP//'" FOUND KEYWORD INTERNAL, BUT THIS ONLY WORKS WITHIN THE STATIC OPTION OR IF TRANSIENT IS USED THEN IT MAY ONLY RESIDE WITHIN THE TRANSIENTE FILE READER (TFR).'//BLN//'THE TEMPORAL INPUT WAS CHANGED TO "STATIC INTERNAL".', INLINE=TRUE)
+                                                        END IF
+                                                        FOUND_TEMPORAL= TRUE
+                                                        LLOC = N
+                                                        EXIT
+                                     CASE('CONSTANT')
+                                                        LAI%IS_CONSTANT = TRUE
+                                                        LLOC = N
+                                                        EXIT
+                                     CASE DEFAULT
+                                                        LLOC = N
+                                                        EXIT
+      END SELECT
+    END DO
+    !
+    IF(ONLYIXJ .AND. .NOT. LAI%HAS_IXJ) THEN
+                           LAI%HAS_IXJ   = TRUE
+                           LAI%LISTLOAD  = FALSE
+                           LAI%LISTARRAY = FALSE
+                           FOUND_SPATIAL = TRUE
+    END IF
+    !
+    IF(.NOT. LAI%IS_CONSTANT) THEN
+        !
+        IF(.NOT. ONLY_STATIC                       .AND. .NOT. FOUND_TEMPORAL) CALL STOP_ERROR(LINE,IN,IOUT,'LIST-ARRAY INPUT (LAI) PROPERTY '//TYP//'. FAILED TO LOCATE "STATIC" OR "TRANSIENT" KEYWORD, WHICH IS REQUIRED FOR THIS PROPERTY.', MSG2=MSG)
+        IF(.NOT. ONLYLIST    .AND. .NOT. ONLYARRAY .AND. .NOT. FOUND_SPATIAL ) CALL STOP_ERROR(LINE,IN,IOUT,'LIST-ARRAY INPUT (LAI) PROPERTY '//TYP//'. FAILED TO LOCATE "LIST" OR "ARRAY" KEYWORD, WHICH IS REQUIRED FOR THIS PROPERTY.', MSG2=MSG)
+        !
+        IF(LAI%READ_BYROW    .AND. (LAI%LISTARRAY .OR. ONLYARRAY)            ) CALL STOP_ERROR(LINE,IN,IOUT,'LIST-ARRAY INPUT (LAI) PROPERTY '//TYP//'. FOUND KEYWORD LIST_TRANSPOSE, BUT INPUT PROPERTY DOES NOT SUPPORT IT. PLEASE CHECK TO SEE IF "LIST" OR "ARRAY" KEYWORD ARE SUPPOSED TO BE USED.', MSG2=MSG)
+        !
+    END IF
+    !
+    IF(ONLYARRAY) LAI%LISTLOAD = FALSE
+    !
+    IF(ONLYLIST .AND. .NOT. LAI%HAS_IXJ) LAI%LISTLOAD = TRUE
+    !
+    IF(LAI%IS_CONSTANT) THEN
+                        IF(ONLYIXJ) CALL STOP_ERROR(LINE,IN,IOUT,MSG='LIST-ARRAY INPUT (LAI) PROPERTY '//TYP//' DOES NOT SUPPORT "CONSTANT" KEYWORD DUE TO ONLY SUPPORTING THE "IXJ" INPUT OPTION.', MSG2=MSG)
+                        LAI%TRANSIENT = FALSE
+                        LAI%HAS_IXJ   = FALSE
+                        IF(ONLYARRAY) THEN
+                                         LAI%LISTLOAD = FALSE
+                        ELSE
+                                         LAI%LISTLOAD = TRUE
+                        END IF
+    END IF
+    !
+    IF(ONLY_STATIC .AND. LAI%TRANSIENT)  CALL WARNING_MESSAGE(LINE,IN,IOUT,MSG='LIST-ARRAY INPUT (LAI) PROPERTY "'//TYP//'" CAN ONLY BE LOADED ONCE, BUT "TRANSIENT" KEYWORD WAS FOUND. PROGRAM WILL CONTINUE AS IF "STATIC" WAS SPECIFIED.')
+    IF(ONLY_STATIC) LAI%TRANSIENT = FALSE
+    !
+    IF (LAI%LISTLOAD) THEN
+            NOID        = FALSE  ! LIST LOADING REQUIRES ID TO BE SPECIFIED ON FIRST COLUMN
+            LAI%HAS_IXJ = FALSE  ! ENSURE THAT IXJ IS DISABLED
+            !
+            IF(LAI%READ_BYROW) NOID = TRUE  ! LIST LOADING WITH LIST_TRANSPOSE DOES NOT READ ID
+            !
+            IF(LAI%LISTARRAY) THEN
+                                   LAI%LISTLOAD  = FALSE
+                                   ALLOCATE(LAI%ARRAY(LDIM2,LDIM1))
+            ELSE
+                                   ALLOCATE(LAI%LIST(LDIM1))
+            END IF
+    ELSEIF(LAI%HAS_IXJ) THEN
+                                   ALLOCATE(LAI%IXJ)
+                                   CALL LAI%IXJ%INIT(CDIM, IOUT)
+                                   NOID = TRUE
+    ELSE
+                                   ALLOCATE(LAI%ARRAY(NCOL,NROW))
+                                   !
+                                   NOID        = TRUE   !ARRAY LOADING DOES NOT INCLUDE ID IN FIRST COLUMN
+                                   LAI%HAS_IXJ = FALSE  ! ENSURE THAT IXJ IS DISABLED
+    END IF
+    !
+    IF(LAI%STORE_ID) THEN
+        IF(LAI%READ_BYROW .OR. .NOT. NOID) THEN
+                                           ALLOCATE(LAI%ID(LDIM1), SOURCE=Z)
+        ELSE
+            LAI%STORE_ID = FALSE
+        END IF
+    END IF
+    !
+    !
+    IF(LAI%READ_BYROW) THEN
+            !
+            CALL LAI%SFAC%INIT()  !Must setup the SFAC
+            !
+            CALL LAI%TFR%INIT( LLOC, LINE, IOUT, IN, NOID=TRUE, EX1_DIM=EX1_DIM, EX1_WORD=EX1_WORD, EX2_DIM=EX2_DIM, EX2_WORD=EX2_WORD, EX3_DIM=EX3_DIM, EX3_WORD=EX3_WORD, NO_BINARY=NO_BINARY, LEN_LN=ONE)
+            !
+            CALL LAI%TFR%SET_FNAME()
+            !
+            DIM = MAX_UNCOMMENTED_LINE_LEN(LAI%TFR%FNAME) + TWO
+            IF(DIM > 10000) DIM = 10000 !Limit length to 10000
+            !
+            IF(ALLOCATED(LAI%TFR%LN)) DEALLOCATE(LAI%TFR%LN)
+            ALLOCATE(CHARACTER(DIM):: LAI%TFR%LN) !Scratch space for reading LIST_TRANSPOSE
+            !
+            CALL READ_LIST_TRANSPOSE(LAI)
+            !
+            CALL SET_SEQUENCE(LDIM1, LAI%ID)
+            !
+    ELSEIF (.NOT. LAI%TRANSIENT ) THEN
+        IF (LAI%LISTLOAD  ) THEN
+                            CALL ULOAD(LAI%LIST,  LLOC, LINE, IOUT, IN, IU, NOID=NOID, ID=LAI%ID, SFAC=LAI%SFAC, EX1_DIM=EX1_DIM, EX1_WORD=EX1_WORD, EX2_DIM=EX2_DIM, EX2_WORD=EX2_WORD, EX3_DIM=EX3_DIM, EX3_WORD=EX3_WORD, SCRATCH=SCRATCH, NO_BINARY=NO_BINARY, MSG=LAI%ERRMSG)
+        ELSEIF(LAI%HAS_IXJ) THEN
+                            CALL ULOAD(LAI%IXJ,   LLOC, LINE, IOUT, IN, IU, NOID=NOID,            SFAC=LAI%SFAC, EX1_DIM=EX1_DIM, EX1_WORD=EX1_WORD, EX2_DIM=EX2_DIM, EX2_WORD=EX2_WORD, EX3_DIM=EX3_DIM, EX3_WORD=EX3_WORD, SCRATCH=SCRATCH, NO_BINARY=NO_BINARY, MSG=LAI%ERRMSG)
+        ELSE
+                            CALL ULOAD(LAI%ARRAY, LLOC, LINE, IOUT, IN, IU, NOID=NOID, ID=LAI%ID, SFAC=LAI%SFAC, EX1_DIM=EX1_DIM, EX1_WORD=EX1_WORD, EX2_DIM=EX2_DIM, EX2_WORD=EX2_WORD, EX3_DIM=EX3_DIM, EX3_WORD=EX3_WORD, SCRATCH=SCRATCH, NO_BINARY=NO_BINARY, MSG=LAI%ERRMSG)
+        END IF
+        !
+        IF(LAI%NONEG_ALLOWED) THEN
+           IF (LAI%LISTLOAD ) THEN
+                                         WHERE ( LAI%LIST < DZ ) LAI%LIST = DZ
+           ELSEIF(.NOT. LAI%HAS_IXJ) THEN
+                                         WHERE ( LAI%ARRAY < DZ ) LAI%ARRAY = DZ
+           END IF
+        END IF
+    ELSE
+        CALL LAI%TFR%INIT( LLOC, LINE, IOUT, IN, NOID=NOID, EX1_DIM=EX1_DIM, EX1_WORD=EX1_WORD, EX2_DIM=EX2_DIM, EX2_WORD=EX2_WORD, EX3_DIM=EX3_DIM, EX3_WORD=EX3_WORD, NO_BINARY=NO_BINARY)
+        !IF (LAI%LISTLOAD ) THEN
+        !                       CALL LAI%TFR%INIT(        LLOC, LINE, IOUT, IN, NOID=NOID, EX1_DIM=EX1_DIM, EX1_WORD=EX1_WORD, EX2_DIM=EX2_DIM, EX2_WORD=EX2_WORD, EX3_DIM=EX3_DIM, EX3_WORD=EX3_WORD, NO_BINARY=NO_BINARY)
+        !ELSE
+        !                       CALL LAI%TFR%INIT(        LLOC, LINE, IOUT, IN, NOID=NOID, EX1_DIM=EX1_DIM, EX1_WORD=EX1_WORD, EX2_DIM=EX2_DIM, EX2_WORD=EX2_WORD, EX3_DIM=EX3_DIM, EX3_WORD=EX3_WORD, NO_BINARY=NO_BINARY)
+        !END IF
+        !
+        CALL LOAD_NEXT_INPUT(LAI)
+    END IF
+    !
+    IF (LAI%LISTLOAD .OR. LAI%LISTARRAY) THEN
+        LINE = 'PROPERTY IS SET TO BE READ IN AS A  LIST OF PROPERTIES THAT IS READ'
+    ELSEIF(LAI%HAS_IXJ) THEN
+        LINE = 'PROPERTY IS SET TO BE READ IN AS A  IXJ-STRUCTURED SET OF PROPERTIES THAT IS READ'
+    ELSE
+        LINE = 'PROPERTY IS SET TO BE READ IN AS AN ARRAY (NROW,NCOL)  THAT IS READ'
+    END IF
+    !
+    IF (LAI%TRANSIENT) THEN
+        LINE = TRIM(LINE)//' IN EVERY STRESS PERIOD'
+    ELSE
+        LINE = TRIM(LINE)//' ONCE FOR THE SIMULATION'
+    END IF
+    !
+  END SUBROUTINE
+  !
+  SUBROUTINE SET_UP_LIST_TRANSPOSE(LAI,LLOC,LINE,IOUT,IN)
+    CLASS(LIST_ARRAY_INPUT_BASE), INTENT(INOUT):: LAI
+    CHARACTER(*),                 INTENT(IN   ):: LINE
+    INTEGER,                      INTENT(INOUT):: LLOC
+    INTEGER,                      INTENT(IN   ):: IOUT,IN
+    !
+    CHARACTER(64):: TXT
+    INTEGER:: DIM !,ISTART,ISTOP
+    !
+    !CALL LAI%TFR%INIT( LLOC, LINE, IOUT, IN, NOID=NOID, NO_BINARY=NO_BINARY, LEN_LN=ONE)
+    !IF(LAI%READ_BYROW) CALL LAI%TFR%INIT( LLOC, LINE, IOUT, IN, NOID=NOID, EX1_DIM=EX1_DIM, EX1_WORD=EX1_WORD, EX2_DIM=EX2_DIM, EX2_WORD=EX2_WORD, EX3_DIM=EX3_DIM, EX3_WORD=EX3_WORD, NO_BINARY=NO_BINARY, LEN_LN=ONE)
+    !
+    CALL LAI%TFR%OPEN(LINE,LLOC,IOUT,IN,KEY=TXT)
+    !
+    CALL LAI%TFR%SET_FNAME()
+    !
+    DIM = MAX_UNCOMMENTED_LINE_LEN(LAI%TFR%FNAME) + TWO
+    IF(DIM > 10000) DIM = 10000 !Limit length to 10000
+    !
+    SELECT TYPE(LAI)
+    TYPE IS(LIST_ARRAY_INPUT); CALL LAI%SFAC%INIT()  !Must setup the SFAC
+    END SELECT
+    !
+    IF(ALLOCATED(LAI%TFR%LN)) DEALLOCATE(LAI%TFR%LN)
+    !!
+    ALLOCATE(CHARACTER(DIM):: LAI%TFR%LN) !Scratch space for reading LIST_TRANSPOSE
+    !
+    LAI%TFR%NOID = TRUE
+    LAI%TFR%IOUT = IOUT
+    !
+    IF(LAI%TFR%IU == Z         ) CALL STOP_ERROR(LINE,IN,IOUT,'LIST-ARRAY INPUT (LAI) PROPERTY '//LAI%TYP//'. FOUND KEYWORD LIST_TRANSPOSE, BUT THE FILE WAS SPECIFIED WITH "INTERNAL". THIS IS NOT ALLOWED. INSTEAD SPECIFY THE FILE WITH EITHER "OPEN/CLOSE", "EXTERNAL", "DATAUNIT", OR "DATAFILE."', MSG2=LAI%ERRMSG)
+    IF(TXT        == 'CONSTANT') CALL STOP_ERROR(LINE,IN,IOUT,'LIST-ARRAY INPUT (LAI) PROPERTY '//LAI%TYP//'. FOUND KEYWORD LIST_TRANSPOSE, BUT THE FILE WAS SPECIFIED WITH "CONSTANT". THIS IS NOT ALLOWED. PLEASE REMOVE THE LIST_TRANSPOSE KEYWORD AD INSTEAD USE "LIST" OR "ARRAY".', MSG2=LAI%ERRMSG)
+    !
+    !DO    !CHECK IF FEEDFILE HAS "STRESS PERIOD" FLAG IS REACHED
+    !  CALL READ_TO_DATA(TXT,LAI%TFR%IU,IOUT,EOF=EOF)
+    !  !
+    !  IF(EOF) THEN         !NOT FOUND, REWIND
+    !      REWIND(LAI%TFR%IU)
+    !      EXIT
+    !  END IF
+    !  !
+    !  LLOC = ONE
+    !  CALL PARSE_WORD_UP(TXT,LLOC,ISTART,ISTOP,TRUE)
+    !  IF(TXT(ISTART:ISTOP)=='TEMPORAL') THEN !Temporal Input
+    !      EXIT
+    !  ELSEIF(TXT(ISTART:ISTOP)=='STRESS' ) THEN
+    !      CALL PARSE_WORD_UP(TXT,LLOC,ISTART,ISTOP,TRUE)
+    !      IF(TXT(ISTART:ISTOP)=='PERIOD' ) EXIT
+    !  END IF
+    !  !
+    !END DO
+    !
+  END SUBROUTINE
+  !
+  SUBROUTINE READ_LIST_TRANSPOSE(LAI)
+    CLASS(LIST_ARRAY_INPUT), INTENT(INOUT):: LAI
+    !
+    INTEGER:: IERR, LLOC, ISTART, ISTOP
+    LOGICAL:: HAS_ERROR
+    !
+    CALL READ_TO_DATA(LAI%TFR%LN, LAI%TFR%IU)
+    !
+    LLOC = ONE
+    CALL GET_NUMBER(LAI%TFR%LN,LLOC,ISTART,ISTOP, LAI%TFR%IOUT,LAI%TFR%IU,LAI%LIST,HAS_ERROR=HAS_ERROR)
+    !
+    IF(.NOT. HAS_ERROR) THEN !Check for SFAC
+        !
+        CALL LAI%SFAC%INIT()
+        !
+        CALL PARSE_WORD_UP(LAI%TFR%LN, LLOC, ISTART, ISTOP)
+        !
+        IF(LAI%TFR%LN(ISTART:ISTOP) == 'SFAC') CALL LAI%SFAC%LOAD( LAI%TFR%LN(LLOC:), LAI%TFR%IU, LAI%TFR%IOUT, EX1_WORD=LAI%TFR%EX1_WORD, EX1_DIM=LAI%TFR%EX1_DIM, EX2_WORD=LAI%TFR%EX2_WORD, EX2_DIM=LAI%TFR%EX2_DIM, EX3_WORD=LAI%TFR%EX3_WORD, EX3_DIM=LAI%TFR%EX3_DIM, SKIP_SFAC=TRUE)
+    ELSE
+       BACKSPACE(LAI%TFR%IU)
+       !
+       READ(LAI%TFR%IU,*,IOSTAT=IERR) LAI%LIST
+       !
+       IF(IERR.NE.Z) CALL FILE_IO_ERROR(IERR,LAI%TFR%IU,LINE=LAI%TFR%LN,INFILE=LAI%TFR%IU,OUTPUT=LAI%TFR%IOUT,MSG='LIST-ARRAY INPUT (LAI) PROPERTY '//LAI%TYP//' HAS LIST_TRANSPOSE OPTION, BUT FAILED TO READ LINE.'//BLN//'NOTE THAT ERROR<0 CAN ALSO MEAN NOT ENOUGH NUMBERS OF LINE.'//NL//'THIS FILE EXPECTED TO LOAD '//NUM2STR(SIZE(LAI%LIST))//' NUMBERS ON EACH LINE.')
+    END IF
+    !
+    IF(ANY(LAI%LIST.NE.LAI%LIST)) CALL STOP_ERROR(LAI%TFR%LN,LAI%TFR%IU,LAI%TFR%IOUT,'LIST-ARRAY INPUT (LAI) PROPERTY '//LAI%TYP//' HAS LIST_TRANSPOSE OPTION, BUT FOUND A NaN ON THE CURRENT LINE BEING READ.'//BLN//'AT THIS POINT IN TIME LIST-ARRAY INPUT WITH LIST_TRANSPOSE DOES NOT SUPPORT "NaN" INPUT.', MSG2=LAI%ERRMSG)
+    !
+    IF(LAI%TFR%SCALE.NE.UNO) LAI%LIST = LAI%LIST * LAI%TFR%SCALE
+    !
+  END SUBROUTINE
+  !
+  SUBROUTINE LOAD_NEXT_INPUT(LAI)
+    CLASS(LIST_ARRAY_INPUT), INTENT(INOUT):: LAI
+    !
+    IF(LAI%TRANSIENT) THEN
+          IF    (LAI%READ_BYROW)THEN
+                               CALL READ_LIST_TRANSPOSE(LAI)
+          ELSEIF(LAI%LISTLOAD) THEN
+                               CALL LAI%TFR%NEXT(LAI%LIST, LAI%SFAC, ID=LAI%ID, MSG=LAI%ERRMSG)
+          ELSEIF(LAI%HAS_IXJ) THEN
+                               CALL LAI%TFR%NEXT(LAI%IXJ,  LAI%SFAC,            MSG=LAI%ERRMSG)
+          ELSE
+                               CALL LAI%TFR%NEXT(LAI%ARRAY,LAI%SFAC, ID=LAI%ID, MSG=LAI%ERRMSG)
+          END IF
+          !
+          IF(LAI%NONEG_ALLOWED) THEN
+             IF (LAI%LISTLOAD ) THEN
+                                           WHERE ( LAI%LIST < DZ ) LAI%LIST = DZ
+             ELSEIF(.NOT. LAI%HAS_IXJ) THEN
+                                           WHERE ( LAI%ARRAY < DZ ) LAI%ARRAY = DZ
+             END IF
+          END IF
+    END IF
+  END SUBROUTINE
+  !
+  SUBROUTINE INITIALIZE_LIST_ARRAY_INPUT_INT_AS_VALUE(LAI, TYP, VAL, IOUT, IN, LDIM1, LDIM2, NROW, NCOL, LISTARRAY, STORE_ID)
+    CLASS(LIST_ARRAY_INPUT_INT),INTENT(INOUT):: LAI
+    CHARACTER(*),               INTENT(IN   ):: TYP
+    INTEGER,                    INTENT(IN   ):: VAL
+    INTEGER,                    INTENT(IN   ):: IOUT, IN, LDIM1, LDIM2, NROW, NCOL
+    LOGICAL, OPTIONAL,          INTENT(IN   ):: LISTARRAY  ! FORCE LISTARRAY EVEN THOUGH LDIM2=1
+    LOGICAL, OPTIONAL,          INTENT(IN   ):: STORE_ID
+    !
+    IF(LAI%INUSE) THEN
+        CALL WARNING_MESSAGE(INFILE=IN,OUTPUT=IOUT,MSG='LIST-ARRAY INPUT PROPERTY "'//TYP//'" IS BEING LOADED A SECOND TIME!!!'//BLN//'¿¿¿MAYBE YOU ACCIDENTALLY SPECIFIED THE SAME KEYWORD TWICE???'//BLN//'THE PREVIOUS LINE THAT THE KEYWORD WAS FOUND WILL BE IGNORED'//NL//'AND THE LINE PRESENTED IN THIS WARNING WILL BE USED INSTEAD.')
+        CALL LIST_ARRAY_INPUT_DEALLOCATE_ALL_TYPES(LAI)
+    END IF
+    !
+    LAI%INUSE = TRUE
+    ALLOCATE(LAI%TYP, SOURCE = TYP)
+    !
+    LAI%ERRMSG=BLNK
+    !
+    LAI%TRANSIENT = FALSE
+    LAI%LISTARRAY = LDIM2  > ONE  !USED TO BE >Z
+    !
+    IF(PRESENT(LISTARRAY) .AND. LDIM2 > Z) LAI%LISTARRAY = LISTARRAY
+    !
+    IF (LDIM1 > Z) THEN
+            !
+            IF(LAI%LISTARRAY) THEN
+                                   LAI%LISTLOAD  = FALSE
+                                   ALLOCATE(LAI%ARRAY(LDIM2,LDIM1), SOURCE=VAL)
+            ELSE
+                                   LAI%LISTLOAD  = TRUE
+                                   ALLOCATE(LAI%LIST(LDIM1), SOURCE=VAL)
+            END IF
+    ELSE
+                                   LAI%LISTLOAD  = FALSE
+                                   ALLOCATE(LAI%ARRAY(NCOL,NROW), SOURCE=VAL)
+    END IF
+    !
+    IF(PRESENT(STORE_ID)) THEN                  
+                          LAI%STORE_ID = STORE_ID  ! Implied .NOT. NOID
+    ELSE
+                          LAI%STORE_ID = FALSE
+    END IF
+    !
+    IF(LAI%STORE_ID) THEN
+                     IF(LAI%LISTARRAY .OR. LAI%LISTLOAD) THEN
+                                                         ALLOCATE(LAI%ID(LDIM1))
+                                                         CALL SET_SEQUENCE(LDIM1, LAI%ID)
+                     ELSE
+                                                         LAI%STORE_ID = FALSE
+                     END IF
+    END IF
+    !
+  END SUBROUTINE
+  !
+  SUBROUTINE INITIALIZE_LIST_ARRAY_INPUT_INT(LAI, TYP, LLOC, LINE, IOUT, IN, LDIM1, LDIM2, NROW, NCOL, SCRATCH, NO_TRANSIENT, LISTARRAY, STORE_ID, CDIM, MSG)
+    ! LDIM1 LENGTHIN OF LIST (row dimension) --SET TO ZERO TO NOT ALLOW LIST LOAD
+    ! LDIM2 NUMBER OF PROPERTIES (col dim)   --If >0 THEN IT WILL ALLOCATE ARRAY, IF =0 THEN IT IT WILL ALLOCATE A LIST WHEN REQUESTED
+    ! NROW  ROWS IN ARRAY                    --SET TO ZERO TO NOT ALLOW ARRAY LOADING
+    ! NCOL  COL IN ARRAY
+    CLASS(LIST_ARRAY_INPUT_INT),INTENT(INOUT):: LAI
+    CHARACTER(*),           INTENT(IN   ):: TYP
+    CHARACTER(*),           INTENT(INOUT):: LINE
+    INTEGER,                INTENT(INOUT):: LLOC
+    INTEGER,                INTENT(IN   ):: IOUT, IN, LDIM1, LDIM2, NROW, NCOL
+    INTEGER, OPTIONAL,      INTENT(IN   ):: SCRATCH
+    LOGICAL, OPTIONAL,      INTENT(IN   ):: NO_TRANSIENT, STORE_ID
+    LOGICAL, OPTIONAL,      INTENT(IN   ):: LISTARRAY  ! FORCE LISTARRAY EVEN THOUGH LDIM2=1
+    INTEGER, DIMENSION(:), CONTIGUOUS, OPTIONAL, INTENT(IN):: CDIM ! ALLOW COMPRESSED ARRAY STORAGE
+    CHARACTER(*), OPTIONAL, INTENT(IN   ):: MSG
+    CHARACTER(12):: LAI_KEY
+    INTEGER:: IU,ISTART,ISTOP,N, DIM
+    LOGICAL:: NOID, ONLYARRAY, ONLYLIST, ONLYIXJ, ONLY_STATIC, FOUND_TEMPORAL, FOUND_SPATIAL, NO_IMPLIED
+    !
+    IF(LAI%INUSE) THEN
+        CALL WARNING_MESSAGE(LINE,IN,IOUT,MSG='LIST-ARRAY INPUT PROPERTY "'//TYP//'" IS BEING LOADED A SECOND TIME!!!'//BLN//'¿¿¿MAYBE YOU ACCIDENTALLY SPECIFIED THE SAME KEYWORD TWICE???'//BLN//'THE PREVIOUS LINE THAT THE KEYWORD WAS FOUND WILL BE IGNORED'//NL//'AND THE LINE PRESENTED IN THIS WARNING WILL BE USED INSTEAD.')
+        CALL LIST_ARRAY_INPUT_DEALLOCATE_ALL_TYPES(LAI)
+    END IF
+    !
+    DIM = Z
+    !
+    LAI%IS_CONSTANT = FALSE
+    FOUND_TEMPORAL  = FALSE
+    FOUND_SPATIAL   = FALSE
+    !
+    ONLY_STATIC = FALSE
+    IF(PRESENT(NO_TRANSIENT)) ONLY_STATIC = NO_TRANSIENT
+    IU = Z
+    LAI%INUSE = TRUE
+    ALLOCATE(LAI%TYP, SOURCE = TYP)
+    !
+    IF(PRESENT(MSG)) THEN
+        LAI%ERRMSG=MSG
+    ELSE
+        LAI%ERRMSG=BLNK
+    END IF
+    !
+    LAI%ERRMSG=BLNK
+    !
+    ONLYARRAY     = LDIM1 == Z
+    LAI%LISTARRAY = LDIM2  > ONE  !USED TO BE >Z
+    ONLYLIST      = NROW  == Z
+    !
+    IF(PRESENT(STORE_ID)) THEN                  
+                          LAI%STORE_ID = STORE_ID  ! Can be overrulled by NOID
+    ELSE
+                          LAI%STORE_ID = FALSE
+    END IF
+    !
+    IF(PRESENT(CDIM)) THEN
+        ONLYIXJ = ANY(CDIM>Z) .AND. LDIM1 == Z .AND. NROW  == Z
+    ELSE
+        ONLYIXJ = FALSE
+    END IF
+    !
+    IF(PRESENT(LISTARRAY) .AND. LDIM2 > Z) LAI%LISTARRAY = LISTARRAY
+    !
+    DO WHILE (.NOT. (FOUND_TEMPORAL .AND. FOUND_SPATIAL) )
+      !
+      CALL GET_WORD(LAI_KEY,LINE,LLOC,OLD_LOC=N)
+      !
+      SELECT CASE (LAI_KEY)
+                                     CASE('TRANSIENT')
+                                                        LAI%TRANSIENT = TRUE
+                                                        FOUND_TEMPORAL= TRUE
+                                     CASE('STATIC')
+                                                        LAI%TRANSIENT = FALSE
+                                                        FOUND_TEMPORAL= TRUE
+                                     CASE('LIST')
+                                                      LAI%LISTLOAD = TRUE
+                                                      FOUND_SPATIAL= TRUE
+                                                      IF(ONLYARRAY) CALL WARNING_MESSAGE(LINE,IN,IOUT,MSG='LIST-ARRAY INPUT (LAI) PROPERTY "'//TYP//'" CAN ONLY BE LOADED AS "ARRAY", BUT "LIST" KEYWORD FOUND.'//NL//'PROGRAM WILL CONTINUE AS IF ARRAY WAS SPECIFIED.')
+                                                      !WRITE(IOUT, '(A,/A/)') 'WARNING: FMP PROPERTY '//TYP//' CAN ONLY BE LOADED AS "ARRAY", BUT "LIST" KEYWORD FOUND. PROGRAM WILL CONTINUE AS IF ARRAY WAS SPECIFIED. THE FOLLOWING LINE CONTAINS THE PROBLEM:',TRIM(LINE)
+                                     CASE('ARRAY')
+                                                      LAI%LISTLOAD  = FALSE
+                                                      LAI%LISTARRAY = FALSE
+                                                      FOUND_SPATIAL = TRUE
+                                                      IF(ONLYLIST) CALL WARNING_MESSAGE(LINE,IN,IOUT,MSG='LIST-ARRAY INPUT (LAI) PROPERTY "'//TYP//'" CAN ONLY BE LOADED AS "LIST", BUT "ARRAY" KEYWORD FOUND. PROGRAM WILL CONTINUE AS IF LIST WAS SPECIFIED.')
+                                                      !WRITE(IOUT, '(A,/A/)') 'WARNING: FMP PROPERTY '//TYP//' CAN ONLY BE LOADED AS LIST, BUT ARRAY KEYWORD FOUND. PROGRAM WILL CONTINUE AS IF LIST WAS SPECIFIED. THE FOLLOWING LINE CONTAINS THE PROBLEM:',TRIM(LINE)
+                                     CASE('PARRENT')
+                                                        LAI%PULL_PARRENT = TRUE
+                                                        LAI%TRANSIENT = FALSE
+                                                        RETURN
+                                     CASE('INTERNAL')
+                                                        IF(LAI%TRANSIENT) THEN
+                                                            LAI%TRANSIENT = FALSE
+                                                            CALL WARNING_MESSAGE(LINE,IN,IOUT,MSG='LIST-ARRAY INPUT (LAI) PROPERTY "'//TYP//'" FOUND KEYWORD INTERNAL, BUT THIS ONLY WORKS WITHIN THE STATIC OPTION OR IF TRANSIENT IS USED THEN IT MAY ONLY RESIDE WITHIN THE TRANSIENT FILE READER (TFR).'//BLN//'THE TEMPORAL INPUT WAS CHANGED TO "STATIC INTERNAL".', INLINE=TRUE)
+                                                        END IF
+                                                        FOUND_TEMPORAL= TRUE
+                                                        LLOC = N
+                                                        EXIT
+                                     CASE('CONSTANT')
+                                                        LAI%IS_CONSTANT = TRUE
+                                                        LLOC = N
+                                                        EXIT
+                                     CASE('NODE', 'IXJ') !'COMPRESSE' ==> 'COMPRESSED' and 'COMPRESSED_ARRAY'
+                                                      !
+                                                      FOUND_SPATIAL = FALSE
+                                                      IF(.NOT. PRESENT(CDIM)) THEN
+                                                          FOUND_SPATIAL = TRUE
+                                                      ELSEIF(ALL(CDIM==Z)) THEN
+                                                          FOUND_SPATIAL = TRUE
+                                                      END IF
+                                                      IF(FOUND_SPATIAL) CALL STOP_ERROR(LINE,IN,IOUT,MSG='LIST-ARRAY INPUT (LAI) PROPERTY '//TYP//' DOES NOT SUPPORT "IXJ" INPUT FORMAT, BUT "'//LAI_KEY//'" KEYWORD WAS FOUND. PROGRAM CANNOT CONITUE WITH A "IXJ" INPUT FORMAT FOR THIS INPUT TYPE. PLEASE CHANGE TO "LIST" OR "ARRAY" STYLE INPUT.', MSG2=MSG)
+                                                      !
+                                                      !IF(ONLYLIST)    CALL STOP_ERROR(LINE,IN,IOUT,MSG='LIST-ARRAY INPUT (LAI) PROPERTY '//TYP//' CAN ONLY BE LOADED AS "LIST", BUT "'//LAI_KEY//'" KEYWORD FOUND. PROGRAM CANNOT CONITUE WITH A IXJ INPUT FORMAT FOR THIS INPUT TYPE. PLEASE CHANGE TO "LIST" STYLE INPUT.')
+                                                      !
+                                                      LAI%HAS_IXJ   = TRUE
+                                                      LAI%LISTLOAD  = FALSE
+                                                      LAI%LISTARRAY = FALSE
+                                                      FOUND_SPATIAL = TRUE
+                                     CASE ('DIM','DIMENSION')
+                                                       CALL GET_INTEGER(LINE,LLOC,ISTART,ISTOP,IOUT,IN,DIM,MSG='LIST_ARRAY_INPUT (LAI/ULOAD) FOUND KEYWORD "'//TRIM(LAI_KEY)//'", WHICH MUST BE FOLLOWED BY AN INTEGER THAT REPRESENTS THE NUMBER OF ROWS TO LOAD FOR COMPRESS ARRAY STORAGE (YOU MUST ALSO SPECIFY THE "COMPRESS" KEYWORD)')
+                                     CASE ('AUTO','AUTOCOUNT','AUTO-COUNT')
+                                                       DIM=Z
+                                     CASE DEFAULT
+                                                        LLOC = N
+                                                        EXIT
+      END SELECT
+    END DO
+    !
+    IF(ONLYIXJ .AND. .NOT. LAI%HAS_IXJ) THEN
+                           LAI%HAS_IXJ   = TRUE
+                           LAI%LISTLOAD  = FALSE
+                           LAI%LISTARRAY = FALSE
+                           FOUND_SPATIAL = TRUE
+    END IF
+    !
+    IF(.NOT. LAI%IS_CONSTANT) THEN
+        !
+        IF(      .NOT. LAI%LISTARRAY .AND. .NOT. ONLYARRAY .AND. .NOT. LAI%HAS_IXJ .AND. .NOT. ONLYIXJ   &
+           .AND. .NOT. ( (FOUND_TEMPORAL.OR.ONLY_STATIC).AND.(FOUND_SPATIAL.OR.ONLYLIST)) ) THEN
+            READ(LAI_KEY,'(I9)',IOSTAT=N) ISTART
+            NO_IMPLIED = N.NE.Z
+        ELSE
+            NO_IMPLIED = TRUE
+        END IF
+        !
+        IF(.NOT. ONLY_STATIC                       .AND. .NOT. FOUND_TEMPORAL .AND. NO_IMPLIED) CALL STOP_ERROR(LINE,IN,IOUT,'LIST-ARRAY INPUT (LAI) PROPERTY "'//TYP//'". FAILED TO LOCATE "STATIC" OR "TRANSIENT" KEYWORD, WHICH IS REQUIRED FOR THIS PROPERTY.', MSG2=MSG)
+        IF(.NOT. ONLYLIST    .AND. .NOT. ONLYARRAY .AND. .NOT. FOUND_SPATIAL  .AND. NO_IMPLIED) CALL STOP_ERROR(LINE,IN,IOUT,'LIST-ARRAY INPUT (LAI) PROPERTY "'//TYP//'". FAILED TO LOCATE "LIST" OR "ARRAY" KEYWORD, WHICH IS REQUIRED FOR THIS PROPERTY.', MSG2=MSG)
+        !
+        IF(.NOT. NO_IMPLIED) THEN
+           IF(.NOT. FOUND_TEMPORAL) LAI%TRANSIENT = FALSE
+           IF(.NOT. FOUND_SPATIAL ) LAI%LISTLOAD  = TRUE
+        END IF
+        !
+    END IF
+    !
+    IF(ONLYARRAY) LAI%LISTLOAD = FALSE
+    IF(ONLYLIST ) LAI%LISTLOAD = TRUE
+    !
+    IF(LAI%IS_CONSTANT) THEN
+                        IF(ONLYIXJ) CALL STOP_ERROR(LINE,IN,IOUT,MSG='LIST-ARRAY INPUT (LAI) PROPERTY '//TYP//' DOES NOT SUPPORT "CONSTANT" KEYWORD DUE TO ONLY SUPPORTING THE "IXJ" INPUT OPTION.', MSG2=MSG)
+                        LAI%TRANSIENT = FALSE
+                        LAI%HAS_IXJ   = FALSE
+                        IF(ONLYARRAY) THEN
+                                         LAI%LISTLOAD = FALSE
+                        ELSE
+                                         LAI%LISTLOAD = TRUE
+                        END IF
+    END IF
+    !
+    IF(ONLY_STATIC .AND. LAI%TRANSIENT) CALL WARNING_MESSAGE(LINE,IN,IOUT,MSG='LIST-ARRAY INPUT (LAI) PROPERTY "'//TYP//'" CAN ONLY BE LOADED ONCE, BUT "TRANSIENT" KEYWORD WAS FOUND. PROGRAM WILL CONTINUE AS IF "STATIC" WAS SPECIFIED.')
+    IF(ONLY_STATIC) LAI%TRANSIENT = FALSE
+    !
+    IF (LAI%LISTLOAD) THEN
+            NOID        = FALSE  !LIST LOADING REQUIRES ID TO BE SPECIFIED ON FIRST COLUMN
+            LAI%HAS_IXJ = FALSE  ! ENSURE THAT IXJ IS DISABLED
+            !
+            IF(LAI%LISTARRAY) THEN
+                                   LAI%LISTLOAD  = FALSE
+                                   ALLOCATE(LAI%ARRAY(LDIM2,LDIM1))
+            ELSE
+                                   ALLOCATE(LAI%LIST(LDIM1))
+            END IF
+    ELSEIF(LAI%HAS_IXJ) THEN
+                                   ALLOCATE(LAI%IXJ)
+                                   CALL LAI%IXJ%INIT(CDIM, IOUT)
+                                   NOID = TRUE
+    ELSE
+                                   ALLOCATE(LAI%ARRAY(NCOL,NROW))
+                                   !
+                                   NOID        = TRUE   !ARRAY LOADING DOES NOT INCLUDE ID IN FIRST COLUMN
+                                   LAI%HAS_IXJ = FALSE  ! ENSURE THAT IXJ IS DISABLED
+    END IF
+    !
+    IF(LAI%STORE_ID) THEN
+        IF(.NOT. NOID) THEN                                                    !LAI%READ_BYROW .OR. 
+                       ALLOCATE(LAI%ID(LDIM1), SOURCE=Z)
+        ELSE
+                       LAI%STORE_ID = FALSE
+        END IF
+    END IF
+    !
+    IF (.NOT. LAI%TRANSIENT ) THEN
+        IF (LAI%LISTLOAD ) THEN
+                               CALL ULOAD(LAI%LIST,  LLOC, LINE, IOUT, IN, IU, NOID=NOID, ID=LAI%ID, SCRATCH=SCRATCH, MSG=LAI%ERRMSG)
+        ELSEIF(LAI%HAS_IXJ) THEN
+                               CALL ULOAD(LAI%IXJ,   LLOC, LINE, IOUT, IN, IU, NOID=NOID,            SCRATCH=SCRATCH, MSG=LAI%ERRMSG)
+        ELSE
+                               CALL ULOAD(LAI%ARRAY, LLOC, LINE, IOUT, IN, IU, NOID=NOID, ID=LAI%ID, SCRATCH=SCRATCH, MSG=LAI%ERRMSG)
+        END IF
+    ELSE
+        CALL LAI%TFR%INIT(LLOC, LINE, IOUT, IN, NOID=NOID)
+        !
+        CALL LOAD_NEXT_INPUT_INT(LAI)
+    END IF
+    !
+  END SUBROUTINE
+  !
+  SUBROUTINE READ_LIST_TRANSPOSE_INT(LAI)
+    CLASS(LIST_ARRAY_INPUT_INT), INTENT(INOUT):: LAI
+    !
+    CHARACTER(200):: LINE
+    INTEGER:: IERR
+    !
+    CALL READ_TO_DATA(LINE, LAI%TFR%IU)
+    BACKSPACE(LAI%TFR%IU)
+    !
+    READ(LAI%TFR%IU,*,IOSTAT=IERR) LAI%LIST
+    !
+    IF(IERR.NE.Z) CALL FILE_IO_ERROR(IERR,LAI%TFR%IU,LINE=LINE,INFILE=LAI%TFR%IU,OUTPUT=LAI%TFR%IOUT,MSG='LIST-ARRAY INPUT (LAI) PROPERTY '//LAI%TYP//' HAS LIST_TRANSPOSE OPTION, BUT FAILED TO READ LINE.'//BLN//'NOTE THAT ERROR<0 CAN ALSO MEAN NOT ENOUGH NUMBERS OF LINE.'//NL//'LIST_TRANSPOSE INPUT EXPECTED TO LOAD '//NUM2STR(SIZE(LAI%LIST))//' NUMBERS ON EACH LINE.'//BLN//'ALSO NOTE THE USE OF LIST_TRANSPOSE WITH LIST-ARRAY INPUT DOES NOT SUPPORT THE USE OF "NAN" ON AN INPUT LINE.')
+    !
+  END SUBROUTINE
+  !
+  SUBROUTINE LOAD_NEXT_INPUT_INT(LAI)
+    CLASS(LIST_ARRAY_INPUT_INT), INTENT(INOUT):: LAI
+    !
+    IF(LAI%TRANSIENT) THEN
+          IF(LAI%LISTLOAD) THEN
+                               CALL LAI%TFR%NEXT(LAI%LIST,  ID=LAI%ID, MSG=LAI%ERRMSG)
+          ELSEIF(LAI%HAS_IXJ) THEN
+                               CALL LAI%TFR%NEXT(LAI%IXJ,              MSG=LAI%ERRMSG)
+          ELSE
+                               CALL LAI%TFR%NEXT(LAI%ARRAY, ID=LAI%ID, MSG=LAI%ERRMSG)
+          END IF
+    END IF
+  END SUBROUTINE
+  !
+  SUBROUTINE INITIALIZE_LIST_ARRAY_INPUT_STR_AS_VALUE(LAI, TYP, VAL, IOUT, IN, LDIM1, LDIM2, NROW, NCOL, LINLEN, LISTARRAY)
+    CLASS(LIST_ARRAY_INPUT_STR),INTENT(INOUT):: LAI
+    CHARACTER(*),               INTENT(IN   ):: TYP
+    CHARACTER(*),               INTENT(IN   ):: VAL
+    INTEGER,                    INTENT(IN   ):: IOUT, IN, LDIM1, LDIM2, NROW, NCOL, LINLEN
+    LOGICAL, OPTIONAL,          INTENT(IN   ):: LISTARRAY  ! FORCE LISTARRAY EVEN THOUGH LDIM2=1
+    !
+    IF(LAI%INUSE) THEN
+        CALL WARNING_MESSAGE(INFILE=IN,OUTPUT=IOUT,MSG='LIST-ARRAY INPUT PROPERTY "'//TYP//'" IS BEING LOADED A SECOND TIME!!!'//BLN//'¿¿¿MAYBE YOU ACCIDENTALLY SPECIFIED THE SAME KEYWORD TWICE???'//BLN//'THE PREVIOUS LINE THAT THE KEYWORD WAS FOUND WILL BE IGNORED'//NL//'AND THE LINE PRESENTED IN THIS WARNING WILL BE USED INSTEAD.')
+        CALL LIST_ARRAY_INPUT_DEALLOCATE_ALL_TYPES(LAI)
+    END IF
+    !
+    LAI%INUSE = TRUE
+    ALLOCATE(LAI%TYP, SOURCE = TYP)
+    LAI%ERRMSG=BLNK
+    !
+    LAI%LINLEN = LINLEN
+    !
+    LAI%TRANSIENT = FALSE
+    LAI%LISTARRAY = LDIM2  > ONE  !USED TO BE >Z
+    !
+    IF(PRESENT(LISTARRAY) .AND. LDIM2 > Z) LAI%LISTARRAY = LISTARRAY
+    !
+    IF (LDIM1 > Z) THEN
+            !
+            IF(LAI%LISTARRAY) THEN
+                                   LAI%LISTLOAD  = FALSE
+                                   ALLOCATE(CHARACTER(LINLEN):: LAI%ARRAY(LDIM2,LDIM1))
+            ELSE
+                                   LAI%LISTLOAD  = TRUE
+                                   ALLOCATE(CHARACTER(LINLEN):: LAI%LIST(LDIM1))
+            END IF
+            LAI%LIST = VAL
+    ELSE
+                                   LAI%LISTLOAD  = FALSE
+                                   ALLOCATE(CHARACTER(LINLEN):: LAI%ARRAY(NCOL,NROW))
+            LAI%ARRAY = VAL
+    END IF
+    !
+  END SUBROUTINE
+  !
+  SUBROUTINE INITIALIZE_LIST_ARRAY_INPUT_STR(LAI, TYP, LLOC, LINE, IOUT, IN, LDIM1, LDIM2, NROW, NCOL,LINLEN, EX1_DIM, EX1_WORD, EX2_DIM, EX2_WORD, EX3_DIM, EX3_WORD, SCRATCH, NO_TRANSIENT, NO_BINARY, ENTIRE_LINE, LISTARRAY, MSG)
+    ! TYP   NAME OF LIST_ARRAY
+    ! IN    IS FILE TO LOAD INFORMATION FROM OR TO CLAIM OCCURED AT
+    !
+    ! LDIM1 LENGTHIN OF LIST (row dimension) --SET TO ZERO TO NOT ALLOW LIST LOAD
+    ! LDIM2 NUMBER OF PROPERTIES (col dim)   --If >0 THEN IT WILL ALLOCATE ARRAY, IF =0 THEN IT IT WILL ALLOCATE A LIST WHEN REQUESTED
+    ! NROW  ROWS IN ARRAY                    --SET TO ZERO TO NOT ALLOW ARRAY LOADING
+    ! NCOL  COL IN ARRAY
+    !
+    ! OPTIONAL ARGUMENTS:
+    !                    EX1_DIM, EX1_WORD ARE DIMENSION AND KEYWORD USED FOR SFAC ROUTING  (eg NFARM, 'BYWBS')
+    !                    SCARTCH IS THE UNIT NUMBER TO LOAD INFORMATION FROM, WHEN IN IS ONLY MEANT TO BE USED FOR ERROR REPORTING
+    CLASS(LIST_ARRAY_INPUT_STR),INTENT(INOUT):: LAI
+    CHARACTER(*),               INTENT(IN   ):: TYP
+    CHARACTER(*),               INTENT(INOUT):: LINE
+    INTEGER,                    INTENT(INOUT):: LLOC
+    INTEGER,                    INTENT(IN   ):: IOUT, IN, LDIM1, LDIM2, NROW, NCOL, LINLEN
+    INTEGER,  OPTIONAL,         INTENT(IN   ):: EX1_DIM, EX2_DIM, EX3_DIM
+    CHARACTER(*),OPTIONAL,      INTENT(IN   ):: EX1_WORD,EX2_WORD,EX3_WORD
+    INTEGER,  OPTIONAL,         INTENT(IN   ):: SCRATCH
+    LOGICAL, OPTIONAL,          INTENT(IN   ):: NO_TRANSIENT, NO_BINARY, ENTIRE_LINE
+    LOGICAL, OPTIONAL,          INTENT(IN   ):: LISTARRAY  ! FORCE LISTARRAY EVEN THOUGH LDIM2=1
+    CHARACTER(*), OPTIONAL,     INTENT(IN   ):: MSG
+    CHARACTER(9):: LAI_KEY
+    INTEGER:: IU,N
+    LOGICAL:: NOID, ONLYARRAY, ONLYLIST, ONLY_STATIC, FOUND_TEMPORAL, FOUND_SPATIAL
+    !
+    IF(LAI%INUSE) THEN
+        CALL WARNING_MESSAGE(LINE,IN,IOUT,MSG='LIST-ARRAY INPUT PROPERTY "'//TYP//'" IS BEING LOADED A SECOND TIME!!!'//BLN//'¿¿¿MAYBE YOU ACCIDENTALLY SPECIFIED THE SAME KEYWORD TWICE???'//BLN//'THE PREVIOUS LINE THAT THE KEYWORD WAS FOUND WILL BE IGNORED'//NL//'AND THE LINE PRESENTED IN THIS WARNING WILL BE USED INSTEAD.')
+        CALL LIST_ARRAY_INPUT_DEALLOCATE_ALL_TYPES(LAI)
+    END IF
+    !
+    LAI%LINLEN = LINLEN
+    !
+    LAI%IS_CONSTANT = FALSE
+    FOUND_TEMPORAL  = FALSE
+    FOUND_SPATIAL   = FALSE
+    !
+    ONLY_STATIC = FALSE
+    IF(PRESENT(NO_TRANSIENT)) ONLY_STATIC = NO_TRANSIENT
+    IU = Z
+    LAI%INUSE = TRUE
+    ALLOCATE(LAI%TYP, SOURCE = TYP)
+    !
+    IF(PRESENT(MSG)) THEN
+        LAI%ERRMSG=MSG
+    ELSE
+        LAI%ERRMSG=BLNK
+    END IF
+    !
+    ONLYARRAY     = LDIM1 == Z
+    LAI%LISTARRAY = LDIM2  > ONE  !USED TO BE >Z
+    ONLYLIST      = NROW  == Z
+    !
+    IF(PRESENT(LISTARRAY) .AND. LDIM2 > Z) LAI%LISTARRAY = LISTARRAY
+    !
+    DO WHILE (.NOT. (FOUND_TEMPORAL .AND. FOUND_SPATIAL) )
+      !
+      CALL GET_WORD(LAI_KEY,LINE,LLOC,N)
+      !
+      SELECT CASE (LAI_KEY)
+                                     CASE('TRANSIENT')
+                                                        LAI%TRANSIENT = TRUE
+                                                        FOUND_TEMPORAL= TRUE
+                                     CASE('STATIC')
+                                                        LAI%TRANSIENT = FALSE
+                                                        FOUND_TEMPORAL= TRUE
+                                     CASE('LIST')
+                                                      LAI%LISTLOAD = TRUE
+                                                      FOUND_SPATIAL= TRUE
+                                                      IF(ONLYARRAY) CALL WARNING_MESSAGE(LINE,IN,IOUT,MSG='LIST-ARRAY INPUT (LAI) PROPERTY "'//TYP//'" CAN ONLY BE LOADED AS "ARRAY", BUT "LIST" KEYWORD FOUND.'//NL//'PROGRAM WILL CONTINUE AS IF ARRAY WAS SPECIFIED.')
+                                                      !WRITE(IOUT, '(A,/A/)') 'WARNING: FMP PROPERTY '//TYP//' CAN ONLY BE LOADED AS "ARRAY", BUT "LIST" KEYWORD FOUND. PROGRAM WILL CONTINUE AS IF ARRAY WAS SPECIFIED. THE FOLLOWING LINE CONTAINS THE PROBLEM:',TRIM(LINE)
+                                     CASE('ARRAY')
+                                                      LAI%LISTLOAD  = FALSE
+                                                      LAI%LISTARRAY = FALSE
+                                                      FOUND_SPATIAL = TRUE
+                                                      IF(ONLYLIST) CALL WARNING_MESSAGE(LINE,IN,IOUT,MSG='LIST-ARRAY INPUT (LAI) PROPERTY "'//TYP//'" CAN ONLY BE LOADED AS "LIST", BUT "ARRAY" KEYWORD FOUND. PROGRAM WILL CONTINUE AS IF LIST WAS SPECIFIED.')
+                                                      !WRITE(IOUT, '(A,/A/)') 'WARNING: FMP PROPERTY '//TYP//' CAN ONLY BE LOADED AS LIST, BUT ARRAY KEYWORD FOUND. PROGRAM WILL CONTINUE AS IF LIST WAS SPECIFIED. THE FOLLOWING LINE CONTAINS THE PROBLEM:',TRIM(LINE)
+                                     CASE('PARRENT')
+                                                        LAI%PULL_PARRENT = TRUE
+                                                        LAI%TRANSIENT = FALSE
+                                                        RETURN
+                                     CASE('INTERNAL')
+                                                        IF(LAI%TRANSIENT) THEN
+                                                            LAI%TRANSIENT = FALSE
+                                                            CALL WARNING_MESSAGE(LINE,IN,IOUT,MSG='LIST-ARRAY INPUT (LAI) PROPERTY "'//TYP//'" FOUND KEYWORD INTERNAL, BUT THIS ONLY WORKS WITHIN THE STATIC OPTION OR IF TRANSIENT IS USED THEN IT MAY ONLY RESIDE WITHIN THE TRANSIENTE FILE READER (TFR).'//BLN//'THE TEMPORAL INPUT WAS CHANGED TO "STATIC INTERNAL".', INLINE=TRUE)
+                                                        END IF
+                                                        FOUND_TEMPORAL= TRUE
+                                                        LLOC = N
+                                                        EXIT
+                                     CASE('CONSTANT')
+                                                        LAI%IS_CONSTANT = TRUE
+                                                        LLOC = N
+                                                        EXIT
+                                     CASE('IXJ', 'NODE','DIM','DIMENSION','AUTO','AUTOCOUNT','AUTO-COUN')!T
+                                                      CALL STOP_ERROR(LINE,IN,IOUT,MSG='LIST-ARRAY INPUT (LAI) PROPERTY '//TYP//' DOES NOT SUPPORT COMPRESS ARRAY INPUT FORMAT, BUT "COMPRESS" KEYWORD WAS FOUND. PROGRAM CANNOT CONITUE WITH A COMPRESS ARRAY INPUT FORMAT FOR THIS INPUT TYPE. PLEASE CHANGE TO "LIST" OR "ARRAY" STYLE INPUT.', MSG2=MSG)
+                                     CASE DEFAULT
+                                                        LLOC = N
+                                                        EXIT
+      END SELECT
+    END DO
+    !
+    IF(.NOT. LAI%IS_CONSTANT) THEN
+        !
+        IF(.NOT. ONLY_STATIC                       .AND. .NOT. FOUND_TEMPORAL) CALL STOP_ERROR(LINE,IN,IOUT,'LIST-ARRAY INPUT (LAI) PROPERTY '//TYP//'. FAILED TO LOCATE "STATIC" OR "TRANSIENT" KEYWORD, WHICH IS REQUIRED FOR THIS PROPERTY.', MSG2=MSG)
+        IF(.NOT. ONLYLIST    .AND. .NOT. ONLYARRAY .AND. .NOT. FOUND_SPATIAL ) CALL STOP_ERROR(LINE,IN,IOUT,'LIST-ARRAY INPUT (LAI) PROPERTY '//TYP//'. FAILED TO LOCATE "LIST" OR "ARRAY" KEYWORD, WHICH IS REQUIRED FOR THIS PROPERTY.', MSG2=MSG)
+        !
+    END IF
+    !
+    IF(ONLYARRAY) LAI%LISTLOAD = FALSE
+    IF(ONLYLIST ) LAI%LISTLOAD = TRUE
+    !
+    IF(LAI%IS_CONSTANT) THEN
+                        LAI%TRANSIENT = FALSE
+                        IF(ONLYARRAY) THEN
+                                         LAI%LISTLOAD = FALSE
+                        ELSE
+                                         LAI%LISTLOAD = TRUE
+                        END IF
+    END IF
+    !
+    IF(ONLY_STATIC .AND. LAI%TRANSIENT)  CALL WARNING_MESSAGE(LINE,IN,IOUT,MSG='LIST-ARRAY INPUT (LAI) PROPERTY "'//TYP//'" CAN ONLY BE LOADED ONCE, BUT "TRANSIENT" KEYWORD WAS FOUND. PROGRAM WILL CONTINUE AS IF "STATIC" WAS SPECIFIED.')
+    IF(ONLY_STATIC) LAI%TRANSIENT = FALSE
+    !
+    IF (LAI%LISTLOAD) THEN
+            NOID = FALSE  !LIST LOADING REQUIRES ID TO BE SPECIFIED ON FIRST COLUMN
+            !
+            IF(LAI%LISTARRAY) THEN
+                                   LAI%LISTLOAD  = FALSE
+                                   ALLOCATE(CHARACTER(LINLEN):: LAI%ARRAY(LDIM2,LDIM1))
+            ELSE
+                                   ALLOCATE(CHARACTER(LINLEN):: LAI%LIST(LDIM1))
+            END IF
+    ELSE
+                                   ALLOCATE(CHARACTER(LINLEN):: LAI%ARRAY(NCOL,NROW))
+                                   !
+                                   NOID = TRUE   !ARRAY LOADING DOES NOT INCLUDE ID IN FIRST COLUMN
+    END IF
+    !
+    IF (.NOT. LAI%TRANSIENT ) THEN
+        IF (LAI%LISTLOAD ) THEN
+                               CALL ULOAD(LAI%LIST,  LLOC, LINE, IOUT, IN, IU, NOID=NOID, EX1_DIM=EX1_DIM, EX1_WORD=EX1_WORD, EX2_DIM=EX2_DIM, EX2_WORD=EX2_WORD, EX3_DIM=EX3_DIM, EX3_WORD=EX3_WORD, SFAC=LAI%SFAC, SCRATCH=SCRATCH, NO_BINARY=NO_BINARY, ENTIRE_LINE=ENTIRE_LINE, MSG=LAI%ERRMSG)
+        ELSE
+                               CALL ULOAD(LAI%ARRAY, LLOC, LINE, IOUT, IN, IU, NOID=NOID, EX1_DIM=EX1_DIM, EX1_WORD=EX1_WORD, EX2_DIM=EX2_DIM, EX2_WORD=EX2_WORD, EX3_DIM=EX3_DIM, EX3_WORD=EX3_WORD, SFAC=LAI%SFAC, SCRATCH=SCRATCH, NO_BINARY=NO_BINARY, MSG=LAI%ERRMSG) !CANNOT DO ARRAY OF ENTIRE LINE
+        END IF
+        LAI%TRUNCATED = LLOC < Z
+    ELSE
+        IF (LAI%LISTLOAD ) THEN
+                               CALL LAI%TFR%INIT(        LLOC, LINE, IOUT, IN, NOID=NOID, EX1_DIM=EX1_DIM, EX1_WORD=EX1_WORD, EX2_DIM=EX2_DIM, EX2_WORD=EX2_WORD, EX3_DIM=EX3_DIM, EX3_WORD=EX3_WORD, NO_BINARY=NO_BINARY, ENTIRE_LINE=ENTIRE_LINE)
+        ELSE
+                               CALL LAI%TFR%INIT(        LLOC, LINE, IOUT, IN, NOID=NOID, EX1_DIM=EX1_DIM, EX1_WORD=EX1_WORD, EX2_DIM=EX2_DIM, EX2_WORD=EX2_WORD, EX3_DIM=EX3_DIM, EX3_WORD=EX3_WORD, NO_BINARY=NO_BINARY)
+        END IF
+        !
+        CALL LOAD_NEXT_INPUT_STR(LAI)
+    END IF
+    !
+    IF (LAI%LISTLOAD .OR. LAI%LISTARRAY) THEN
+        LINE = 'PROPERTY IS SET TO BE READ IN AS A  LIST OF PROPERTIES THAT IS READ '
+    ELSE
+        LINE = 'PROPERTY IS SET TO BE READ IN AS AN ARRAY (NROW,NCOL)  THAT IS READ '
+    END IF
+    !
+    IF (LAI%TRANSIENT) THEN
+        LINE = TRIM(LINE)//' IN EVERY STRESS PERIOD'
+    ELSE
+        LINE = TRIM(LINE)//' ONCE FOR THE SIMULATION'
+    END IF
+    !
+  END SUBROUTINE
+  !
+  SUBROUTINE LOAD_NEXT_INPUT_STR(LAI)
+    CLASS(LIST_ARRAY_INPUT_STR), INTENT(INOUT):: LAI
+    !
+    IF(LAI%TRANSIENT) THEN
+          IF(LAI%LISTLOAD) THEN
+                               CALL LAI%TFR%NEXT(LAI%LIST, LAI%SFAC, MSG=LAI%ERRMSG)
+          ELSE
+                               CALL LAI%TFR%NEXT(LAI%ARRAY,LAI%SFAC, MSG=LAI%ERRMSG)
+          END IF
+          LAI%TRUNCATED = LAI%TFR%TRUNCATED
+    END IF
+  END SUBROUTINE
+  !
+  PURE FUNCTION GET_VALUE(LAI, ID, DIM1, DIM2, LDIM, ID_COL, IR, IC, IV, FROM_START)  RESULT(VAL)  !NOTE EXPECTS INDEXES ARE CORRECT -- NO CHECKING
+    CLASS(LIST_ARRAY_INPUT), INTENT(IN):: LAI   
+    INTEGER,                 INTENT(IN):: ID
+    INTEGER,       OPTIONAL, INTENT(IN):: DIM1, DIM2
+    INTEGER,       OPTIONAL, INTENT(IN):: LDIM
+    INTEGER,       OPTIONAL, INTENT(IN):: ID_COL, IR, IC, IV
+    LOGICAL,       OPTIONAL, INTENT(IN):: FROM_START
+    REAL(REAL64):: VAL
+    !
+    IF(LAI%LISTLOAD) THEN
+                               VAL = LAI%LIST(ID)
+    ELSEIF(LAI%LISTARRAY) THEN
+                               VAL = LAI%ARRAY(LDIM,ID)
+    !!!ELSEIF(LAI%HAS_IXJ) THEN                            ! SCOTT change back to (IN)
+    !!!                           CALL LAI%IXJ%GET_VALUE_IXJ(VAL, IV, ID, ID_COL, DIM1, IR, DIM2, IC, FROM_START=FROM_START)
+    ELSE
+                               VAL = LAI%ARRAY(DIM1, DIM2)
+    END IF
+  END FUNCTION
+  !
+  PURE FUNCTION GET_VALUE_INT(LAI, ID, DIM1, DIM2, LDIM, ID_COL, IR, IC, IV, FROM_START)  RESULT(VAL)  !NOTE EXPECTS INDEXES ARE CORRECT -- NO CHECKING
+    CLASS(LIST_ARRAY_INPUT_INT), INTENT(IN):: LAI   
+    INTEGER,                     INTENT(IN):: ID
+    INTEGER,       OPTIONAL,     INTENT(IN):: DIM1, DIM2
+    INTEGER,       OPTIONAL,     INTENT(IN):: LDIM
+    INTEGER,       OPTIONAL,     INTENT(IN):: ID_COL, IR, IC, IV
+    LOGICAL,       OPTIONAL,     INTENT(IN):: FROM_START
+    INTEGER:: VAL
+    !
+    IF(LAI%LISTLOAD) THEN
+                               VAL = LAI%LIST(ID)
+    ELSEIF(LAI%LISTARRAY) THEN
+                               VAL = LAI%ARRAY(LDIM,ID)
+    !!!ELSEIF(LAI%HAS_IXJ) THEN
+    !!!                           CALL LAI%IXJ%GET_J_IXJ(VAL, IV, ID, ID_COL, DIM1, IR, DIM2, IC, FROM_START=FROM_START)  ! SCOTT change back to (IN)
+    ELSE
+                               VAL = LAI%ARRAY(DIM1, DIM2)
+    END IF
+  END FUNCTION
+  !
+  FUNCTION GET_VALUE_STR(LAI, ID, DIM1, DIM2, LDIM)  RESULT(VAL)  !NOTE EXPECTS INDEXES ARE CORRECT -- NO CHECKING
+    CLASS(LIST_ARRAY_INPUT_STR), INTENT(IN):: LAI
+    INTEGER,                     INTENT(IN):: ID
+    INTEGER,       OPTIONAL,     INTENT(IN):: DIM1, DIM2
+    INTEGER,       OPTIONAL,     INTENT(IN):: LDIM
+    CHARACTER(:), ALLOCATABLE:: VAL
+    !
+    ALLOCATE(CHARACTER(LAI%LINLEN):: VAL)
+    !
+    IF(LAI%LISTLOAD) THEN
+                               VAL(:) = LAI%LIST(ID)
+    ELSEIF(LAI%LISTARRAY) THEN
+                               VAL(:) = LAI%ARRAY(LDIM,ID)
+    ELSE
+                               VAL(:) = LAI%ARRAY(DIM1, DIM2)
+    END IF
+  END FUNCTION
+  !
+  PURE FUNCTION COMBINE_LAI_TO_LINES(LAI)  RESULT(VAL)  !NOTE EXPECTS INDEXES ARE CORRECT -- NO CHECKING
+    CLASS(LIST_ARRAY_INPUT_STR), INTENT(IN):: LAI
+    CHARACTER(:), ALLOCATABLE:: VAL
+    INTEGER:: I,J
+    !
+    VAL=NL
+    IF(LAI%LISTLOAD) THEN
+                         DO I=1, UBOUND(LAI%LIST, 1)
+                               VAL = VAL//'"'//TRIM(LAI%LIST(I))//'"'//NL
+                         END DO
+    ELSE
+                         DO I=1, UBOUND(LAI%ARRAY, 2)
+                         DO J=1, UBOUND(LAI%ARRAY, 1)
+                               VAL = VAL//'"'//LAI%ARRAY(J,I)//'"  '
+                         END DO
+                         VAL = VAL//NL
+                         END DO
+    END IF
+  END FUNCTION
+  !
+  SUBROUTINE LIST_ARRAY_INPUT_BASE_DEALLOCATE(LAI)
+    CLASS(LIST_ARRAY_INPUT_BASE), INTENT(INOUT)::LAI
+    !
+    LAI%INUSE        = FALSE
+    LAI%TRANSIENT    = FALSE
+    LAI%LISTLOAD     = FALSE
+    LAI%LISTARRAY    = FALSE
+    LAI%NO_BINARY    = FALSE
+    LAI%IS_CONSTANT  = FALSE
+    LAI%PULL_PARRENT = FALSE
+    LAI%STORE_ID     = FALSE
+    IF(ALLOCATED(LAI%TYP   )) DEALLOCATE(LAI%TYP)
+    IF(ALLOCATED(LAI%ERRMSG)) DEALLOCATE(LAI%ERRMSG)
+    IF(ALLOCATED(LAI%ID    )) DEALLOCATE(LAI%ID)
+    CALL LAI%TFR%DESTROY()
+    !
+  END SUBROUTINE
+  !
+  SUBROUTINE LIST_ARRAY_INPUT_DEALLOCATE_ALL_TYPES(LAI)
+    CLASS(LIST_ARRAY_INPUT_BASE), INTENT(INOUT)::LAI
+    !
+    CALL LIST_ARRAY_INPUT_BASE_DEALLOCATE(LAI)
+    !
+    SELECT TYPE(LAI)
+    TYPE IS (LIST_ARRAY_INPUT)
+                                   IF(ALLOCATED(LAI%LIST) ) DEALLOCATE(LAI%LIST)
+                                   IF(ALLOCATED(LAI%ARRAY)) DEALLOCATE(LAI%ARRAY)
+                                   IF(ALLOCATED(LAI%IXJ)  ) DEALLOCATE(LAI%IXJ)
+                                   !
+                                   CALL LAI%SFAC%DESTROY()
+    TYPE IS (LIST_ARRAY_INPUT_INT)
+                                   IF(ALLOCATED(LAI%LIST) ) DEALLOCATE(LAI%LIST)
+                                   IF(ALLOCATED(LAI%ARRAY)) DEALLOCATE(LAI%ARRAY)
+                                   !
+    TYPE IS (LIST_ARRAY_INPUT_STR)
+                                   IF(ALLOCATED(LAI%LIST) ) DEALLOCATE(LAI%LIST)
+                                   IF(ALLOCATED(LAI%ARRAY)) DEALLOCATE(LAI%ARRAY)
+                                   !
+                                   LAI%LINLEN = Z
+                                   CALL LAI%SFAC%INIT()
+    END SELECT
+    !
+  END SUBROUTINE
+  !
+  SUBROUTINE FINAL_LIST_ARRAY_INPUT(LAI)
+    TYPE(LIST_ARRAY_INPUT),INTENT(INOUT)::LAI
+    !
+    CALL LIST_ARRAY_INPUT_DEALLOCATE_ALL_TYPES(LAI)
+    !
+  END SUBROUTINE
+  !
+  SUBROUTINE FINAL_LIST_ARRAY_INPUT_INT(LAI)
+    TYPE(LIST_ARRAY_INPUT_INT),INTENT(INOUT)::LAI
+    !
+    CALL LIST_ARRAY_INPUT_DEALLOCATE_ALL_TYPES(LAI)
+    !
+  END SUBROUTINE
+  !
+  SUBROUTINE FINAL_LIST_ARRAY_INPUT_STR(LAI)
+    TYPE(LIST_ARRAY_INPUT_STR),INTENT(INOUT)::LAI
+    !
+    CALL LIST_ARRAY_INPUT_DEALLOCATE_ALL_TYPES(LAI)
+    !
+  END SUBROUTINE
+  !
+END MODULE

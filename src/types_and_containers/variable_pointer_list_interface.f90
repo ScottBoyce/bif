@@ -1,0 +1,198 @@
+!
+MODULE VARIABLE_POINTER_LIST_INTERFACE!, ONLY: VAR_POINTER_LIST
+  USE CONSTANTS
+  IMPLICIT NONE
+  PRIVATE
+  PUBLIC:: VAR_POINTER_LIST
+  !
+  TYPE VAR_VAL 
+    DOUBLE PRECISION, POINTER:: D => NULL()
+  END TYPE
+  !
+  TYPE VAR_POINTER_LIST 
+      INTEGER:: N = Z  !TOTAL DIM
+      INTEGER:: P = Z  !ASSOCIATED DIM
+      TYPE(VAR_VAL), DIMENSION(:), ALLOCATABLE:: LST
+      !
+      CONTAINS
+      !
+      PROCEDURE, PASS(VAR):: INIT     => INITIALIZE_VAR_VAL_TYPE!(N)
+      PROCEDURE, PASS(VAR):: ADD      => ADD_VAL_VAR_VAL_TYPE  !(VAL)
+      PROCEDURE, PASS(VAR):: SUM      => SUM_VAR_VAL_TYPE      !()
+      PROCEDURE, PASS(VAR):: SUM_DIM  => SUM_RANGE_VAR_VAL_TYPE!(ISTART, [ISTOP])
+      !
+      PROCEDURE, PASS(VAR):: ADJUST_MAXSUM => ADJUST_MAXSUM_VAR_POINTER_LIST!(MAXSUM)            
+      PROCEDURE, PASS(VAR):: REDUCE_SUM_BY                          !(REDUCER)
+      PROCEDURE, PASS(VAR):: NULL     => NULLIFY_VAR_VAL_TYPE
+      FINAL:: FINAL_DESTROY_VAR_VAL_TYPE
+  END TYPE
+    
+    CONTAINS
+    !
+  PURE SUBROUTINE INITIALIZE_VAR_VAL_TYPE(VAR, N)  
+    CLASS(VAR_POINTER_LIST), INTENT(INOUT):: VAR
+    INTEGER, INTENT(IN):: N
+    !
+    IF(.NOT. ALLOCATED(VAR%LST)) THEN
+        ALLOCATE(VAR%LST(N))
+    ELSEIF(ALLOCATED(VAR%LST) .AND. SIZE(VAR%LST).NE.N) THEN
+        DEALLOCATE(VAR%LST)
+        ALLOCATE(VAR%LST(N))
+    END IF
+    !
+    VAR%N = N
+    VAR%P = Z
+    !
+  END SUBROUTINE
+    !
+  SUBROUTINE ADD_VAL_VAR_VAL_TYPE(VAR, VAL)  
+    CLASS(VAR_POINTER_LIST),   INTENT(INOUT):: VAR
+    DOUBLE PRECISION, INTENT(IN), TARGET:: VAL
+    !
+    TYPE(VAR_POINTER_LIST):: TMP
+    INTEGER::I, P
+    !
+    IF(VAR%N == Z) CALL INITIALIZE_VAR_VAL_TYPE(VAR, ONE)  
+    !
+    VAR%P = VAR%P + ONE
+    !
+    P = VAR%P
+    !
+    IF(VAR%P > VAR%N) THEN
+        !
+        CALL INITIALIZE_VAR_VAL_TYPE(TMP, P)
+        !
+        DO I=ONE, VAR%N
+                       TMP%LST(I)%D => VAR%LST(I)%D
+        END DO
+        !
+        CALL INITIALIZE_VAR_VAL_TYPE(VAR, P)  
+        !
+        VAR%P = P 
+        DO I=ONE, VAR%N
+                       VAR%LST(I)%D => TMP%LST(I)%D
+        END DO
+    END IF
+    !
+    VAR%LST(P)%D => VAL
+    !
+  END SUBROUTINE
+  !
+  PURE FUNCTION SUM_VAR_VAL_TYPE(VAR) RESULT(SM)  
+    CLASS(VAR_POINTER_LIST), INTENT(IN):: VAR
+    DOUBLE PRECISION:: SM
+    INTEGER::I
+    !
+    SM = DZ
+    DO CONCURRENT (I=ONE:VAR%P); SM = SM + VAR%LST(I)%D
+    END DO
+    !
+  END FUNCTION
+  !
+  PURE FUNCTION SUM_RANGE_VAR_VAL_TYPE(VAR,ISTART,ISTOP) RESULT(SM)  
+    CLASS(VAR_POINTER_LIST), INTENT(IN):: VAR
+    INTEGER,         INTENT(IN):: ISTART
+    INTEGER,OPTIONAL,INTENT(IN):: ISTOP
+    DOUBLE PRECISION:: SM
+    INTEGER::I
+    !
+    SM = DZ
+    !
+    IF(PRESENT(ISTOP)) THEN
+          IF (ISTOP > VAR%P) THEN 
+              DO CONCURRENT (I=ISTART:VAR%P); SM = SM + VAR%LST(I)%D
+              END DO
+          ELSE
+              DO CONCURRENT (I=ISTART:ISTOP); SM = SM + VAR%LST(I)%D
+              END DO
+          END IF
+    ELSEIF(ISTART == VAR%P) THEN
+                                              SM = VAR%LST(VAR%P)%D
+    ELSEIF(ISTART <  VAR%P) THEN
+              DO CONCURRENT (I=ISTART:VAR%P); SM = SM + VAR%LST(I)%D
+              END DO
+    END IF
+    !
+  END FUNCTION
+  !
+  PURE SUBROUTINE ADJUST_MAXSUM_VAR_POINTER_LIST(VAR, MAXSUM)
+    CLASS(VAR_POINTER_LIST),  INTENT(INOUT):: VAR
+    DOUBLE PRECISION, INTENT(IN   )::MAXSUM
+    DOUBLE PRECISION:: TOT
+    INTEGER:: I
+    !
+    TOT = SUM_VAR_VAL_TYPE(VAR)
+    !
+    DO I=ONE, VAR%P
+          IF(TOT > MAXSUM) THEN
+              !
+              VAR%LST(I)%D = MAXSUM - SUM_RANGE_VAR_VAL_TYPE(VAR,I+ONE)
+              !
+              IF(VAR%LST(I)%D < DZ) VAR%LST(I)%D = DZ
+              !
+              TOT = SUM_VAR_VAL_TYPE(VAR)
+          ELSE
+              EXIT
+          END IF
+    END DO
+    !
+  END SUBROUTINE
+  !
+  PURE SUBROUTINE REDUCE_SUM_BY(VAR, REDUCER) !REDUCES BY THE |REDUCER|
+    CLASS(VAR_POINTER_LIST), INTENT(INOUT):: VAR
+    DOUBLE PRECISION,        INTENT(IN):: REDUCER
+    DOUBLE PRECISION:: RED
+    INTEGER:: I
+    !
+    IF(REDUCER .NE. DZ) THEN
+        !
+        IF(REDUCER < DZ) THEN
+            RED = REDUCER
+        ELSE
+            RED = DNEG*REDUCER
+        END IF
+        !
+        DO I=ONE, VAR%P
+            VAR%LST(I)%D = VAR%LST(I)%D + RED
+            IF( VAR%LST(I)%D < DZ ) THEN
+                RED = VAR%LST(I)%D 
+                VAR%LST(I)%D = DZ
+            ELSE
+                RED = DZ
+                EXIT
+            END IF
+        END DO
+    END IF
+    !
+  END SUBROUTINE
+  !
+  PURE SUBROUTINE NULLIFY_VAR_VAL_TYPE(VAR)  
+    CLASS(VAR_POINTER_LIST),   INTENT(INOUT):: VAR
+    INTEGER:: I
+    !
+    DO I=ONE, VAR%N
+                   VAR%LST(I)%D => NULL()
+    END DO
+    !
+    VAR%P = Z
+    !
+  END SUBROUTINE
+  !
+  SUBROUTINE FINAL_DESTROY_VAR_VAL_TYPE(VAR)  
+    TYPE(VAR_POINTER_LIST),   INTENT(INOUT):: VAR
+    INTEGER:: I
+    !
+    DO I=ONE, VAR%N
+                   VAR%LST(I)%D => NULL()
+    END DO
+    !
+    IF(ALLOCATED(VAR%LST)) DEALLOCATE(VAR%LST)
+    !
+    VAR%P = Z
+    VAR%N = Z
+    !
+  END SUBROUTINE
+  !
+END MODULE
+!
+!

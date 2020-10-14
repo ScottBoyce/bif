@@ -1,0 +1,147 @@
+
+MODULE INTEGER_ARRAY_BUILDER_INTERFACE!, ONLY: INTEGER_ARRAY_BUILDER
+  IMPLICIT NONE
+  PRIVATE
+  PUBLIC:: INTEGER_ARRAY_BUILDER
+  !
+  !
+  ! Constants used internally to module ----------------------------------------------------
+  !
+  LOGICAL, PARAMETER:: TRUE  = .TRUE.
+  LOGICAL, PARAMETER:: FALSE = .FALSE.
+  INTEGER, PARAMETER:: Z   = 0
+  INTEGER, PARAMETER:: ONE = 1
+  INTEGER, PARAMETER:: TWO = 2
+  !
+  ! ----------------------------------------------------------------------------------------
+  !
+  TYPE INTEGER_ARRAY_BUILDER
+      INTEGER:: N=Z
+      INTEGER, DIMENSION(:),ALLOCATABLE:: INT 
+      !
+  CONTAINS
+  PROCEDURE, PASS(ARR):: INIT    => INITIALIZE_INTEGER_ARRAY !()
+  PROCEDURE, PASS(ARR):: ADD     => ADD_INTEGER              !(I)
+  PROCEDURE, PASS(ARR)::            ADD_UNIQUE               !(I)
+  PROCEDURE, PASS(ARR)::            IS_UNIQUE                !(I)
+  PROCEDURE, PASS(ARR)::            NOT_UNIQUE               !(I)
+  PROCEDURE, PASS(ARR):: POP     => REMOVE_LOCATION          !(POS)
+  PROCEDURE, PASS(ARR):: DESTROY => INITIALIZE_INTEGER_ARRAY !()  --NOTE SAME AS INIT
+  FINAL:: FINAL_DEALLOCATE_INTEGER_ARRAY
+  END TYPE
+  !
+  CONTAINS
+  !
+  PURE SUBROUTINE INITIALIZE_INTEGER_ARRAY(ARR)
+    CLASS(INTEGER_ARRAY_BUILDER),INTENT(INOUT):: ARR
+    !
+    IF(ALLOCATED(ARR%INT)) DEALLOCATE(ARR%INT) 
+    !
+    ARR%N = Z
+    !
+  END SUBROUTINE
+  !
+  PURE SUBROUTINE ADD_INTEGER(ARR,I)
+    CLASS(INTEGER_ARRAY_BUILDER),INTENT(INOUT):: ARR
+    INTEGER,                     INTENT(IN   ):: I
+    INTEGER, DIMENSION(:), ALLOCATABLE:: TMP
+    !
+    IF(ARR%N > Z) THEN
+        ALLOCATE(TMP, SOURCE=[ARR%INT,I])
+        CALL MOVE_ALLOC(TMP,ARR%INT)
+    ELSE
+        ALLOCATE(ARR%INT(ONE), SOURCE=I)
+    END IF
+    !
+    ARR%N = ARR%N + ONE
+    !
+  END SUBROUTINE
+  !
+  PURE SUBROUTINE ADD_UNIQUE(ARR,I)
+    CLASS(INTEGER_ARRAY_BUILDER),INTENT(INOUT):: ARR
+    INTEGER,                     INTENT(IN   ):: I
+    INTEGER, DIMENSION(:), ALLOCATABLE:: TMP
+    !
+    IF(ARR%N > Z) THEN
+        IF(ALL(I.NE.ARR%INT)) THEN
+              ALLOCATE(TMP, SOURCE=[ARR%INT,I])
+              CALL MOVE_ALLOC(TMP,ARR%INT)
+              ARR%N = ARR%N + ONE
+        END IF
+    ELSE
+        ALLOCATE(ARR%INT(ONE), SOURCE=I)
+        ARR%N = ONE
+    END IF
+    !
+  END SUBROUTINE
+  !
+  PURE FUNCTION IS_UNIQUE(ARR,I) RESULT(ANS)
+    CLASS(INTEGER_ARRAY_BUILDER),INTENT(IN):: ARR
+    INTEGER,                     INTENT(IN):: I
+    LOGICAL:: ANS
+    !
+    IF(ARR%N > Z) THEN
+        ANS = ALL(I.NE.ARR%INT)
+    ELSE
+        ANS = TRUE
+    END IF
+    !
+  END FUNCTION
+  !
+  PURE FUNCTION NOT_UNIQUE(ARR,I) RESULT(ANS)
+    CLASS(INTEGER_ARRAY_BUILDER),INTENT(IN):: ARR
+    INTEGER,                     INTENT(IN):: I
+    LOGICAL:: ANS
+    !
+    IF(ARR%N > Z) THEN
+        ANS = ANY(I == ARR%INT)
+    ELSE
+        ANS = FALSE
+    END IF
+    !
+  END FUNCTION
+  !
+  PURE SUBROUTINE REMOVE_LOCATION(ARR,POS)
+    CLASS(INTEGER_ARRAY_BUILDER),INTENT(INOUT):: ARR
+    INTEGER, OPTIONAL,           INTENT(IN   ):: POS
+    INTEGER, DIMENSION(:), ALLOCATABLE:: TMP
+    INTEGER:: N
+    !
+    N = ARR%N - ONE
+    !
+    IF(ARR%N <= ONE) THEN
+        !
+        N = Z
+        IF(ALLOCATED(ARR%INT)) DEALLOCATE(ARR%INT) 
+        !
+    ELSEIF(PRESENT(POS)) THEN
+        IF(POS == ONE) THEN 
+                                 ALLOCATE(TMP, SOURCE=ARR%INT(TWO:))
+                                 CALL MOVE_ALLOC(TMP,ARR%INT)
+        ELSEIF(POS == ARR%N) THEN
+                                 ALLOCATE(TMP, SOURCE=ARR%INT(:N))
+                                 CALL MOVE_ALLOC(TMP,ARR%INT)
+        ELSE
+                                 ALLOCATE(TMP(N))
+                                 TMP(:POS-ONE ) = ARR%INT(:POS-ONE )
+                                 TMP( POS+ONE:) = ARR%INT( POS+ONE:)
+                                 CALL MOVE_ALLOC(TMP,ARR%INT)
+        END IF
+    ELSE
+        ALLOCATE(TMP, SOURCE=ARR%INT(:N))
+        CALL MOVE_ALLOC(TMP,ARR%INT)
+    END IF
+    !
+    ARR%N = N
+    !
+  END SUBROUTINE
+  !
+  PURE SUBROUTINE FINAL_DEALLOCATE_INTEGER_ARRAY(ARR)
+    TYPE(INTEGER_ARRAY_BUILDER),INTENT(INOUT):: ARR
+    !
+    CALL INITIALIZE_INTEGER_ARRAY(ARR)
+    !
+  END SUBROUTINE
+  !
+END MODULE
+!

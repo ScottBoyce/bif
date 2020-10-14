@@ -1,0 +1,354 @@
+!
+! CODE DEVELOPED BY SCOTT E BOYCE
+!                   CONTACT <seboyce@usgs.gov> or <Boyce@engineer.com>
+!
+MODULE CAST_TO_STRING!, ONLY: CAST2STR
+  USE, INTRINSIC:: ISO_FORTRAN_ENV, ONLY: INT8, INT16, INT32, INT64, REAL32, REAL64 !CHARACTER_STORAGE_SIZE   !NO REAL128 SUPPORT
+  !USE, INTRINSIC:: ISO_C_BINDING,   ONLY: C_SIZEOF -> Better to do STORAGE_SIZE(X)/8 instead
+  ! ASSUMES CHARACTER(1) IS 1 BYTE (viz. CHARACTER_STORAGE_SIZE = 8)
+  !
+  ! CAST2STR(X)       is an interface to all basic Fortran data types to convert to a character type
+  ! cast_to_string(X) is a function that converts anything, CLASS(*), to a character type
+  !
+  IMPLICIT NONE(TYPE, EXTERNAL)
+  PRIVATE
+  PUBLIC::  CAST2STR
+  !
+  INTERFACE CAST2STR
+                    !!!MODULE PROCEDURE CAST_TO_STRING_0D  !Uses CLASS(*) and C_SIZEOF to determine transfer
+                    !!!MODULE PROCEDURE CAST_TO_STRING_1D
+                    !!!MODULE PROCEDURE CAST_TO_STRING_2D
+                    !!!MODULE PROCEDURE CAST_TO_STRING_3D
+                    !!!!
+                    !!!MODULE PROCEDURE CAST_TO_STRING_0D_SIZE
+                    !!!MODULE PROCEDURE CAST_TO_STRING_1D_SIZE
+                    !!!MODULE PROCEDURE CAST_TO_STRING_2D_SIZE
+                    !!!MODULE PROCEDURE CAST_TO_STRING_3D_SIZE
+                    !
+                    MODULE PROCEDURE CAST_SUPERSHORT_TO_STRING_0D     ! Former method, that now conflicts with CLASS(*) -- Note also not using DIMENSION(..) for implied dimension
+                    MODULE PROCEDURE CAST_SUPERSHORT_TO_STRING_1D
+                    MODULE PROCEDURE CAST_SUPERSHORT_TO_STRING_2D
+                    MODULE PROCEDURE CAST_SUPERSHORT_TO_STRING_3D
+                    !
+                    MODULE PROCEDURE CAST_SHORT_TO_STRING_0D
+                    MODULE PROCEDURE CAST_SHORT_TO_STRING_1D
+                    MODULE PROCEDURE CAST_SHORT_TO_STRING_2D
+                    MODULE PROCEDURE CAST_SHORT_TO_STRING_3D
+                    !
+                    MODULE PROCEDURE CAST_INT_TO_STRING_0D
+                    MODULE PROCEDURE CAST_INT_TO_STRING_1D
+                    MODULE PROCEDURE CAST_INT_TO_STRING_2D
+                    MODULE PROCEDURE CAST_INT_TO_STRING_3D
+                    !
+                    MODULE PROCEDURE CAST_LONG_TO_STRING_0D
+                    MODULE PROCEDURE CAST_LONG_TO_STRING_1D
+                    MODULE PROCEDURE CAST_LONG_TO_STRING_2D
+                    MODULE PROCEDURE CAST_LONG_TO_STRING_3D
+                    !
+                    MODULE PROCEDURE CAST_FLOAT_TO_STRING_0D
+                    MODULE PROCEDURE CAST_FLOAT_TO_STRING_1D
+                    MODULE PROCEDURE CAST_FLOAT_TO_STRING_2D
+                    MODULE PROCEDURE CAST_FLOAT_TO_STRING_3D
+                    !
+                    MODULE PROCEDURE CAST_DBLE_TO_STRING_0D
+                    MODULE PROCEDURE CAST_DBLE_TO_STRING_1D
+                    MODULE PROCEDURE CAST_DBLE_TO_STRING_2D
+                    MODULE PROCEDURE CAST_DBLE_TO_STRING_3D
+  END INTERFACE
+  !
+  CONTAINS
+  !
+  ! Function that converts anything to string
+  !
+  !!!PURE FUNCTION cast_to_string(VAL) RESULT(STR)
+  !!!  !USE ISO_C_BINDING, ONLY: C_SIZEOF
+  !!!  CLASS(*), INTENT(IN):: VAL
+  !!!  CHARACTER(C_SIZEOF(X)):: STR
+  !!!  !
+  !!!  STR = TRANSFER(VAL,STR)
+  !!!  !
+  !!!END FUNCTION
+  !
+  ! -- The following commented code does not compile with gfortran. Instead not using CLASS(*)
+  !
+  !!!PURE FUNCTION CAST_TO_STRING_0D(X) RESULT(STR)
+  !!!CLASS(*),                INTENT(IN):: X
+  !!!CHARACTER(C_SIZEOF(X)):: STR
+  !!!!
+  !!!STR = TRANSFER(X,STR)
+  !!!!
+  !!!END FUNCTION
+  !!!!
+  !!!PURE FUNCTION CAST_TO_STRING_1D(X) RESULT(STR)
+  !!!CLASS(*), DIMENSION(:), INTENT(IN):: X
+  !!!CHARACTER(C_SIZEOF(X)):: STR
+  !!!!
+  !!!STR = TRANSFER(X,STR)
+  !!!!
+  !!!END FUNCTION
+  !!!!
+  !!!PURE FUNCTION CAST_TO_STRING_2D(X) RESULT(STR)
+  !!!CLASS(*), DIMENSION(:,:), INTENT(IN):: X
+  !!!CHARACTER(C_SIZEOF(X)):: STR
+  !!!!
+  !!!STR = TRANSFER(X,STR)
+  !!!!
+  !!!END FUNCTION
+  !!!!
+  !!!PURE FUNCTION CAST_TO_STRING_3D(X) RESULT(STR)
+  !!!CLASS(*), DIMENSION(:,:,:), INTENT(IN):: X
+  !!!CHARACTER(C_SIZEOF(X)):: STR
+  !!!!
+  !!!STR = TRANSFER(X,STR)
+  !!!!
+  !!!END FUNCTION
+  !!!!
+  !!!! -------------------------------------------------------------------------------
+  !!!! -------------------------------------------------------------------------------
+  !!!! -------------------------------------------------------------------------------
+  !!!!
+  !!!!
+  !!!FUNCTION CAST_TO_STRING_0D_SIZE(X, SIZE) RESULT(STR)
+  !!!CLASS(*),                INTENT(IN):: X
+  !!!INTEGER,                 INTENT(OUT):: SIZE
+  !!!CHARACTER(C_SIZEOF(X)):: STR
+  !!!!
+  !!!SIZE = LEN(STR)
+  !!!STR  = TRANSFER(X,STR)
+  !!!!
+  !!!END FUNCTION
+  !!!!
+  !!!FUNCTION CAST_TO_STRING_1D_SIZE(X, SIZE) RESULT(STR)
+  !!!CLASS(*), DIMENSION(:), INTENT(IN):: X
+  !!!INTEGER,                INTENT(OUT):: SIZE
+  !!!CHARACTER(C_SIZEOF(X)):: STR
+  !!!!
+  !!!SIZE = LEN(STR)
+  !!!STR  = TRANSFER(X,STR)
+  !!!!
+  !!!END FUNCTION
+  !!!!
+  !!!FUNCTION CAST_TO_STRING_2D_SIZE(X, SIZE) RESULT(STR)
+  !!!CLASS(*), DIMENSION(:,:), INTENT(IN):: X
+  !!!INTEGER,                 INTENT(OUT):: SIZE
+  !!!CHARACTER(C_SIZEOF(X)):: STR
+  !!!!
+  !!!SIZE = LEN(STR)
+  !!!STR  = TRANSFER(X,STR)
+  !!!!
+  !!!END FUNCTION
+  !!!!
+  !!!FUNCTION CAST_TO_STRING_3D_SIZE(X, SIZE) RESULT(STR)
+  !!!CLASS(*), DIMENSION(:,:,:), INTENT(IN):: X
+  !!!INTEGER,                    INTENT(OUT):: SIZE
+  !!!CHARACTER(C_SIZEOF(X)):: STR
+  !!!!
+  !!!SIZE = LEN(STR)
+  !!!STR  = TRANSFER(X,STR)
+  !!!!
+  !!!END FUNCTION
+  !
+  ! -------------------------------------------------------------------------------
+  ! -------------------------------------------------------------------------------
+  ! -------------------------------------------------------------------------------
+  !
+  PURE FUNCTION CAST_SUPERSHORT_TO_STRING_0D(X) RESULT(STR)
+  INTEGER(INT8), INTENT(IN):: X
+  CHARACTER(1):: STR
+  !
+  STR = TRANSFER(X,STR)
+  !
+  END FUNCTION
+  !
+  PURE FUNCTION CAST_SHORT_TO_STRING_0D(X) RESULT(STR)
+  INTEGER(INT16), INTENT(IN):: X
+  CHARACTER(2):: STR
+  !
+  STR = TRANSFER(X,STR)
+  !
+  END FUNCTION
+  !
+  PURE FUNCTION CAST_INT_TO_STRING_0D(X) RESULT(STR)
+  INTEGER(INT32), INTENT(IN):: X
+  CHARACTER(4):: STR
+  !
+  STR = TRANSFER(X,STR)
+  !
+  END FUNCTION
+  !
+  PURE FUNCTION CAST_LONG_TO_STRING_0D(X) RESULT(STR)
+  INTEGER(INT64), INTENT(IN):: X
+  CHARACTER(8):: STR
+  !
+  STR = TRANSFER(X,STR)
+  !
+  END FUNCTION
+  ! Could BeSupereded by CLASS(*)
+  PURE FUNCTION CAST_FLOAT_TO_STRING_0D(X) RESULT(STR)
+  REAL(REAL32), INTENT(IN):: X
+  CHARACTER(4):: STR
+  !
+  STR = TRANSFER(X,STR)
+  !
+  END FUNCTION
+  !
+  PURE FUNCTION CAST_DBLE_TO_STRING_0D(X) RESULT(STR)
+  REAL(REAL64), INTENT(IN):: X
+  CHARACTER(8):: STR
+  !
+  STR = TRANSFER(X,STR)
+  !
+  END FUNCTION
+  !
+  ! ==================================================================
+  !
+  PURE FUNCTION CAST_SUPERSHORT_TO_STRING_1D(X) RESULT(STR)
+  INTEGER(INT8), DIMENSION(:), CONTIGUOUS, INTENT(IN):: X
+  CHARACTER(SIZE(X)):: STR
+  !
+  STR = TRANSFER(X,STR)
+  !
+  END FUNCTION
+  !
+  PURE FUNCTION CAST_SHORT_TO_STRING_1D(X) RESULT(STR)
+  INTEGER(INT16), DIMENSION(:), CONTIGUOUS, INTENT(IN):: X
+  CHARACTER(2*SIZE(X)):: STR
+  !
+  STR = TRANSFER(X,STR)
+  !
+  END FUNCTION
+  !
+  PURE FUNCTION CAST_INT_TO_STRING_1D(X) RESULT(STR)
+  INTEGER(INT32), DIMENSION(:), CONTIGUOUS, INTENT(IN):: X
+  CHARACTER(4*SIZE(X)):: STR
+  !
+  STR = TRANSFER(X,STR)
+  !
+  END FUNCTION
+  !
+  PURE FUNCTION CAST_LONG_TO_STRING_1D(X) RESULT(STR)
+  INTEGER(INT64), DIMENSION(:), CONTIGUOUS, INTENT(IN):: X
+  CHARACTER(8*SIZE(X)):: STR
+  !
+  STR = TRANSFER(X,STR)
+  !
+  END FUNCTION
+  !
+  PURE FUNCTION CAST_FLOAT_TO_STRING_1D(X) RESULT(STR)
+  REAL(REAL32), DIMENSION(:), CONTIGUOUS, INTENT(IN):: X
+  CHARACTER(4*SIZE(X)):: STR
+  !
+  STR = TRANSFER(X,STR)
+  !
+  END FUNCTION
+  !
+  PURE FUNCTION CAST_DBLE_TO_STRING_1D(X) RESULT(STR)
+  REAL(REAL64), DIMENSION(:), CONTIGUOUS, INTENT(IN):: X
+  CHARACTER(8*SIZE(X)):: STR
+  !
+  STR = TRANSFER(X,STR)
+  !
+  END FUNCTION
+  !
+  ! ==================================================================
+  !
+  PURE FUNCTION CAST_SUPERSHORT_TO_STRING_2D(X) RESULT(STR)
+  INTEGER(INT8), DIMENSION(:,:), CONTIGUOUS, INTENT(IN):: X
+  CHARACTER(SIZE(X)):: STR
+  !
+  STR = TRANSFER(X,STR)
+  !
+  END FUNCTION
+  !
+  PURE FUNCTION CAST_SHORT_TO_STRING_2D(X) RESULT(STR)
+  INTEGER(INT16), DIMENSION(:,:), CONTIGUOUS, INTENT(IN):: X
+  CHARACTER(2*SIZE(X)):: STR
+  !
+  STR = TRANSFER(X,STR)
+  !
+  END FUNCTION
+  !
+  PURE FUNCTION CAST_INT_TO_STRING_2D(X) RESULT(STR)
+  INTEGER(INT32), DIMENSION(:,:), CONTIGUOUS, INTENT(IN):: X
+  CHARACTER(4*SIZE(X)):: STR
+  !
+  STR = TRANSFER(X,STR)
+  !
+  END FUNCTION
+  !
+  PURE FUNCTION CAST_LONG_TO_STRING_2D(X) RESULT(STR)
+  INTEGER(INT64), DIMENSION(:,:), CONTIGUOUS, INTENT(IN):: X
+  CHARACTER(8*SIZE(X)):: STR
+  !
+  STR = TRANSFER(X,STR)
+  !
+  END FUNCTION
+  !
+  PURE FUNCTION CAST_FLOAT_TO_STRING_2D(X) RESULT(STR)
+  REAL(REAL32), DIMENSION(:,:), CONTIGUOUS, INTENT(IN):: X
+  CHARACTER(4*SIZE(X)):: STR
+  !
+  STR = TRANSFER(X,STR)
+  !
+  END FUNCTION
+  !
+  PURE FUNCTION CAST_DBLE_TO_STRING_2D(X) RESULT(STR)
+  REAL(REAL64), DIMENSION(:,:), CONTIGUOUS, INTENT(IN):: X
+  CHARACTER(8*SIZE(X)):: STR
+  !
+  STR = TRANSFER(X,STR)
+  !
+  END FUNCTION
+  !
+  ! ==================================================================
+  !
+  PURE FUNCTION CAST_SUPERSHORT_TO_STRING_3D(X) RESULT(STR)
+  INTEGER(INT8), DIMENSION(:,:,:), CONTIGUOUS, INTENT(IN):: X
+  CHARACTER(SIZE(X)):: STR
+  !
+  STR = TRANSFER(X,STR)
+  !
+  END FUNCTION
+  !
+  PURE FUNCTION CAST_SHORT_TO_STRING_3D(X) RESULT(STR)
+  INTEGER(INT16), DIMENSION(:,:,:), CONTIGUOUS, INTENT(IN):: X
+  CHARACTER(2*SIZE(X)):: STR
+  !
+  STR = TRANSFER(X,STR)
+  !
+  END FUNCTION
+  !
+  PURE FUNCTION CAST_INT_TO_STRING_3D(X) RESULT(STR)
+  INTEGER(INT32), DIMENSION(:,:,:), CONTIGUOUS, INTENT(IN):: X
+  CHARACTER(4*SIZE(X)):: STR
+  !
+  STR = TRANSFER(X,STR)
+  !
+  END FUNCTION
+  !
+  PURE FUNCTION CAST_LONG_TO_STRING_3D(X) RESULT(STR)
+  INTEGER(INT64), DIMENSION(:,:,:), CONTIGUOUS, INTENT(IN):: X
+  CHARACTER(8*SIZE(X)):: STR
+  !
+  STR = TRANSFER(X,STR)
+  !
+  END FUNCTION
+  !
+  PURE FUNCTION CAST_FLOAT_TO_STRING_3D(X) RESULT(STR)
+  REAL(REAL32), DIMENSION(:,:,:), CONTIGUOUS, INTENT(IN):: X
+  CHARACTER(4*SIZE(X)):: STR
+  !
+  STR = TRANSFER(X,STR)
+  !
+  END FUNCTION
+  !
+  PURE FUNCTION CAST_DBLE_TO_STRING_3D(X) RESULT(STR)
+  REAL(REAL64), DIMENSION(:,:,:), CONTIGUOUS, INTENT(IN):: X
+  CHARACTER(8*SIZE(X)):: STR
+  !
+  STR = TRANSFER(X,STR)
+  !
+  END FUNCTION
+END MODULE
+!
+!

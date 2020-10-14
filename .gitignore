@@ -1,0 +1,76 @@
+
+# Binary Directories -- Note that the directory does commit ".keep"
+bin/**
+
+# Executables
+*.exe
+*.exe~
+*.app
+*.nix
+
+# Visual Studio Files - Uncomment when needed to update
+!*.sln
+!*.vcxproj
+!*.vfproj
+
+# don't ignore keep and readme files
+!.keep
+!README.md
+
+
+# WinMerge bak file
+*.bak
+
+# Prerequisites
+*.d
+
+# Compiled Object files
+*.slo
+*.lo
+*.o
+*.obj
+*.aps
+*.idb
+*.pdb
+
+# Precompiled Headers
+*.gch
+*.pch
+
+# Compiled Dynamic libraries
+*.so
+*.dylib
+*.dll
+
+# Fortran module files
+*.mod
+*.smod
+
+# Compiled Static libraries
+*.lai
+*.la
+*.a
+*.lib
+
+# Output of the go coverage tool, specifically when used with LiteIDE
+*.out
+
+# Unit Test/Example output directories
+tests/output/**
+
+# Intermediate Directories
+obj/**
+lib/**
+doxygen
+#
+# Visual Studio files
+
+# Test binary, built with `go test -c`
+*.test
+
+#Intel and VS specific
+**/.vs
+*.suo
+*.u2d
+*.user
+

@@ -1,0 +1,42 @@
+{
+  "source_dirs": [
+    "src/datetime",
+    "src/dynamic_arrays",
+    "src/error",
+    "src/input_reader",
+    "src/io",
+    "src/math_numbers",
+    "src/sort",
+    "src/spatial",
+    "src/strings",
+    "src/system",
+    "src/types_and_containers",
+    "src/unicode",
+    "src/unit_test",
+    "src/util_misc"
+  ],
+
+  "excl_paths": [
+    "bin", 
+    "download", 
+    "doxygen", 
+    "icon", 
+    "img", 
+    "lib", 
+    "ide" 
+  ],
+
+  "excl_suffixes": [
+    ".u2d", 
+    ".vfproj", 
+    ".sln", 
+    ".txt", 
+    ".md", 
+    ".json", 
+    ".gitignore", 
+    ".gitattributes"
+  ],
+  
+  "lowercase_intrinsics": false,
+  "debug_log": false
+}

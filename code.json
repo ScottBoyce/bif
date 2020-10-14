@@ -1,0 +1,66 @@
+[
+  {
+    "name": "Batteries Included Fortran Library (BiF-Lib)",
+
+    "version": "1.0.0",
+    "status": "Production",
+
+    "organization": "U.S. Geological Survey",
+    "description": "Fortran source files that assist in file I/O, common operations that are present in other languages, and include data types that mimic python data types (such as, list and dict).",
+
+    "downloadURL": "https://code.usgs.gov/fortran/bif/-/archive/1.0/bif-1.0.zip",
+    "homepageURL": "https://code.usgs.gov/fortran/bif",
+    "disclaimerURL": "https://code.usgs.gov/fortran/bif/-/raw/1.0/DISCLAIMER.md",
+
+    "repositoryURL": "https://code.usgs.gov/fortran/bif.git",
+    "vcs": "git",
+
+    "contact": {
+      "name": "Scott E. Boyce",
+      "email": "seboyce@usgs.gov",
+      "URL": "https://www.usgs.gov/staff-profiles/scott-boyce"
+    },
+
+    "permissions": {
+      "usageType": "openSource",
+      "licenses": [
+        {
+          "name": "Apache License, Version 2.0",
+          "URL": "https://code.usgs.gov/fortran/bif/-/raw/1.0/LICENSE.md"
+        }
+      ]
+    },
+
+    "laborHours": 99999,
+
+    "tags": [
+      "FORTRAN",
+      "DICTIONARY",
+      "HASH",
+      "LINKED LIST",
+      "GENERIC FIlE OPERATIONS",
+      "FILE IO",
+      "FILE I/O",
+      "TYPE CONVERSION UTILITY",
+      "INPUT READ UTILITY"
+    ],
+
+    "languages": [
+      "English",
+      "FORTRAN",
+      "FORTRAN77",
+      "FORTRAN90",
+      "FORTRAN95",
+      "FORTRAN2003",
+      "FORTRAN2008",
+      "FORTRAN2018",
+      "batch",
+      "bash",
+      "shell"
+    ],
+
+    "date": {
+      "metadataLastUpdated": "2021-03-15"
+    }
+  }
+]

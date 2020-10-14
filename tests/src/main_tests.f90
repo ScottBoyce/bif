@@ -1,0 +1,2068 @@
+!
+! --------------------------------------------------------------------------------
+!
+SUBROUTINE test_ADJACENCY_LIST_INSTRUCTION(UT)
+  USE UNIT_TESTING_INSTRUCTION, ONLY: UNIT_TESTS
+  USE ADJACENCY_LIST_INSTRUCTION, ONLY: ADJ_LST, VERTEX_BACKPATH, VERTEX_VERTEX_PATH, BUILD_DIJKSTRA_PATH
+  IMPLICIT NONE
+  TYPE(UNIT_TESTS), INTENT(INOUT):: UT
+  TYPE(ADJ_LST           ):: ADJ
+  TYPE(VERTEX_BACKPATH   ):: VBK
+  TYPE(VERTEX_VERTEX_PATH):: VVP
+  !
+  INTEGER:: I, J, K
+  DOUBLE PRECISION:: DTMP
+  !
+  CALL UT%NEXT_SECTION("ADJACENCY_LIST_INSTRUCTION")
+    CALL UT%NEXT_TEST("ADJ_LST")
+      !
+      !CALL UT%TEST_STATUS(PASSED, [END_TEST], [MSG])
+    !
+    ! --------------------------------------------------------------------------------
+    CALL UT%NEXT_TEST("VERTEX_BACKPATH")
+      !
+      !CALL UT%TEST_STATUS(PASSED, [END_TEST], [MSG])
+    !
+    ! --------------------------------------------------------------------------------
+    CALL UT%NEXT_TEST("VERTEX_VERTEX_PATH")
+      !
+      !CALL UT%TEST_STATUS(PASSED, [END_TEST], [MSG])
+    !
+    ! --------------------------------------------------------------------------------
+    CALL UT%NEXT_TEST("BUILD_DIJKSTRA_PATH")
+      !
+      !CALL UT%TEST_STATUS(PASSED, [END_TEST], [MSG])
+    !
+    ! --------------------------------------------------------------------------------
+    !
+    !
+    !CALL BUILD_DIJKSTRA_PATH()
+  !
+END SUBROUTINE
+!
+! --------------------------------------------------------------------------------
+!
+
+SUBROUTINE test_ALLOC_INTERFACE(UT)
+  USE UNIT_TESTING_INSTRUCTION, ONLY: UNIT_TESTS
+  USE ALLOC_INTERFACE, ONLY:ALLOC, GROW, RESIZE
+  IMPLICIT NONE
+  TYPE(UNIT_TESTS), INTENT(INOUT):: UT
+  !
+  INTEGER:: I, J, K
+  DOUBLE PRECISION:: DTMP
+  LOGICAL,          DIMENSION(:),   ALLOCATABLE:: LVEC
+  LOGICAL,          DIMENSION(:,:), ALLOCATABLE:: LARR
+  INTEGER,          DIMENSION(:),   ALLOCATABLE:: IVEC
+  INTEGER,          DIMENSION(:,:), ALLOCATABLE:: IARR
+  DOUBLE PRECISION, DIMENSION(:),   ALLOCATABLE:: DVEC
+  DOUBLE PRECISION, DIMENSION(:,:), ALLOCATABLE:: DARR
+  INTEGER:: N, M
+  LOGICAL:: PASSED
+  !
+  CALL UT%NEXT_SECTION("ALLOC_INTERFACE")
+    CALL UT%NEXT_TEST("ALLOC")
+    N = 3
+    M = 5
+    CALL ALLOC(IVEC, N, SRC=1)
+    !
+    CALL UT%ASSERT(SIZE(IVEC) == N, MSG='INT_VECTOR')
+    DEALLOCATE(IVEC)
+    !
+    CALL ALLOC(IVEC, N, SRC=[2,4,6]) ! SRC is dim N
+    !
+    CALL UT%ASSERT(ALL(IVEC==[2,4,6]), MSG='INT_VECTOR_SRC')
+    DEALLOCATE(IVEC)
+    !
+    CALL ALLOC(IARR, N, M)              ! SRC is a scalar
+    !
+    CALL UT%ASSERT(SIZE(IARR) == N*M, MSG='INT_ARRAY')
+    DEALLOCATE(IARR)
+    !
+    !
+    !
+    CALL ALLOC(DVEC, N, SRC=1D0)
+    !
+    CALL UT%ASSERT(SIZE(DVEC) == N, MSG='DBL_VECTOR')
+    DEALLOCATE(DVEC)
+    !
+    CALL ALLOC(DARR, N, M)              ! SRC is a scalar
+    !
+    CALL UT%ASSERT(SIZE(DARR) == N*M, MSG='DBL_ARRAY')
+    DEALLOCATE(DARR)
+    !
+  CALL UT%NEXT_TEST("GROW")
+    CALL GROW(IVEC, 10, 16)
+    CALL GROW(IVEC, 14, 16)
+    CALL GROW(IVEC, 50, 16)
+    CALL UT%ASSERT(SIZE(IVEC) == 64, MSG='INT_GROW')
+    !
+    CALL GROW(DVEC, 10, 16)
+    CALL GROW(DVEC, 14, 16)
+    CALL GROW(DVEC, 50, 16)
+    CALL UT%ASSERT(SIZE(DVEC) == 64, MSG='DBL_GROW')
+    
+  CALL UT%NEXT_TEST("RESIZE")
+    !
+    IVEC = 1
+    DVEC = 1D0
+    CALL RESIZE(IVEC, 40)
+    CALL UT%ASSERT(SIZE(IVEC) == 40, MSG='INT_RESIZE')
+    !
+    CALL RESIZE(DVEC, 40)
+    CALL UT%ASSERT(SIZE(DVEC) == 40, MSG='DBL_RESIZE')
+  !
+END SUBROUTINE
+!
+SUBROUTINE test_BINARY_HEAP_INSTRUCTION(UT)
+  USE UNIT_TESTING_INSTRUCTION, ONLY: UNIT_TESTS
+  USE BINARY_HEAP_INSTRUCTION, ONLY: BINARY_HEAP
+  IMPLICIT NONE
+  TYPE(UNIT_TESTS), INTENT(INOUT):: UT
+  TYPE(BINARY_HEAP):: BH
+  !
+  INTEGER:: I, J, K
+  DOUBLE PRECISION:: DTMP
+  !
+  CALL UT%NEXT_SECTION("BINARY_HEAP_INSTRUCTION")
+    CALL UT%NEXT_TEST("BINARY_HEAP")
+  !
+
+  !
+END SUBROUTINE
+!
+SUBROUTINE test_DYNAMIC_ARRAY(UT)
+  USE, INTRINSIC:: ISO_FORTRAN_ENV, ONLY: INT32, INT64, REL32 => REAL32, REL64 => REAL64
+  USE UNIT_TESTING_INSTRUCTION,  ONLY: UNIT_TESTS
+  USE DYNAMIC_ARRAY, ONLY: CAP, SIZE, DYNAMIC_ARRAY_INT32
+  IMPLICIT NONE
+  TYPE(UNIT_TESTS), INTENT(INOUT):: UT
+  DOUBLE PRECISION:: TOL
+  TOL = 0.25d0
+  !
+  CALL UT%NEXT_SECTION("DYNAMIC_ARRAY")
+  CALL UT%NEXT_TEST("DYNAMIC_ARRAY_INT32")
+  !
+  BLOCK 
+    TYPE(DYNAMIC_ARRAY_INT32):: dt
+    !
+    CALL dt%append(5)
+    CALL dt%append(3)
+    CALL dt%append(4)
+    CALL dt%append(6)
+    CALL dt%append(3)
+    !
+    CALL UT%ASSERT(dt == [5,3,4,6,3], MSG='dt == [5,3,4,6,3]')
+    CALL UT%ASSERT(SIZE(dt) == 5, MSG='SIZE(dt) == 5')
+    CALL UT%ASSERT(CAP(dt) == 16, MSG='CAP(dt) == 16')
+    !
+    CALL dt%sort()
+    !
+    CALL UT%ASSERT(dt == [3,3,4,5,6], MSG='dt%sort() == [3,3,4,5,6]')
+    !
+    CALL dt%reverse()
+    !
+    CALL UT%ASSERT(dt == [6,5,4,3,3], MSG='dt%reverse() == [6,5,4,3,3]')
+    !
+    CALL dt%init()
+    !
+    !CALL UT%ASSERT(ALL(dt%array == 0) .AND. dt%SIZE() == 0, MSG='dt%init() .AND. dt%SIZE() == 0')
+    !
+    CALL dt%init(dim=30, val=5)
+    !
+    !CALL UT%ASSERT(ALL(dt%array == 5) .AND. dt%CAP() == 32, MSG='ALL(dt%array == 5) .AND. dt%CAP() == 32')
+    !
+    CALL dt%RESIZE(12)
+    !
+    CALL UT%ASSERT(dt == 5 .AND. SIZE(dt) == 12, MSG='dt == 5 .AND. SIZE(dt) == 12')
+    !
+    CALL dt%init(dim=33, val=4, siz=10)
+    !
+    CALL UT%ASSERT(dt == 4 .AND. SIZE(dt) == 10 .AND. CAP(dt) == 64, MSG='ALL(dt%array == 5) .AND. dt%CAP() == 32')
+    !
+  END BLOCK
+!
+!    GENERIC ::                INIT => INIT_VAL_INT32, &    ! CALL dyn%INIT([DIM], [val], [siz])
+    !                                  INIT_VEC_INT32       ! CALL dyn%INIT(vec, [rep])
+    !!                                                      
+    !PROCEDURE, pass(dyn) ::  SIZE => SIZE_INT32            ! dyn%SIZE() RESULT(siz)
+    !PROCEDURE, pass(dyn) ::   CAP => CAPACITY_INT32        ! dyn%CAP () RESULT(dim)
+    !!                                                      
+    !PROCEDURE, pass(dyn) ::  CLEAR => CLEAR_INT32          ! CALL dyn%CLEAR()
+    !PROCEDURE, pass(dyn) :: RESIZE => RESIZE_INT32         ! CALL dyn%RESIZE(siz)  -> Only changes siz parameter; may make array bigger if necessary
+    !!
+    !GENERIC ::              APPEND => APPEND_VAL_INT32, &  ! CALL dyn%APPEND(val, [unqiue])
+    !                                  APPEND_VEC_INT32     ! CALL dyn%APPEND(vec, [unqiue])
+    !!
+    !GENERIC ::             PREPEND => PREPEND_VAL_INT32, & ! CALL dyn%PREPEND(val, [unqiue])
+    !                                  PREPEND_VEC_INT32    ! CALL dyn%PREPEND(vec, [unqiue])
+    !!
+    !PROCEDURE, pass(dyn) :: INSERT => INSERT_VAL_INT32     ! CALL dyn%INSERT(pos, val)
+    !!                                                                    
+    !GENERIC ::              SET    =>   SET_POS_INT32, &   ! CALL dyn%SET(pos,  val)     --> Note pos will auto-grow array if pos > dim
+    !                                  SET_RANGE_INT32      ! CALL dyn%SET(I, J, val)     --> Note J   will auto-grow array if J   > dim
+    !!                                                      
+    !PROCEDURE, pass(dyn) :: GET    => GET_INT32            ! CALL dyn%GET(pos) RESULT(val)
+    !!                                                      
+    !PROCEDURE, pass(dyn) :: POP    => POP_INT32            ! CALL dyn%POP   ([val], [pos])
+    !PROCEDURE, pass(dyn) :: DELETE => DELETE_INT32         ! CALL dyn%DELETE(pos)
+    !!                                                      
+    !GENERIC ::              REMOVE => REMOVE_VAL_INT32, &  ! CALL dyn%REMOVE(val, [first], [back], [found])
+    !                                  REMOVE_VEC_INT32     ! CALL dyn%REMOVE(vec, [first], [back], [found])
+    !!                                                      
+    !PROCEDURE, pass(dyn) ::     START => ITERATOR_START_INT32 ! CALL dyn%START()
+    !PROCEDURE, pass(dyn) ::     NEXT  =>   ITERATE_NEXT_INT32 ! dyn%NEXT([index], [val])   RESULT(cont)  -> cont is set to true so long as iteration is betweeen 1 and dyn%siz
+    !PROCEDURE, pass(dyn) :: NEXT_PTR  =>    ITERATE_PTR_INT32 ! dyn%NEXT_PTR(ptr, [index]) RESULT(cont)  -> If cont=T, then PTR => current iterated array value
+    !!
+    !PROCEDURE, pass(dyn) ::    SORT =>    SORT_INT32       ! CALL dyn%SORT([descend])
+    !PROCEDURE, pass(dyn) :: REVERSE => REVERSE_INT32       ! CALL dyn%REVERSE()
+    !!
+    !PROCEDURE, pass(dyn) ::  INDEX => INDEX_INT32          ! dyn%INDEX(val, [ipos], [back]) RESULT(pos)
+    !PROCEDURE, pass(dyn) ::  COUNT => COUNT_INT32          ! dyn%COUNT(val) RESULT(cnt)
+    !!
+    !PROCEDURE, pass(dyn) ::  SHIFT_RIGHT =>  SHIFT_RIGHT_INT32 ! CALL dyn% SHIFT_RIGHT(shift)
+    !PROCEDURE, pass(dyn) :: CIRCLE_RIGHT => CIRCLE_RIGHT_INT32 ! CALL dyn%CIRCLE_RIGHT(shift)
+    !!
+    !PROCEDURE, pass(dyn) ::  SHIFT_LEFT =>  SHIFT_LEFT_INT32 ! CALL dyn% SHIFT_RIGHT(shift)
+    !PROCEDURE, pass(dyn) :: CIRCLE_LEFT => CIRCLE_LEFT_INT32 ! CALL dyn%CIRCLE_RIGHT(shift)
+    !!
+    !PROCEDURE, pass(dyn) :: PRINT  =>  PRINT_INT32             ! CALL dyn%PRINT(iu, [sep], [fmt])
+    !PROCEDURE, pass(dyn) :: STRING => STRING_INT32             !      dyn%STRING([sep], [fmt]) RESULT(str)
+    !!
+    !PROCEDURE, pass(dyn) :: ADD  => ADD_INT32                  ! CALL dyn%ADD (val) -> dyn = dyn + val   => Element-wise
+    !PROCEDURE, pass(dyn) :: SUB  => SUB_RIGHT_INT32            ! CALL dyn%SUB (val) -> dyn = dyn - val
+    !PROCEDURE, pass(dyn) :: MULT => MULT_INT32                 ! CALL dyn%MULT(val) -> dyn = dyn * val
+    !PROCEDURE, pass(dyn) :: DIV  => DIV_DENOM_INT32            ! CALL dyn%DIV (val) -> dyn = dyn / val
+    !PROCEDURE, pass(dyn) :: POW  => POW_INT32                  ! CALL dyn%POW (val) -> dyn = dyn ^ val
+    !!
+    !PROCEDURE, pass(dyn) ::  SUB_LEFT => SUB_LEFT_INT32        ! CALL dyn%SUB_LEFT(val)  --> Solves val - dyn
+    !PROCEDURE, pass(dyn) :: DIV_NUMER => DIV_NUMER_INT32       ! CALL dyn%DIV_NUMER(val) --> Solves val/dyn
+    !
+    !!
+    !GENERIC:: ASSIGNMENT(= ) => EQUAL_DYN_DYN, EQUAL_DYN_VAL, EQUAL_DYN_VEC, EQUAL_VEC_DYN
+    !!
+    !GENERIC:: OPERATOR  (+ ) => ADD_DYN_DYN, ADD_DYN_VAL, ADD_VAL_DYN, ADD_DYN_VEC, ADD_VEC_DYN
+    !GENERIC:: OPERATOR  (- ) => SUB_DYN_DYN, SUB_DYN_VAL, SUB_VAL_DYN, SUB_DYN_VEC, SUB_VEC_DYN
+    !GENERIC:: OPERATOR  (* ) => MLT_DYN_DYN, MLT_DYN_VAL, MLT_VAL_DYN, MLT_DYN_VEC, MLT_VEC_DYN
+    !GENERIC:: OPERATOR  (/ ) => DIV_DYN_DYN, DIV_DYN_VAL, DIV_VAL_DYN, DIV_DYN_VEC, DIV_VEC_DYN
+    !GENERIC:: OPERATOR  (**) => POW_DYN_DYN, POW_DYN_VAL, POW_VAL_DYN, POW_DYN_VEC, POW_VEC_DYN
+    !GENERIC:: OPERATOR  (//) => CONCAT_DYN_DYN
+    !!
+    !GENERIC:: OPERATOR  (==) => EQ_DYN_DYN, EQ_DYN_VAL, EQ_VAL_DYN, EQ_DYN_VEC, EQ_VEC_DYN
+    !GENERIC:: OPERATOR  (< ) => LT_DYN_DYN, LT_DYN_VAL, LT_VAL_DYN, LT_DYN_VEC, LT_VEC_DYN
+    !GENERIC:: OPERATOR  (<=) => LE_DYN_DYN, LE_DYN_VAL, LE_VAL_DYN, LE_DYN_VEC, LE_VEC_DYN
+    !GENERIC:: OPERATOR  (> ) => GT_DYN_DYN, GT_DYN_VAL, GT_VAL_DYN, GT_DYN_VEC, GT_VEC_DYN
+    !GENERIC:: OPERATOR  (>=) => GE_DYN_DYN, GE_DYN_VAL, GE_VAL_DYN, GE_DYN_VEC, GE_VEC_DYN
+  !
+  !~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~
+  !
+END SUBROUTINE
+!
+SUBROUTINE test_CALENDAR_FUNCTIONS(UT)
+  USE UNIT_TESTING_INSTRUCTION, ONLY: UNIT_TESTS
+  USE CALENDAR_FUNCTIONS
+  IMPLICIT NONE
+  TYPE(UNIT_TESTS), INTENT(INOUT):: UT
+  !
+  INTEGER:: I, J, K
+  DOUBLE PRECISION:: DTMP
+  !
+  CALL UT%NEXT_SECTION("CALENDAR_FUNCTIONS")
+  CALL UT%QUICK_TEST("YEAR_FRACTION",       YEAR_FRACTION(1975.1234d0)      , 0.1234d0)
+  CALL UT%QUICK_TEST("YEAR_FRACTION_DYEAR", YEAR_FRACTION_DYEAR(1975.235d0) , 0.235d0)
+  CALL UT%QUICK_TEST("YEAR_FRACTION_DMY",   YEAR_FRACTION_DMY(5, 1, 1971)   , 0.0109589041d0)
+  !
+  !INTERFACE YEAR_FRACTION
+  !  MODULE PROCEDURE YEAR_FRACTION_DYEAR
+  !  MODULE PROCEDURE YEAR_FRACTION_DMY
+  !END INTERFACE
+  !!
+  !INTERFACE TIME_TO_DAY_FRACTION ! (HOUR, MIN, SEC)
+  !   MODULE PROCEDURE TIME_TO_DAY_FRACTION_INT_INT_INT
+  !   MODULE PROCEDURE TIME_TO_DAY_FRACTION_INT_INT_DBL
+  !   MODULE PROCEDURE TIME_TO_DAY_FRACTION_INT_DBL_DBL
+  !   MODULE PROCEDURE TIME_TO_DAY_FRACTION_DBL_DBL_DBL
+  !   MODULE PROCEDURE STR_TIME_TO_DAY_FRACTION       !(STR)
+  !END INTERFACE
+  !!
+  !ELEMENTAL PURE FUNCTION ISLEAPYEAR(YEAR) 
+  !!  
+  !ELEMENTAL PURE FUNCTION LEAP_CHECK(YEAR, LEAP) RESULT(LEAPYEAR)  !NECESSARY FOR SUBROUTINES THAT MAY NOT INCLUDE YEAR BUT SPECIFY LEAP VARIABLE
+  !!  
+  !ELEMENTAL PURE FUNCTION MONTHDAYS(MONTH, YEAR, LEAP) 
+  !!  
+  !ELEMENTAL PURE FUNCTION JULIANDAY(DAY, MONTH, YEAR, LEAP) 
+  !!  
+  !ELEMENTAL PURE SUBROUTINE JULIANDAY_TO_DATE(JDN_IN, YEAR_IN, DAY, MONTH, YEAR, JDN, LEAP) 
+  !!  
+  !ELEMENTAL PURE SUBROUTINE DYEAR_TO_DATE(DYEAR, DAY, MONTH, YEAR, FRAC, JDN, LEAP) 
+  !!  
+  !ELEMENTAL PURE FUNCTION DATE_TO_DYEAR(DAY, MONTH, YEAR, FRAC, LEAP) 
+  !!  
+  !ELEMENTAL PURE FUNCTION JDN_TO_DYEAR(JDN, YEAR, FRAC, LEAP) 
+  !!  
+  !ELEMENTAL PURE FUNCTION YEAR_DAY_COUNT(YEAR, LEAP) 
+  !!  
+  !ELEMENTAL PURE FUNCTION YEAR_DAY_COUNT_DBLE(YEAR, LEAP) 
+  !!
+  !ELEMENTAL PURE FUNCTION YEAR_FRACTION_DYEAR(DYEAR) RESULT(YFRAC)
+  !!
+  !ELEMENTAL PURE FUNCTION YEAR_FRACTION_DMY(DAY, MONTH, YEAR, FRAC, LEAP) RESULT(YFRAC)
+  !!
+  !PURE FUNCTION MONTHNAME(MONTHNUM,FULLNAME)  RESULT(MON)
+  !!
+  !PURE FUNCTION MONTHNUM(MONTHNAME)  RESULT(MON) !RETURN MONTHNUMBER OF -1
+  !!
+  !PURE ELEMENTAL FUNCTION TIME_TO_DAY_FRACTION_INT_INT_INT(HOUR, MIN, SEC) RESULT(FRAC)
+  !!
+  !PURE ELEMENTAL FUNCTION TIME_TO_DAY_FRACTION_INT_INT_DBL(HOUR, MIN, SEC) RESULT(FRAC)
+  !!
+  !PURE ELEMENTAL FUNCTION TIME_TO_DAY_FRACTION_INT_DBL_DBL(HOUR, MIN, SEC) RESULT(FRAC)
+  !!
+  !PURE ELEMENTAL FUNCTION TIME_TO_DAY_FRACTION_DBL_DBL_DBL(HOUR, MIN, SEC) RESULT(FRAC)
+  !!
+  !ELEMENTAL PURE FUNCTION STR_TIME_TO_DAY_FRACTION(TIME) RESULT(FRAC)
+  !
+END SUBROUTINE
+!
+SUBROUTINE test_CAST_TO_STRING(UT)
+  USE, INTRINSIC:: ISO_FORTRAN_ENV, ONLY: INT8
+  USE UNIT_TESTING_INSTRUCTION, ONLY: UNIT_TESTS
+  USE CAST_TO_STRING, ONLY: CAST2STR
+  IMPLICIT NONE
+  TYPE(UNIT_TESTS), INTENT(INOUT):: UT
+  !
+  INTEGER:: I, J, K
+  DOUBLE PRECISION:: DTMP
+  !
+  CALL UT%NEXT_SECTION("CAST_TO_STRING")
+  CALL UT%NEXT_TEST("CAST2STR")
+  !
+  CALL UT%ASSERT( CAST2STR(35_int8), 'eq', '#', msg='CAST2STR(35_int8)')
+  !
+END SUBROUTINE
+!
+SUBROUTINE test_CONSOLE_COMMANDER(UT)
+  USE UNIT_TESTING_INSTRUCTION, ONLY: UNIT_TESTS
+  USE CONSOLE_COMMANDER, ONLY: CMD_PRINT, CMD_EXTEND, CMD_CLEAR
+  IMPLICIT NONE
+  TYPE(UNIT_TESTS), INTENT(INOUT):: UT
+  !
+  INTEGER:: I, J, K
+  DOUBLE PRECISION:: DTMP
+  !
+  CALL UT%NEXT_SECTION("CONSOLE_COMMANDER")
+  CALL UT%QUICK_TEST("No Tests", .TRUE.)
+  !
+  !CALL CMD_PRINT
+  !CALL CMD_EXTEND
+  !CALL CMD_CLEAR
+  !
+END SUBROUTINE
+!
+SUBROUTINE test_CONSTANTS(UT)
+  USE, INTRINSIC :: ISO_FORTRAN_ENV, ONLY: INT32, REL64=>REAL64
+  USE, INTRINSIC :: IEEE_ARITHMETIC, ONLY: IEEE_IS_NAN
+  USE UNIT_TESTING_INSTRUCTION, ONLY: UNIT_TESTS
+  USE CONSTANTS
+  IMPLICIT NONE
+  TYPE(UNIT_TESTS), INTENT(INOUT):: UT
+  !
+  CALL UT%NEXT_SECTION("CONSTANTS")
+  CALL UT%NEXT_TEST("Value Check")
+  !
+  CALL UT%ASSERT(TRUE, .TRUE., msg='TRUE')
+  CALL UT%ASSERT(FALSE, .FALSE., msg='FALSE')
+  !
+  CALL UT%ASSERT(NL, 'eq', NEW_LINE(' '), msg="LF = NEW_LINE(' ')")
+  !
+  CALL UT%ASSERT(lowerCHAR, 'eq', "abcdefghijklmnopqrstuvwxyz", msg='lowerCHAR', CAP=FALSE)
+  !
+  CALL UT%ASSERT(Z, 'eq', 0_int32, msg='Z')
+  !
+  CALL UT%ASSERT(UNO, 'eq', 1.0_rel64, msg='UNO')
+  CALL UT%ASSERT(DODRANT, 'eq', 0.75_rel64, msg='DODRANT')
+  CALL UT%ASSERT(DECIMILLI, 'eq', 0.0001_rel64, msg='DECIMILLI')
+  !
+  CALL UT%ASSERT(VIGINTI, 'eq', 20.0_rel64, msg='VIGINTI')
+  CALL UT%ASSERT(SEXAGEN, 'eq', 60.0_rel64, msg='SEXAGEN')
+  !
+  CALL UT%ASSERT(IEEE_IS_NAN(NaN), msg='NaN')
+  !
+END SUBROUTINE
+!
+SUBROUTINE test_CYCLING_TEXT_FILE_INTERFACE(UT)
+  USE UNIT_TESTING_INSTRUCTION, ONLY: UNIT_TESTS
+  USE CYCLING_TEXT_FILE_INTERFACE, ONLY: CYCLING_TEXT_FILE
+  IMPLICIT NONE
+  TYPE(UNIT_TESTS), INTENT(INOUT):: UT
+  TYPE(CYCLING_TEXT_FILE):: CTF
+  !
+  INTEGER:: I, J, K
+  DOUBLE PRECISION:: DTMP
+  !
+  CALL UT%NEXT_SECTION("CYCLING_TEXT_FILE_INTERFACE")
+  !CALL UT%QUICK_TEST("No Tests", .TRUE.)
+  !
+  
+  !
+END SUBROUTINE
+!
+SUBROUTINE test_DATE_OPERATOR_INSTRUCTION(UT)
+  USE UNIT_TESTING_INSTRUCTION, ONLY: UNIT_TESTS
+  USE DATE_OPERATOR_INSTRUCTION, ONLY: DATE_OPERATOR, DATE_STR_TO_DYEAR
+  IMPLICIT NONE
+  TYPE(UNIT_TESTS), INTENT(INOUT):: UT
+  TYPE(DATE_OPERATOR):: DT
+  !
+  INTEGER:: I, J, K
+  DOUBLE PRECISION:: DTMP
+  !
+  CALL UT%NEXT_SECTION("DATE_OPERATOR_INSTRUCTION")
+  !CALL UT%NEXT_TEST("")
+  !
+  ! DATE_STR_TO_DYEAR()
+  !
+END SUBROUTINE
+!
+SUBROUTINE test_EquationParser(UT)
+  USE UNIT_TESTING_INSTRUCTION, ONLY: UNIT_TESTS
+  USE EquationParser, ONLY: EVAL, EVAL_EQUATION, EVAL_CONDITION, NAME_LOOKUP, KEYWORDCHECK, &
+						    EQUATION_SETUP_ERROR_ROUTINES, REMOVE_EQUATION_ERROR_ROUTINES
+  IMPLICIT NONE
+  TYPE(UNIT_TESTS), INTENT(INOUT):: UT
+  !
+  INTEGER:: I, J, K
+  DOUBLE PRECISION:: DTMP
+  !
+  CALL UT%NEXT_SECTION("EquationParser")
+  !CALL UT%NEXT_TEST("")
+  !
+  CALL REMOVE_EQUATION_ERROR_ROUTINES()
+  !CALL EQUATION_SETUP_ERROR_ROUTINES(OUTPUT=IOUT,STOP_ERROR_SUB=, WARNING_SUB=)
+  !
+END SUBROUTINE
+!
+SUBROUTINE test_ERROR_INTERFACE(UT)
+  USE UNIT_TESTING_INSTRUCTION, ONLY: UNIT_TESTS
+  USE ERROR_INTERFACE, ONLY: STOP_ERROR, FILE_IO_ERROR, WARNING_MESSAGE,         &
+							 PAUSE, SET_WARN_UNIT, GET_WARN, CLOSE_WARNING_UNIT, &
+							 GAME_OVER, EPIC_FAIL, GET_FILE_NAME
+  IMPLICIT NONE
+  TYPE(UNIT_TESTS), INTENT(INOUT):: UT
+  !
+  INTEGER:: I, J, K
+  DOUBLE PRECISION:: DTMP
+  !
+  CALL UT%NEXT_SECTION("ERROR_INTERFACE")
+  CALL UT%QUICK_TEST("No Tests", .TRUE.)
+  !
+
+  !
+END SUBROUTINE
+!
+SUBROUTINE test_FILE_INCREMENTER_INTERFACE(UT)
+  USE UNIT_TESTING_INSTRUCTION, ONLY: UNIT_TESTS
+  USE FILE_INCREMENTER_INTERFACE, ONLY: FILE_INCREMENTER
+  IMPLICIT NONE
+  TYPE(UNIT_TESTS), INTENT(INOUT):: UT
+  TYPE(FILE_INCREMENTER):: FI
+  !
+  INTEGER:: I, J, K
+  DOUBLE PRECISION:: DTMP
+  !
+  CALL UT%NEXT_SECTION("FILE_INCREMENTER_INTERFACE")
+  CALL UT%QUICK_TEST("No Tests", .TRUE.)
+  !
+
+  !
+END SUBROUTINE
+!
+SUBROUTINE test_FILE_IO_INTERFACE(UT)
+  USE UNIT_TESTING_INSTRUCTION, ONLY: UNIT_TESTS
+  USE FILE_IO_INTERFACE, ONLY: READ_TO_DATA, MOVE_TO_DATA, COMMENT_INDEX, &
+                               DATAFILE_UNIT_NUMBER, UNIT_ARRAY_BUILDER,  &
+                               CLOSE_GERNIC_INPUT_OUTPUT_DATAFILES,       &
+                               GET_FILE_NAME, WRITE_DATA,                 &
+                               FILENAME_TO_UNIT, FILENAME_TO_FULLNAME,    &
+                               MAX_LINE_LENGTH, MAX_UNCOMMENTED_LINE_LEN
+
+  IMPLICIT NONE
+  TYPE(UNIT_TESTS), INTENT(INOUT):: UT
+  TYPE(UNIT_ARRAY_BUILDER):: UIB
+  !
+  INTEGER:: I, J, K
+  DOUBLE PRECISION:: DTMP
+  !
+  CALL UT%NEXT_SECTION("FILE_IO_INTERFACE")
+  !
+
+
+  !
+END SUBROUTINE
+!
+SUBROUTINE test_GENERIC_BLOCK_READER_INSTRUCTION(UT)
+  USE UNIT_TESTING_INSTRUCTION, ONLY: UNIT_TESTS
+  USE GENERIC_BLOCK_READER_INSTRUCTION, ONLY: GENERIC_BLOCK_READER
+  IMPLICIT NONE
+  TYPE(UNIT_TESTS), INTENT(INOUT):: UT
+  TYPE(GENERIC_BLOCK_READER):: BL
+  !
+  INTEGER:: I, J, K
+  DOUBLE PRECISION:: DTMP
+  !
+  CALL UT%NEXT_SECTION("GENERIC_BLOCK_READER")
+  !
+
+  !
+END SUBROUTINE
+!
+SUBROUTINE test_GENERIC_INPUT_FILE_INSTRUCTION(UT)
+  USE UNIT_TESTING_INSTRUCTION, ONLY: UNIT_TESTS
+  USE GENERIC_INPUT_FILE_INSTRUCTION, ONLY: GENERIC_INPUT_FILE
+  IMPLICIT NONE
+  TYPE(UNIT_TESTS), INTENT(INOUT):: UT
+  TYPE(GENERIC_INPUT_FILE):: FL
+  !
+  INTEGER:: I, J, K
+  DOUBLE PRECISION:: DTMP
+  !
+  CALL UT%NEXT_SECTION("GENERIC_INPUT_FILE_INSTRUCTION")
+  !
+
+  !
+END SUBROUTINE
+!
+SUBROUTINE test_GENERIC_OPEN_INTERFACE(UT)
+  USE UNIT_TESTING_INSTRUCTION, ONLY: UNIT_TESTS
+  USE GENERIC_OPEN_INTERFACE, ONLY: GENERIC_OPEN, GENERIC_SCRATCH_FILE, NULL_FILE,     &
+                                    GENERIC_NULL_FILE_OPEN, FORCE_UNIT_CLOSE,          &
+									SET_GENERIC_OPEN_WARN_IU, UTF8_BOM_OFFSET_REWIND,  &
+									OPEN_NEW_READ_UNIT, UNIT_IS_BOM, SET_TO_NULL_UNIT
+  IMPLICIT NONE
+  TYPE(UNIT_TESTS), INTENT(INOUT):: UT
+  !
+  INTEGER:: I, J, K
+  DOUBLE PRECISION:: DTMP
+  !
+  CALL UT%NEXT_SECTION("GENERIC_OPEN_INTERFACE")
+  !
+
+  !
+END SUBROUTINE
+!
+SUBROUTINE test_GENERIC_OUTPUT_FILE_INSTRUCTION(UT)
+  USE UNIT_TESTING_INSTRUCTION, ONLY: UNIT_TESTS
+  USE GENERIC_OUTPUT_FILE_INSTRUCTION, ONLY: GENERIC_OUTPUT_FILE, GENERIC_OUTPUT_FILE_DEPOINT
+  IMPLICIT NONE
+  TYPE(UNIT_TESTS), INTENT(INOUT):: UT
+  TYPE(GENERIC_OUTPUT_FILE):: FL
+  !
+  INTEGER:: I, J, K
+  DOUBLE PRECISION:: DTMP
+  !
+  CALL UT%NEXT_SECTION("GENERIC_OUTPUT_FILE_INSTRUCTION")
+  !CALL UT%NEXT_TEST("")
+  !
+
+  !
+END SUBROUTINE
+!
+SUBROUTINE test_HASH_TABLE_INSTRUCTION(UT)
+  USE UNIT_TESTING_INSTRUCTION, ONLY: UNIT_TESTS
+  USE HASH_TABLE_INSTRUCTION, ONLY: HASH_TABLE
+  IMPLICIT NONE
+  TYPE(UNIT_TESTS), INTENT(INOUT):: UT
+  TYPE(HASH_TABLE):: HT
+  !
+  INTEGER:: I, J, K
+  DOUBLE PRECISION:: DTMP
+  !
+  CALL UT%NEXT_SECTION("HASH_TABLE_INSTRUCTION")
+  !CALL UT%NEXT_TEST("")
+  !
+
+  !
+END SUBROUTINE
+!
+SUBROUTINE test_INTEGER_ARRAY_BUILDER_INTERFACE(UT)
+  USE UNIT_TESTING_INSTRUCTION, ONLY: UNIT_TESTS
+  USE INTEGER_ARRAY_BUILDER_INTERFACE, ONLY: INTEGER_ARRAY_BUILDER
+  IMPLICIT NONE
+  TYPE(UNIT_TESTS), INTENT(INOUT):: UT
+  TYPE(INTEGER_ARRAY_BUILDER):: IARR
+  !
+  INTEGER:: I, J, K
+  DOUBLE PRECISION:: DTMP
+  !
+  CALL UT%NEXT_SECTION("INTEGER_ARRAY_BUILDER_INTERFACE")
+  !CALL UT%NEXT_TEST("")
+  !
+
+  !
+END SUBROUTINE
+!
+SUBROUTINE test_INTEGER_QUEUE_INSTRUCTION(UT)
+  USE UNIT_TESTING_INSTRUCTION, ONLY: UNIT_TESTS
+  USE INTEGER_QUEUE_INSTRUCTION, ONLY: INTEGER_QUEUE
+  IMPLICIT NONE
+  TYPE(UNIT_TESTS), INTENT(INOUT):: UT
+  TYPE(INTEGER_QUEUE):: QUE
+  !
+  INTEGER:: I, J, K
+  DOUBLE PRECISION:: DTMP
+  !
+  CALL UT%NEXT_SECTION("INTEGER_QUEUE_INSTRUCTION")
+  !CALL UT%NEXT_TEST("")
+  !
+
+  !
+END SUBROUTINE
+!
+SUBROUTINE test_IS_ASCII_INTERFACE(UT)
+  USE UNIT_TESTING_INSTRUCTION, ONLY: UNIT_TESTS
+  USE IS_ASCII_INTERFACE, ONLY: IS_ASCII, ASCII_CHECK
+  IMPLICIT NONE
+  TYPE(UNIT_TESTS), INTENT(INOUT):: UT
+  !
+  CALL UT%NEXT_SECTION("IS_ASCII_INTERFACE")
+  CALL UT%NEXT_TEST("IS_ASCII(ln)")
+  CALL UT%ASSERT( IS_ASCII("ABCdef"), msg='IS_ASCII("ABCdef")')
+  CALL UT%ASSERT( IS_ASCII("µ"), .FALSE., msg='IS_ASCII("µ")')
+  !
+END SUBROUTINE
+!
+SUBROUTINE test_IS_ROUTINES(UT)
+  USE UNIT_TESTING_INSTRUCTION, ONLY: UNIT_TESTS
+  USE IS_ROUTINES, ONLY: IS_ODD, IS_EVEN, IS_CLOSE, IS_BLANK, &
+                         IS_INTEGER, IS_NUMBER, IS_UNIQUE,    &
+						 IS_NAN_OR, IS_NOT_NAN_OR,            &
+						 IS_PRESENT, IS_PRESENT_OR
+  IMPLICIT NONE
+  TYPE(UNIT_TESTS), INTENT(INOUT):: UT
+  !
+  INTEGER:: I, J, K
+  DOUBLE PRECISION:: DTMP
+  !
+  CALL UT%NEXT_SECTION("IS_ROUTINES")
+  !CALL UT%NEXT_TEST("")
+  !
+
+  !
+END SUBROUTINE
+!
+SUBROUTINE test_IXJ_INSTRUCTION(UT)
+  USE UNIT_TESTING_INSTRUCTION, ONLY: UNIT_TESTS
+  USE IXJ_INSTRUCTION, ONLY: IXJ_STRUCTURE, IXJ_SINGLE_ENTRY
+  IMPLICIT NONE
+  TYPE(UNIT_TESTS), INTENT(INOUT):: UT
+  TYPE(IXJ_STRUCTURE   ):: IXJ
+  TYPE(IXJ_SINGLE_ENTRY):: STRCT
+  !
+  INTEGER:: I, J, K
+  DOUBLE PRECISION:: DTMP
+  !
+  CALL UT%NEXT_SECTION("IXJ_INSTRUCTION")
+  !CALL UT%NEXT_TEST("")
+  !
+
+  !
+END SUBROUTINE
+!
+SUBROUTINE test_LINE_WRITER_INTERFACE(UT)
+  USE UNIT_TESTING_INSTRUCTION, ONLY: UNIT_TESTS
+  USE LINE_WRITER_INTERFACE, ONLY: LINE_WRITER
+  IMPLICIT NONE
+  TYPE(UNIT_TESTS), INTENT(INOUT):: UT
+  TYPE(LINE_WRITER):: LW
+  !
+  INTEGER:: I, J, K
+  DOUBLE PRECISION:: DTMP
+  !
+  CALL UT%NEXT_SECTION("LINE_WRITER_INTERFACE")
+  !CALL UT%NEXT_TEST("")
+  !
+
+  !
+END SUBROUTINE
+!
+SUBROUTINE test_LINKED_LIST_INSTRUCTION(UT)
+  USE UNIT_TESTING_INSTRUCTION, ONLY: UNIT_TESTS
+  USE LINKED_LIST_INSTRUCTION, ONLY: INTEGER_LINKED_LIST, CHARACTER_LINKED_LIST
+  IMPLICIT NONE
+  TYPE(UNIT_TESTS), INTENT(INOUT):: UT
+  TYPE(INTEGER_LINKED_LIST  ):: ILST
+  TYPE(CHARACTER_LINKED_LIST):: CLST
+  !
+  INTEGER:: I, J, K
+  DOUBLE PRECISION:: DTMP
+  !
+  CALL UT%NEXT_SECTION("LINKED_LIST_INSTRUCTION")
+  !CALL UT%NEXT_TEST("")
+  !
+
+  !
+END SUBROUTINE
+!
+SUBROUTINE test_LIST_ARRAY_INPUT_INTERFACE(UT)
+  USE UNIT_TESTING_INSTRUCTION, ONLY: UNIT_TESTS
+  USE LIST_ARRAY_INPUT_INTERFACE, ONLY: GENERIC_LINE_INPUT,   LIST_ARRAY_INPUT,    &
+                                        LIST_ARRAY_INPUT_INT, LIST_ARRAY_INPUT_STR
+  IMPLICIT NONE
+  TYPE(UNIT_TESTS), INTENT(INOUT):: UT
+  TYPE(LIST_ARRAY_INPUT    ):: LAI
+  TYPE(LIST_ARRAY_INPUT_INT):: LAI_INT
+  TYPE(LIST_ARRAY_INPUT_STR):: LAI_STR
+  !
+  INTEGER:: I, J, K
+  DOUBLE PRECISION:: DTMP
+  !
+  CALL UT%NEXT_SECTION("LIST_ARRAY_INPUT_INTERFACE")
+  !CALL UT%NEXT_TEST("")
+  !
+
+  !
+END SUBROUTINE
+!
+SUBROUTINE test_LOG2_INTERFACE(UT)
+  USE UNIT_TESTING_INSTRUCTION, ONLY: UNIT_TESTS
+  USE LOG2_INTERFACE, ONLY: LOG2
+  IMPLICIT NONE
+  TYPE(UNIT_TESTS), INTENT(INOUT):: UT
+  !
+  INTEGER:: I, J, K
+  DOUBLE PRECISION:: DTMP
+  !
+  CALL UT%NEXT_SECTION("LOG2_INTERFACE")
+  !CALL UT%NEXT_TEST("")
+  !
+  ! x = LOG2(2)
+  !
+END SUBROUTINE
+!
+SUBROUTINE test_LOOKUP_TABLE_INSTRUCTION(UT)
+  USE UNIT_TESTING_INSTRUCTION, ONLY: UNIT_TESTS
+  USE LOOKUP_TABLE_INSTRUCTION, ONLY: LOOKUP_TABLE_TYPE, LOOKUP_BY_NAME
+  IMPLICIT NONE
+  TYPE(UNIT_TESTS), INTENT(INOUT):: UT
+  TYPE(LOOKUP_TABLE_TYPE):: TBL
+  !
+  INTEGER:: I, J, K
+  DOUBLE PRECISION:: DTMP
+  !
+  CALL UT%NEXT_SECTION("LOOKUP_TABLE_INSTRUCTION")
+  !CALL UT%NEXT_TEST("")
+  !
+
+  !
+END SUBROUTINE
+!
+SUBROUTINE test_NAME_ID_INTERFACE(UT)
+  USE UNIT_TESTING_INSTRUCTION, ONLY: UNIT_TESTS
+  USE NAME_ID_INTERFACE, ONLY: NAME_ID, ID_TYPE_BASE
+  IMPLICIT NONE
+  TYPE(UNIT_TESTS), INTENT(INOUT):: UT
+  TYPE(NAME_ID     ):: NID
+  TYPE(ID_TYPE_BASE):: BASE
+  !
+  INTEGER:: I, J, K
+  DOUBLE PRECISION:: DTMP
+  !
+  CALL UT%NEXT_SECTION("NAME_ID_INTERFACE")
+  !CALL UT%NEXT_TEST("")
+  !
+
+  !
+END SUBROUTINE
+!
+SUBROUTINE test_NUM2STR_INTERFACE(UT)
+  USE UNIT_TESTING_INSTRUCTION, ONLY: UNIT_TESTS
+  USE NUM2STR_INTERFACE, ONLY: NUM2STR, NUM2STR7, INTFMT, NUMFMT, SEQ2STR
+  IMPLICIT NONE
+  TYPE(UNIT_TESTS), INTENT(INOUT):: UT
+  !
+  INTEGER:: I, J, K
+  DOUBLE PRECISION:: DTMP
+  !
+  CALL UT%NEXT_SECTION("")
+  CALL UT%NEXT_TEST("")
+  !
+
+  !
+END SUBROUTINE
+!
+SUBROUTINE test_OBS_GROUP_INTERPOLATOR(UT)
+  USE UNIT_TESTING_INSTRUCTION, ONLY: UNIT_TESTS
+  USE OBS_GROUP_INTERPOLATOR, ONLY: OBS_POINTS, OBS_POINT
+  IMPLICIT NONE
+  TYPE(UNIT_TESTS), INTENT(INOUT):: UT
+  TYPE(OBS_POINTS):: OBS
+  TYPE(OBS_POINT ):: PNT
+  !
+  INTEGER:: I, J, K
+  DOUBLE PRECISION:: DTMP
+  !
+  CALL UT%NEXT_SECTION("OBS_GROUP_INTERPOLATOR")
+  !CALL UT%NEXT_TEST("")
+  !
+
+  !
+END SUBROUTINE
+!
+SUBROUTINE test_PARSE_WORD_INTERFACE(UT)
+  USE UNIT_TESTING_INSTRUCTION, ONLY: UNIT_TESTS
+  USE PARSE_WORD_INTERFACE, ONLY: PARSE_WORD, PARSE_WORD_UP, FIND_NONBLANK, GET_WORD, RET_WORD
+  IMPLICIT NONE
+  TYPE(UNIT_TESTS), INTENT(INOUT):: UT
+  !
+  INTEGER:: I, J, K
+  DOUBLE PRECISION:: DTMP
+  !
+  CALL UT%NEXT_SECTION("PARSE_WORD_INTERFACE")
+  !CALL UT%NEXT_TEST("")
+  !
+
+  !
+END SUBROUTINE
+!
+SUBROUTINE test_PATH_INTERFACE(UT)
+  USE UNIT_TESTING_INSTRUCTION, ONLY: UNIT_TESTS
+  USE PATH_INTERFACE, ONLY: IS_WINDOWS, MAKE_DIRECTORY,       &
+                            FIX_PATH, PATH_TO_ARRAY,          &
+							BSLASH_TO_SLASH, SLASH_TO_BSLASH, &
+                            ADD_DIR_SLASH, ADD_DIR_SLASH_ALLOC
+  IMPLICIT NONE
+  TYPE(UNIT_TESTS), INTENT(INOUT):: UT
+  !
+  INTEGER:: I, J, K
+  DOUBLE PRECISION:: DTMP
+  !
+  CALL UT%NEXT_SECTION("PATH_INTERFACE")
+  !CALL UT%NEXT_TEST("")
+  !
+
+  !
+END SUBROUTINE
+!
+SUBROUTINE test_POSITION_INTERFACE(UT)
+  USE UNIT_TESTING_INSTRUCTION, ONLY: UNIT_TESTS
+  USE POSITION_INTERFACE, ONLY: FIND_POS, STR_POS, INT_POS
+  IMPLICIT NONE
+  TYPE(UNIT_TESTS), INTENT(INOUT):: UT
+  !
+  INTEGER:: I, J, K
+  DOUBLE PRECISION:: DTMP
+  !
+  CALL UT%NEXT_SECTION("POSITION_INTERFACE")
+  !CALL UT%NEXT_TEST("")
+  !
+
+  !
+END SUBROUTINE
+!
+SUBROUTINE test_POST_KEY_SUB(UT)
+  USE UNIT_TESTING_INSTRUCTION, ONLY: UNIT_TESTS
+  USE POST_KEY_SUB, ONLY: CHECK_FOR_POST_KEY
+  IMPLICIT NONE
+  TYPE(UNIT_TESTS), INTENT(INOUT):: UT
+  !
+  INTEGER:: I, J, K
+  DOUBLE PRECISION:: DTMP
+  !
+  CALL UT%NEXT_SECTION("POST_KEY_SUB")
+  !CALL UT%NEXT_TEST("")
+  !
+
+  !
+END SUBROUTINE
+!
+SUBROUTINE test_PRIME_FINDER(UT)
+  USE UNIT_TESTING_INSTRUCTION, ONLY: UNIT_TESTS
+  USE PRIME_FINDER, ONLY: NEXT_PRIME, NEXT_PRIME_GCD, IS_PRIME
+  IMPLICIT NONE
+  TYPE(UNIT_TESTS), INTENT(INOUT):: UT
+  !
+  INTEGER:: I, J, K
+  DOUBLE PRECISION:: DTMP
+  !
+  CALL UT%NEXT_SECTION("PRIME_FINDER")
+  !CALL UT%NEXT_TEST("")
+  !
+
+  !
+END SUBROUTINE
+!
+SUBROUTINE test_RANDOM_ROUTINES(UT)
+  USE, INTRINSIC:: ISO_FORTRAN_ENV, ONLY: INT32, INT64, REL64 => REAL64, qp=>REAL128
+  USE NUM2STR_INTERFACE
+  USE UNIT_TESTING_INSTRUCTION, ONLY: UNIT_TESTS
+  USE RANDOM_ROUTINES, ONLY: RANDOM_GENERATOR, rand, shuffle
+  IMPLICIT NONE
+  TYPE(UNIT_TESTS), INTENT(INOUT):: UT
+  TYPE(RANDOM_GENERATOR):: rg
+  REAL(qp), dimension(6):: M
+  REAL(qp):: div, one, zer, mu, va
+  INTEGER:: I, J, K, mxiter
+  mxiter = 1000000000
+  zer = 0.0_qp
+  one = 1.0_qp
+  div = REAL(mxiter, qp)
+  div = one/div
+  !
+  CALL UT%NEXT_SECTION("RANDOM_ROUTINES")
+  !
+  CALL UT%NEXT_TEST("shuffle()")
+  !
+  BLOCK
+      INTEGER(INT32), dimension(128):: vec
+      LOGICAL,        dimension(128):: test
+      INTEGER:: i, j, k
+      LOGICAL:: passed
+      do i=1, 128
+          vec(i) = i
+      end do
+      !
+      do j=1, 1000
+          call shuffle(vec)
+          !
+          test = .false.
+          do i=1, 128
+                  k = vec(i)
+                  if(0 < k .and. k <=128) test(k) = .true.
+          end do
+          passed = all(test)
+          if( .not. passed) exit
+          !
+      end do
+      CALL UT%assert( passed, msg='call shuffle(vec)' )
+      !
+  END BLOCK
+  !
+  CALL UT%NEXT_TEST("Uniform - real64")
+  !
+  BLOCK
+      REAL(rel64):: rnd, mx, mn
+      INTEGER(INT32):: UP, LO
+      LO = 3
+      UP = 67
+      M  = zer
+      mx = -huge(mx) 
+      mn =  huge(mn)
+      do k=1, mxiter
+          call rg%get(rnd, LO, UP)
+          if(rnd > mx) mx = rnd
+          if(rnd < mn) mn = rnd
+          do i=1, 6
+                  M(i) = M(i) + real(rnd**i, qp)
+          end do
+      end do
+      M = M*div
+      CALL UT%assert( mx, 'LE', dble(UP), msg='mx <= UP for rg%get(rnd, LO, UP)' )
+      CALL UT%assert( mn, 'GE', dble(LO), msg='mn >= LO for rg%get(rnd, LO, UP)' )
+      CALL UT%assert( nint(M(1)), 'EQ', nint(real(UP+LO)/2.0), msg='Average for rg%get(rnd, LO, UP)' )
+      CALL UT%assert( nint(M(2)), 'EQ', nint(real(up**3 - lo**3, qp)/(3.0_qp*real(UP-LO, qp))), msg='Moment 2 for rg%get(rnd, LO, UP)' )
+      !WRITE(*,*)
+      !WRITE(*,'(A,2F12.1)') 'M1 ', M(1), real(up**2 - lo**2, qp)/(2.0_qp*real(UP-LO, qp)) 
+      !WRITE(*,'(A,2F12.1)') 'M2 ', M(2), real(up**3 - lo**3, qp)/(3.0_qp*real(UP-LO, qp)) 
+      !WRITE(*,'(A,2F12.0)') 'M3 ', M(3), real(up**4 - lo**4, qp)/(4.0_qp*real(UP-LO, qp)) 
+      !WRITE(*,'(A,2F12.0)') 'M4 ', M(4), real(up**5 - lo**5, qp)/(5.0_qp*real(UP-LO, qp)) 
+      !WRITE(*,'(A,2F12.0)') 'M5 ', M(5), real(up**6 - lo**6, qp)/(6.0_qp*real(UP-LO, qp)) 
+      !WRITE(*,'(A,2F12.0)') 'M6 ', M(6), real(up**7 - lo**7, qp)/(7.0_qp*real(UP-LO, qp)) 
+  END BLOCK
+  !
+  CALL UT%NEXT_TEST("rand()")
+  !
+  BLOCK
+      REAL(rel64):: rnd, mx, mn
+      INTEGER(INT32):: UP, LO
+      LO = 3
+      UP = 67
+      M  = zer
+      mx = -huge(mx) 
+      mn =  huge(mn)
+      do k=1, mxiter
+          rnd = rand(LO, UP)
+          if(rnd > mx) mx = rnd
+          if(rnd < mn) mn = rnd
+          do i=1, 6
+                  M(i) = M(i) + real(rnd**i, qp)
+          end do
+      end do
+      M = M*div
+      CALL UT%assert( mx, 'LE', dble(UP), msg='mx <= UP for rg%get(rnd, LO, UP)' )
+      CALL UT%assert( mn, 'GE', dble(LO), msg='mn >= LO for rg%get(rnd, LO, UP)' )
+      CALL UT%assert( nint(M(1)), 'EQ', nint(real(UP+LO)/2.0), msg='Average for rg%get(rnd, LO, UP)' )
+      CALL UT%assert( nint(M(2)), 'EQ', nint(real(up**3 - lo**3, qp)/(3.0_qp*real(UP-LO, qp))), msg='Moment 2 for rg%get(rnd, LO, UP)' )
+      !WRITE(*,*)
+      !WRITE(*,'(A,2F12.1)') 'M1 ', M(1), real(up**2 - lo**2, qp)/(2.0_qp*real(UP-LO, qp)) 
+      !WRITE(*,'(A,2F12.1)') 'M2 ', M(2), real(up**3 - lo**3, qp)/(3.0_qp*real(UP-LO, qp)) 
+      !WRITE(*,'(A,2F12.0)') 'M3 ', M(3), real(up**4 - lo**4, qp)/(4.0_qp*real(UP-LO, qp)) 
+      !WRITE(*,'(A,2F12.0)') 'M4 ', M(4), real(up**5 - lo**5, qp)/(5.0_qp*real(UP-LO, qp)) 
+      !WRITE(*,'(A,2F12.0)') 'M5 ', M(5), real(up**6 - lo**6, qp)/(6.0_qp*real(UP-LO, qp)) 
+      !WRITE(*,'(A,2F12.0)') 'M6 ', M(6), real(up**7 - lo**7, qp)/(7.0_qp*real(UP-LO, qp)) 
+  END BLOCK
+  !
+  CALL UT%NEXT_TEST("Uniform - int32")
+  !
+  BLOCK
+      INTEGER(INT32):: rnd, mx, mn
+      INTEGER(INT32):: UP, LO
+      LO = 3
+      UP = 67
+      M  = zer
+      mx = -huge(mx) 
+      mn =  huge(mn)
+      do k=1, mxiter
+          call rg%get(rnd, LO, UP)
+          if(rnd > mx) mx = rnd
+          if(rnd < mn) mn = rnd
+          do i=1, 6
+                  M(i) = M(i) + real(rnd**i, qp)
+          end do
+      end do
+      M = M*div
+      CALL UT%assert( mx, 'LE', UP, msg='mx <= UP for rg%get(rnd, LO, UP)' )
+      CALL UT%assert( mn, 'GE', LO, msg='mn >= LO for rg%get(rnd, LO, UP)' )
+      CALL UT%assert( nint(M(1)), 'EQ', nint(real(UP+LO)/2), msg='Average for rg%get(rnd, LO, UP)' )
+      !WRITE(*,*)
+      !WRITE(*,'(A,2F12.1)') 'M1 ', M(1), real(up**2 - lo**2, qp)/(2.0_qp*real(UP-LO, qp)) 
+      !WRITE(*,'(A,2F12.1)') 'M2 ', M(2), real(up**3 - lo**3, qp)/(3.0_qp*real(UP-LO, qp)) 
+      !WRITE(*,'(A,2F12.0)') 'M3 ', M(3), real(up**4 - lo**4, qp)/(4.0_qp*real(UP-LO, qp)) 
+      !WRITE(*,'(A,2F12.0)') 'M4 ', M(4), real(up**5 - lo**5, qp)/(5.0_qp*real(UP-LO, qp)) 
+      !WRITE(*,'(A,2F12.0)') 'M5 ', M(5), real(up**6 - lo**6, qp)/(6.0_qp*real(UP-LO, qp)) 
+      !WRITE(*,'(A,2F12.0)') 'M6 ', M(6), real(up**7 - lo**7, qp)/(7.0_qp*real(UP-LO, qp)) 
+  END BLOCK
+  !
+  CALL UT%NEXT_TEST("Exponential Samples")
+  !
+  BLOCK
+      REAL(rel64):: rnd
+      M  = zer
+      do k=1, mxiter
+          call rg%exp(rnd)
+          do i=1, 6
+                  M(i) = M(i) + real(rnd**i, qp)
+          end do
+      end do
+      M = M*div
+      CALL UT%assert( nint(1e2_qp*M(1)), 'EQ', 100, msg='Mean/Moment 1' )
+      CALL UT%assert( nint(1e2_qp*M(2)), 'EQ', 200, msg='Moment 2' )
+      CALL UT%assert( nint(1e2_qp*M(3)), 'EQ', 600, msg='Moment 3' )
+      CALL UT%assert( nint(10._qp*M(4)), 'EQ', 240, msg='Moment 4' )
+      CALL UT%assert( nint(       M(5)), 'EQ', 120, msg='Moment 5' )
+      CALL UT%assert( nint(       M(6)), 'EQ', 720, msg='Moment 6' )
+      !WRITE(*,*)
+      !WRITE(*,'(A,2F12.5)') 'M1 ', M(1) 
+      !WRITE(*,'(A,2F12.5)') 'M2 ', M(2) 
+      !WRITE(*,'(A,2F12.5)') 'M3 ', M(3) 
+      !WRITE(*,'(A,2F12.5)') 'M4 ', M(4) 
+      !WRITE(*,'(A,2F12.5)') 'M5 ', M(5) 
+      !WRITE(*,'(A,2F12.5)') 'M6 ', M(6) 
+  END BLOCK
+  !
+  CALL UT%NEXT_TEST("Standard Normal Samples")
+  !
+  BLOCK
+      REAL(rel64):: rnd
+      M  = zer
+      do k=1, mxiter
+          call rg%gauss(rnd)
+          do i=1, 6
+                  M(i) = M(i) + real(rnd**i, qp)
+          end do
+      end do
+      M = M*div
+      CALL UT%assert( nint(1e2_qp*M(1)), 'EQ',   0, msg='Mean/Moment 1' )
+      CALL UT%assert( nint(1e2_qp*M(2)), 'EQ', 100, msg='Moment 2' )
+      CALL UT%assert( nint(1e2_qp*M(3)), 'EQ',   0, msg='Moment 3' )
+      CALL UT%assert( nint(1e2_qp*M(4)), 'EQ', 300, msg='Moment 4' )
+      CALL UT%assert( nint(1e2_qp*M(5)), 'EQ',   0, msg='Moment 5' )
+      CALL UT%assert( nint(10._qp*M(6)), 'EQ', 150, msg='Moment 6' )
+      !WRITE(*,*)
+      !WRITE(*,'(A,2F12.5)') 'M1 ', M(1) 
+      !WRITE(*,'(A,2F12.5)') 'M2 ', M(2) 
+      !WRITE(*,'(A,2F12.5)') 'M3 ', M(3) 
+      !WRITE(*,'(A,2F12.5)') 'M4 ', M(4) 
+      !WRITE(*,'(A,2F12.5)') 'M5 ', M(5) 
+      !WRITE(*,'(A,2F12.5)') 'M6 ', M(6) 
+  END BLOCK
+  !
+END SUBROUTINE
+!
+SUBROUTINE test_RELAX_INTERFACE(UT)
+  USE UNIT_TESTING_INSTRUCTION, ONLY: UNIT_TESTS
+  USE RELAX_INTERFACE, ONLY: RELAXER, RELAX_IT, DAMP_IT
+  IMPLICIT NONE
+  TYPE(UNIT_TESTS), INTENT(INOUT):: UT
+  !
+  INTEGER:: I, J, K
+  DOUBLE PRECISION:: DTMP
+  !
+  CALL UT%NEXT_SECTION("RELAX_INTERFACE")
+  !CALL UT%NEXT_TEST("")
+  !
+
+  !
+END SUBROUTINE
+!
+SUBROUTINE test_SET_ARRAY_INTERFACE(UT)
+  USE UNIT_TESTING_INSTRUCTION, ONLY: UNIT_TESTS
+  USE SET_ARRAY_INTERFACE, ONLY: SET_ARRAY, SET_ZERO, SET_NAN, &
+                                 SET_SEQUENCE, POSITION_SET_ARRAY
+  IMPLICIT NONE
+  TYPE(UNIT_TESTS), INTENT(INOUT):: UT
+  !
+  INTEGER:: I, J, K
+  DOUBLE PRECISION:: DTMP
+  !
+  CALL UT%NEXT_SECTION("SET_ARRAY_INTERFACE")
+  !CALL UT%NEXT_TEST("")
+  !
+
+  !
+END SUBROUTINE
+!
+SUBROUTINE test_SLEEP_INTERFACE(UT)
+  USE, INTRINSIC:: ISO_FORTRAN_ENV, ONLY: INT32, INT64, REL32 => REAL32, REL64 => REAL64
+  USE UNIT_TESTING_INSTRUCTION, ONLY: UNIT_TESTS
+  USE SLEEP_INTERFACE,          ONLY: SLEEP, OS_SLEEP
+  USE TIMER_INSTRUCTION,        ONLY: SIMPLE_TIMER, CPU_TIMER
+  IMPLICIT NONE
+  TYPE(UNIT_TESTS), INTENT(INOUT):: UT
+  DOUBLE PRECISION:: TOL
+  TOL = 0.25d0
+  !
+  CALL UT%NEXT_SECTION("SLEEP_INTERFACE")
+  CALL UT%NEXT_TEST("SLEEP SUBROUTINE")
+  !
+  BLOCK 
+    REAL(REL32):: TIME0, TIME1
+    INTEGER(INT32):: TIM
+    !
+    TIM = 8_INT32
+    CALL CPU_TIME(TIME0)
+    !
+    CALL SLEEP(TIM)
+    !
+    CALL CPU_TIME(TIME1)
+    !
+    CALL UT%ASSERT(ABS(TIME1-TIME0-8.) < TOL, MSG='CALL SLEEP(8_INT32)')
+    !
+  END BLOCK
+  !
+  BLOCK 
+    REAL(REL32):: TIME0, TIME1
+    INTEGER(INT32):: TIM
+    !
+    TIM = 12_INT32
+    CALL CPU_TIME(TIME0)
+    !
+    CALL SLEEP(TIM)
+    !
+    CALL CPU_TIME(TIME1)
+    !
+    CALL UT%ASSERT(ABS(TIME1-TIME0-12.) < TOL, MSG='CALL SLEEP(12_INT32)')
+    !
+  END BLOCK
+  !
+  BLOCK 
+    REAL(REL32):: TIME0, TIME1
+    INTEGER(INT32):: TIM
+    !
+    TIM = 63_INT32
+    CALL CPU_TIME(TIME0)
+    !
+    CALL SLEEP(TIM)
+    !
+    CALL CPU_TIME(TIME1)
+    !
+    CALL UT%ASSERT(ABS(TIME1-TIME0-63.) < TOL, MSG='CALL SLEEP(63_INT32)')
+    !
+  END BLOCK
+  !
+  !~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~
+  !
+  BLOCK 
+    REAL(REL32):: TIME0, TIME1
+    INTEGER(INT64):: TIM
+    !
+    TIM = 8_INT64
+    CALL CPU_TIME(TIME0)
+    !
+    CALL SLEEP(TIM)
+    !
+    CALL CPU_TIME(TIME1)
+    !
+    CALL UT%ASSERT(ABS(TIME1-TIME0-8.) < TOL, MSG='CALL SLEEP(8_INT64)')
+    !
+  END BLOCK
+  !
+  BLOCK 
+    REAL(REL32):: TIME0, TIME1
+    INTEGER(INT64):: TIM
+    !
+    TIM = 12_INT64
+    CALL CPU_TIME(TIME0)
+    !
+    CALL SLEEP(TIM)
+    !
+    CALL CPU_TIME(TIME1)
+    !
+    CALL UT%ASSERT(ABS(TIME1-TIME0-12.) < TOL, MSG='CALL SLEEP(12_INT64)')
+    !
+  END BLOCK
+  !
+  BLOCK 
+    REAL(REL32):: TIME0, TIME1
+    INTEGER(INT64):: TIM
+    !
+    TIM = 63_INT64
+    CALL CPU_TIME(TIME0)
+    !
+    CALL SLEEP(TIM)
+    !
+    CALL CPU_TIME(TIME1)
+    !
+    CALL UT%ASSERT(ABS(TIME1-TIME0-63.) < TOL, MSG='CALL SLEEP(63_INT64)')
+    !
+  END BLOCK
+  !
+  !~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~
+  !
+  BLOCK 
+    REAL(REL32):: TIME0, TIME1
+    REAL(REL32):: TIM
+    !
+    TIM = 8_REL32
+    CALL CPU_TIME(TIME0)
+    !
+    CALL SLEEP(TIM)
+    !
+    CALL CPU_TIME(TIME1)
+    !
+    CALL UT%ASSERT(ABS(TIME1-TIME0-8.) < TOL, MSG='CALL SLEEP(8_REL32)')
+    !
+  END BLOCK
+  !
+  BLOCK 
+    REAL(REL32):: TIME0, TIME1
+    REAL(REL32):: TIM
+    !
+    TIM = 12_REL32
+    CALL CPU_TIME(TIME0)
+    !
+    CALL SLEEP(TIM)
+    !
+    CALL CPU_TIME(TIME1)
+    !
+    CALL UT%ASSERT(ABS(TIME1-TIME0-12.) < TOL, MSG='CALL SLEEP(12_REL32)')
+    !
+  END BLOCK
+  !
+  BLOCK 
+    REAL(REL32):: TIME0, TIME1
+    REAL(REL32):: TIM
+    !
+    TIM = 63_REL32
+    CALL CPU_TIME(TIME0)
+    !
+    CALL SLEEP(TIM)
+    !
+    CALL CPU_TIME(TIME1)
+    !
+    CALL UT%ASSERT(ABS(TIME1-TIME0-63.) < TOL, MSG='CALL SLEEP(63_REL32)')
+    !
+  END BLOCK
+  !
+  !~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~
+  !
+  BLOCK 
+    REAL(REL32):: TIME0, TIME1
+    REAL(REL64):: TIM
+    !
+    TIM = 8_REL64
+    CALL CPU_TIME(TIME0)
+    !
+    CALL SLEEP(TIM)
+    !
+    CALL CPU_TIME(TIME1)
+    !
+    CALL UT%ASSERT(ABS(TIME1-TIME0-8.) < TOL, MSG='CALL SLEEP(8_REL64)')
+    !
+  END BLOCK
+  !
+  BLOCK 
+    REAL(REL32):: TIME0, TIME1
+    REAL(REL64):: TIM
+    !
+    TIM = 12_REL64
+    CALL CPU_TIME(TIME0)
+    !
+    CALL SLEEP(TIM)
+    !
+    CALL CPU_TIME(TIME1)
+    !
+    CALL UT%ASSERT(ABS(TIME1-TIME0-12.) < TOL, MSG='CALL SLEEP(12_REL64)')
+    !
+  END BLOCK
+  !
+  BLOCK 
+    REAL(REL32):: TIME0, TIME1
+    REAL(REL64):: TIM
+    !
+    TIM = 63_REL64
+    CALL CPU_TIME(TIME0)
+    !
+    CALL SLEEP(TIM)
+    !
+    CALL CPU_TIME(TIME1)
+    !
+    CALL UT%ASSERT(ABS(TIME1-TIME0-63.) < TOL, MSG='CALL SLEEP(63_REL64)')
+    !
+  END BLOCK
+  !
+  !###############################################################################
+  !###############################################################################
+  !###############################################################################
+  !
+  CALL UT%NEXT_TEST("OS_SLEEP SUBROUTINE")
+  TOL = 1d0
+  !
+  BLOCK 
+    INTEGER(INT32):: TIM
+    TYPE(SIMPLE_TIMER):: T
+    !
+    CALL T%START()
+    !
+    TIM = 8_INT32
+    CALL OS_SLEEP(TIM)
+    !
+    CALL UT%ASSERT(ABS(T%ELAPSED()-8.) < TOL, MSG='CALL OS_SLEEP(8_INT32)')
+    !
+  END BLOCK
+  !
+  BLOCK 
+    INTEGER(INT32):: TIM
+    TYPE(SIMPLE_TIMER):: T
+    !
+    CALL T%START()
+    !
+    TIM = 12_INT32
+    CALL OS_SLEEP(TIM)
+    !
+    CALL UT%ASSERT(ABS(T%ELAPSED()-12.) < TOL, MSG='CALL OS_SLEEP(12_INT32)')
+    !
+  END BLOCK
+  !
+  BLOCK 
+    INTEGER(INT32):: TIM
+    TYPE(SIMPLE_TIMER):: T
+    !
+    CALL T%START()
+    !
+    TIM = 63_INT32
+    CALL OS_SLEEP(TIM)
+    !
+    CALL UT%ASSERT(ABS(T%ELAPSED()-63.) < TOL, MSG='CALL OS_SLEEP(63_INT32)')
+    !
+  END BLOCK
+  !
+  !~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~
+  !
+  BLOCK 
+    INTEGER(INT64):: TIM
+    TYPE(SIMPLE_TIMER):: T
+    !
+    CALL T%START()
+    !
+    TIM = 8_INT64
+    CALL OS_SLEEP(TIM)
+    !
+    CALL UT%ASSERT(ABS(T%ELAPSED()-8.) < TOL, MSG='CALL OS_SLEEP(8_INT64)')
+    !
+  END BLOCK
+  !
+  BLOCK 
+    INTEGER(INT64):: TIM
+    TYPE(SIMPLE_TIMER):: T
+    !
+    CALL T%START()
+    !
+    TIM = 12_INT64
+    CALL OS_SLEEP(TIM)
+    !
+    CALL UT%ASSERT(ABS(T%ELAPSED()-12.) < TOL, MSG='CALL OS_SLEEP(12_INT64)')
+    !
+  END BLOCK
+  !
+  BLOCK 
+    INTEGER(INT64):: TIM
+    TYPE(SIMPLE_TIMER):: T
+    !
+    CALL T%START()
+    !
+    TIM = 63_INT64
+    CALL OS_SLEEP(TIM)
+    !
+    CALL UT%ASSERT(ABS(T%ELAPSED()-63.) < TOL, MSG='CALL OS_SLEEP(63_INT64)')
+    !
+  END BLOCK
+  !
+  !~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~
+  !
+  BLOCK 
+    REAL(REL32):: TIM
+    TYPE(SIMPLE_TIMER):: T
+    !
+    CALL T%START()
+    !
+    TIM = 8_REL32
+    CALL OS_SLEEP(TIM)
+    !
+    CALL UT%ASSERT(ABS(T%ELAPSED()-8.) < TOL, MSG='CALL OS_SLEEP(8_REL32)')
+    !
+  END BLOCK
+  !
+  BLOCK 
+    REAL(REL32):: TIM
+    TYPE(SIMPLE_TIMER):: T
+    !
+    CALL T%START()
+    !
+    TIM = 12_REL32
+    CALL OS_SLEEP(TIM)
+    !
+    CALL UT%ASSERT(ABS(T%ELAPSED()-12.) < TOL, MSG='CALL OS_SLEEP(12_REL32)')
+    !
+  END BLOCK
+  !
+  BLOCK 
+    REAL(REL32):: TIM
+    TYPE(SIMPLE_TIMER):: T
+    !
+    CALL T%START()
+    !
+    TIM = 63_REL32
+    CALL OS_SLEEP(TIM)
+    !
+    CALL UT%ASSERT(ABS(T%ELAPSED()-63.) < TOL, MSG='CALL OS_SLEEP(63_REL32)')
+    !
+  END BLOCK
+  !
+  !~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~
+  !
+  BLOCK 
+    REAL(REL64):: TIM
+    TYPE(SIMPLE_TIMER):: T
+    !
+    CALL T%START()
+    !
+    TIM = 8_REL64
+    CALL OS_SLEEP(TIM)
+    !
+    CALL UT%ASSERT(ABS(T%ELAPSED()-8.) < TOL, MSG='CALL OS_SLEEP(8_REL64)')
+    !
+  END BLOCK
+  !
+  BLOCK 
+    REAL(REL64):: TIM
+    TYPE(SIMPLE_TIMER):: T
+    !
+    CALL T%START()
+    !
+    TIM = 12_REL64
+    CALL OS_SLEEP(TIM)
+    !
+    CALL UT%ASSERT(ABS(T%ELAPSED()-12.) < TOL, MSG='CALL OS_SLEEP(12_REL64)')
+    !
+  END BLOCK
+  !
+  BLOCK 
+    REAL(REL64):: TIM
+    TYPE(SIMPLE_TIMER):: T
+    !
+    CALL T%START()
+    !
+    TIM = 63_REL64
+    CALL OS_SLEEP(TIM)
+    !
+    CALL UT%ASSERT(ABS(T%ELAPSED()-63.) < TOL, MSG='CALL OS_SLEEP(63_REL64)')
+    !
+  END BLOCK
+  !
+END SUBROUTINE
+!
+SUBROUTINE test_SORT_INTERFACE(UT)
+  USE UNIT_TESTING_INSTRUCTION, ONLY: UNIT_TESTS
+  USE SORT_WILD_EXAMPLE3_MOD, ONLY: SORT_WILD_EXAMPLE3
+  !USE SORT_INTERFACE, ONLY: SORT, SORTED, REVERSE_ORDER, SORT_BY_DIM1
+  IMPLICIT NONE
+  TYPE(UNIT_TESTS), INTENT(INOUT):: UT
+  !
+  !
+  CALL UT%NEXT_SECTION("SORT_INTERFACE - 1D and 2D")
+  !
+  CALL SORT_1D_TEST_INT32(UT)
+  CALL SORT_1D_TEST_INT64(UT)
+  CALL SORT_1D_TEST_REL32(UT)
+  CALL SORT_1D_TEST_REL64(UT)
+  !
+  CALL SORT_2D_COL_TEST1(UT)
+  CALL SORT_2D_COL_TEST2(UT)
+  !
+  CALL SORT_2D_ROW_TEST1(UT)
+  CALL SORT_2D_ROW_TEST2(UT)
+  !
+  CALL UT%NEXT_SECTION("SORT_INTERFACE - 1D-1D")
+  !
+  CALL SORT_1D_1D_INT32_INT32_TEST(UT)
+  CALL SORT_1D_1D_INT32_INT64_TEST(UT)
+  CALL SORT_1D_1D_INT32_REL32_TEST(UT)
+  CALL SORT_1D_1D_INT32_REL64_TEST(UT)
+  call SORT_1D_1D_INT32_CHAR_TEST(UT)
+  !
+  CALL SORT_1D_1D_INT64_INT32_TEST(UT)
+  CALL SORT_1D_1D_INT64_INT64_TEST(UT)
+  CALL SORT_1D_1D_INT64_REL32_TEST(UT)
+  CALL SORT_1D_1D_INT64_REL64_TEST(UT)
+  call SORT_1D_1D_INT64_CHAR_TEST(UT)
+  !
+  CALL SORT_1D_1D_REL32_INT32_TEST(UT)
+  CALL SORT_1D_1D_REL32_INT64_TEST(UT)
+  CALL SORT_1D_1D_REL32_REL32_TEST(UT)
+  CALL SORT_1D_1D_REL32_REL64_TEST(UT)
+  call SORT_1D_1D_REL32_CHAR_TEST(UT)
+  !
+  CALL SORT_1D_1D_REL64_INT32_TEST(UT)
+  CALL SORT_1D_1D_REL64_INT64_TEST(UT)
+  CALL SORT_1D_1D_REL64_REL32_TEST(UT)
+  CALL SORT_1D_1D_REL64_REL64_TEST(UT)
+  !
+  CALL SORT_1D_1D_INT32_INT32_INT32_TEST1(UT)
+  CALL SORT_1D_1D_INT32_INT32_INT32_TEST2(UT)
+  !
+  CALL SORT_1D_1D_REL64_REL64_REL64_TEST(UT)
+  !
+  CALL SORT_1D_1D_REL64_INT32_INT32_TEST(UT)
+  !
+  CALL SORT_1D_1D_INT32_REL64_REL64_TEST(UT)
+  !
+  CALL SORT_1D_1D_INT32_INT32_REL64_TEST(UT)
+  !
+  CALL SORT_MULTI_WILD_WILD_WILD_TEST(UT)
+  !
+  CALL UT%NEXT_SECTION("SORT_INTERFACE - CLASS(*)")
+  !
+  CALL SORT_WILD_EXAMPLE1(UT)
+  CALL SORT_WILD_EXAMPLE2(UT)
+  CALL SORT_WILD_EXAMPLE3(UT)
+  !
+  CALL SORT_TEST_INT32_AS_WILD(UT)
+  !
+END SUBROUTINE
+!
+SUBROUTINE test_STRINGS(UT)
+  USE UNIT_TESTING_INSTRUCTION, ONLY: UNIT_TESTS
+  USE STRINGS, ONLY:  GET, GET_NUMBER, GET_INTEGER, GET_DATE, GET_DOUBLE_DATE, GET_WORD, &
+                      UPPER, GO_UP, IS_IN_STR, JOIN_TXT,                                 &
+                      NAME_LIST_DUBLICATE_CHECK,                                         &
+                      SPECIAL_BLANK_STRIP, COMMA_STRIP, TAB_STRIP,                       &
+                      PRE_CHECK_WORD, FPRE_CHECK_WORD, POST_CHECK_WORD, FPOST_CHECK_WORD
+  IMPLICIT NONE
+  TYPE(UNIT_TESTS), INTENT(INOUT):: UT
+  !
+  INTEGER:: I, J, K
+  DOUBLE PRECISION:: DTMP
+  !
+  CALL UT%NEXT_SECTION("STRINGS")
+  !CALL UT%NEXT_TEST("")
+  !
+  
+  !
+END SUBROUTINE
+!
+SUBROUTINE test_SUB_BLOCK_INPUT_INTERFACE(UT)
+  USE UNIT_TESTING_INSTRUCTION, ONLY: UNIT_TESTS
+  USE SUB_BLOCK_INPUT_INTERFACE, ONLY: SUB_BLOCK_INPUT
+  IMPLICIT NONE
+  TYPE(UNIT_TESTS), INTENT(INOUT):: UT
+  TYPE(SUB_BLOCK_INPUT):: SUBL
+  !
+  INTEGER:: I, J, K
+  DOUBLE PRECISION:: DTMP
+  !
+  CALL UT%NEXT_SECTION("SUB_BLOCK_INPUT_INTERFACE")
+  !CALL UT%NEXT_TEST("")
+  !
+
+  !
+END SUBROUTINE
+!
+SUBROUTINE test_TIME_SERIES_INSTRUCTION(UT)
+  USE UNIT_TESTING_INSTRUCTION, ONLY: UNIT_TESTS
+  USE TIME_SERIES_INSTRUCTION, ONLY: TIME_SERIES_FILE, TIME_SERIES_FILE_GROUP, LOAD_TIME_SERIES_BLOCK, LOAD_TIME_SERIES_BLOCK_POINTER
+  IMPLICIT NONE
+  TYPE(UNIT_TESTS), INTENT(INOUT):: UT
+  TYPE(TIME_SERIES_FILE      ):: TSF
+  TYPE(TIME_SERIES_FILE_GROUP):: TSG
+  !
+  INTEGER:: I, J, K
+  DOUBLE PRECISION:: DTMP
+  !
+  CALL UT%NEXT_SECTION("TIME_SERIES_INSTRUCTION")
+  !CALL UT%NEXT_TEST("")
+  !
+
+  !
+END SUBROUTINE
+!
+SUBROUTINE test_TIMER_INSTRUCTION(UT)
+  USE UNIT_TESTING_INSTRUCTION, ONLY: UNIT_TESTS
+  USE TIMER_INSTRUCTION,        ONLY: SIMPLE_TIMER, CPU_TIMER
+  IMPLICIT NONE
+  TYPE(UNIT_TESTS), INTENT(INOUT):: UT
+  DOUBLE PRECISION:: TOL
+  TOL = 0.1d0
+  !
+  CALL UT%NEXT_SECTION("TIMER_INSTRUCTION")
+  !
+  CALL UT%NEXT_TEST("1 second Tests")
+  !
+  BLOCK 
+    TYPE(SIMPLE_TIMER):: TIM
+    DOUBLE PRECISION:: DTMP
+    !
+    CALL TIM%START()
+    !
+    call sleep(1)     ! Uses GNU and Intel Fortran extension for timing
+    !
+    DTMP = TIM%ELAPSED()
+    !
+    CALL UT%ASSERT(ABS(DTMP-5d0) < TOL, MSG='SIMPLE_TIM%ELAPSED() = 5s')
+    !
+    call sleep(1)
+    DTMP = TIM%ELAPSED()
+    !
+    CALL UT%ASSERT(ABS(DTMP-6d0) < TOL, MSG='SIMPLE_TIM%ELAPSED() = 6s Attempt 2')
+    !
+  END BLOCK
+  !
+  BLOCK 
+    TYPE(CPU_TIMER):: TIM
+    DOUBLE PRECISION:: DTMP
+    !
+    CALL TIM%INIT()
+    CALL TIM%START()
+    !
+    call sleep(5)     ! Uses GNU and Intel Fortran extension for timing
+    !
+    DTMP = TIM%ELAPSED()
+    !
+    CALL UT%ASSERT(ABS(DTMP-5d0) < TOL, MSG='CPU_TIM%ELAPSED() = 5s')
+    !
+    call sleep(1)
+    DTMP = TIM%ELAPSED()
+    !
+    CALL UT%ASSERT(ABS(DTMP-6d0) < TOL, MSG='CPU_TIM%ELAPSED() = 6s Attempt 2')
+    !
+  END BLOCK
+  !
+  !--------------------------------------------------------------------
+  CALL UT%NEXT_TEST("SIMPLE_TIMER")
+  !--------------------------------------------------------------------
+  !
+  BLOCK 
+    TYPE(SIMPLE_TIMER):: TIM
+    DOUBLE PRECISION:: DTMP
+    !
+    CALL TIM%START()
+    !
+    call sleep(5)     ! Uses GNU and Intel Fortran extension for timing
+    !
+    DTMP = TIM%ELAPSED()
+    !
+    CALL UT%ASSERT(ABS(DTMP-5d0) < TOL, MSG='SIMPLE_TIM%ELAPSED() = 5s')
+    !
+    call sleep(1)
+    DTMP = TIM%ELAPSED()
+    !
+    CALL UT%ASSERT(ABS(DTMP-6d0) < TOL, MSG='SIMPLE_TIM%ELAPSED() = 6s Attempt 2')
+    !
+  END BLOCK
+  BLOCK 
+    TYPE(CPU_TIMER):: TIM
+    DOUBLE PRECISION:: DTMP
+    !
+    CALL TIM%INIT()
+    CALL TIM%START()
+    !
+    call sleep(5)     ! Uses GNU and Intel Fortran extension for timing
+    !
+    DTMP = TIM%ELAPSED()
+    !
+    CALL UT%ASSERT(ABS(DTMP-5d0) < TOL, MSG='CPU_TIM%ELAPSED() = 5s')
+    !
+    call sleep(1)
+    DTMP = TIM%ELAPSED()
+    !
+    CALL UT%ASSERT(ABS(DTMP-6d0) < TOL, MSG='CPU_TIM%ELAPSED() = 6s Attempt 2')
+    !
+  END BLOCK
+  !
+  BLOCK 
+    TYPE(SIMPLE_TIMER):: TIM
+    DOUBLE PRECISION:: DTMP
+    !
+    CALL TIM%START()
+    !
+    CALL sleep(4)     ! Uses GNU and Intel Fortran extension for timing
+    CALL TIM%SAVE_LAP()
+    !
+    CALL sleep(6)
+    CALL TIM%SAVE_LAP()
+    CALL sleep(5)
+    CALL TIM%SAVE_LAP()
+    CALL sleep(2)
+    CALL TIM%SAVE_LAP()
+    !
+    DTMP = TIM%ELAPSED()
+    !
+    CALL UT%ASSERT(     TIM%LAP_NUM == 4          .AND. &
+                        ABS( TIM%LAPS(1) - 4d0 ) < TOL .AND. &
+                        ABS( TIM%LAPS(2) - 6d0 ) < TOL .AND. &
+                        ABS( TIM%LAPS(3) - 5d0 ) < TOL .AND. &
+                        ABS( TIM%LAPS(4) - 2d0 ) < TOL .AND. &
+                        ABS( DTMP       - 17d0 ) < TOL, MSG='SIMPLE_TIM%SAVE_LAP() done 4 times')
+  END BLOCK
+  !
+  BLOCK 
+    TYPE(SIMPLE_TIMER):: TIM
+    DOUBLE PRECISION:: DTMP, DTIM
+    INTEGER:: I, J
+    !
+    CALL TIM%START()
+    !
+    DTIM = 0d0
+    J = 0
+    DO I=1, 100
+        J = J + 1
+        IF( J == 5 ) J = 1
+        DTIM = DTIM + DBLE(J) 
+       CALL sleep(J)     ! Uses GNU and Intel Fortran extension for timing
+       CALL TIM%SAVE_LAP()
+    END DO    
+    !
+    DTMP = TIM%ELAPSED()
+    !
+    CALL UT%ASSERT(     TIM%LAP_NUM == 100        .AND. &
+                        ABS( TIM%LAPS(1) - 1d0 ) < TOL .AND. &
+                        ABS( TIM%LAPS(4) - 4d0 ) < TOL .AND. &
+                        ABS( TIM%LAPS( 50)-2d0 ) < TOL .AND. &
+                        ABS( TIM%LAPS(100)-4d0 ) < TOL .AND. &
+                        ABS( DTMP       - DTIM ) < 0.5d0, MSG='SIMPLE_TIM%SAVE_LAP() done 4 times')
+  END BLOCK
+  !
+  BLOCK 
+    TYPE(SIMPLE_TIMER):: TIM
+    DOUBLE PRECISION:: DTMP, LAP1, LAP2, LAP3
+    !
+    CALL TIM%START()
+    !
+    CALL sleep(4)     ! Uses GNU and Intel Fortran extension for timing
+    CALL TIM%LAP(LAP1)
+    !
+    CALL sleep(6)
+    CALL TIM%LAP(LAP2)
+    !
+    CALL sleep(5)
+    CALL TIM%LAP(LAP3)
+    !
+    DTMP = TIM%ELAPSED()
+    !
+    CALL UT%ASSERT(ABS( LAP1 -  4d0 ) < TOL .AND. &
+                        ABS( LAP2 -  6d0 ) < TOL .AND. &
+                        ABS( LAP3 -  5d0 ) < TOL .AND. &
+                        ABS( DTMP - 15d0 ) < TOL, MSG='SIMPLE_TIM%LAP(LAP3)')
+    !
+  END BLOCK
+  !
+  !!!BLOCK 
+  !!!  TYPE(SIMPLE_TIMER):: TIM
+  !!!  !
+  !!!  WRITE(*,*)
+  !!!  CALL TIM%START()
+  !!!  !
+  !!!  CALL sleep(4)     ! Uses GNU and Intel Fortran extension for timing
+  !!!  CALL TIM%PRINT_LAP(TXT='Lap 1', HED='Timer Output')
+  !!!  !
+  !!!  CALL sleep(6)
+  !!!  CALL TIM%PRINT_LAP(TXT='Lap 2')
+  !!!  !
+  !!!  CALL sleep(5)
+  !!!  CALL TIM%PRINT_LAP(TXT='Lap 3')
+  !!!  !
+  !!!END BLOCK
+  !!!CONTINUE
+  !!!!
+  !!!BLOCK 
+  !!!  TYPE(SIMPLE_TIMER):: TIM
+  !!!  !
+  !!!  CALL TIM%START()
+  !!!  !
+  !!!  CALL sleep(4)     ! Uses GNU and Intel Fortran extension for timing
+  !!!  CALL TIM%SAVE_LAP()
+  !!!  CALL sleep(6)
+  !!!  CALL TIM%SAVE_LAP()
+  !!!  CALL sleep(3)
+  !!!  CALL TIM%SAVE_LAP()
+  !!!  !
+  !!!  WRITE(*,*)
+  !!!  CALL TIM%PRINT_LAPS(HED='Lap Output')
+  !!!  !
+  !!!END BLOCK
+  !!!CONTINUE
+  !--------------------------------------------------------------------
+  CALL UT%NEXT_TEST("CPU_TIMER")
+  !--------------------------------------------------------------------
+  BLOCK 
+    TYPE(CPU_TIMER):: TIM
+    DOUBLE PRECISION:: DTMP
+    !
+    CALL TIM%INIT()
+    CALL TIM%START()
+    !
+    call sleep(5)     ! Uses GNU and Intel Fortran extension for timing
+    !
+    DTMP = TIM%ELAPSED()
+    !
+    CALL UT%ASSERT(ABS(DTMP-5d0) < TOL, MSG='CPU_TIM%ELAPSED() = 5s')
+    !
+    call sleep(1)
+    DTMP = TIM%ELAPSED()
+    !
+    CALL UT%ASSERT(ABS(DTMP-6d0) < TOL, MSG='CPU_TIM%ELAPSED() = 6s Attempt 2')
+    !
+  END BLOCK
+  !
+  BLOCK 
+    TYPE(CPU_TIMER):: TIM
+    DOUBLE PRECISION:: DTMP
+    !
+    CALL TIM%START()
+    !
+    CALL sleep(4)     ! Uses GNU and Intel Fortran extension for timing
+    CALL TIM%SAVE_LAP()
+    !
+    CALL sleep(6)
+    CALL TIM%SAVE_LAP()
+    CALL sleep(5)
+    CALL TIM%SAVE_LAP()
+    CALL sleep(2)
+    CALL TIM%SAVE_LAP()
+    !
+    DTMP = TIM%ELAPSED()
+    !
+    CALL UT%ASSERT(     TIM%LAP_NUM == 4          .AND. &
+                        ABS( TIM%LAPS(1) - 4d0 ) < TOL .AND. &
+                        ABS( TIM%LAPS(2) - 6d0 ) < TOL .AND. &
+                        ABS( TIM%LAPS(3) - 5d0 ) < TOL .AND. &
+                        ABS( TIM%LAPS(4) - 2d0 ) < TOL .AND. &
+                        ABS( DTMP       - 17d0 ) < TOL, MSG='CPU_TIM%SAVE_LAP() done 4 times')
+  END BLOCK
+  !
+  BLOCK 
+    TYPE(CPU_TIMER):: TIM
+    DOUBLE PRECISION:: DTMP, DTIM
+    INTEGER:: I, J
+    !
+    CALL TIM%START()
+    !
+    DTIM = 0d0
+    J = 0
+    DO I=1, 100
+        J = J + 1
+        IF( J == 5 ) J = 1
+        DTIM = DTIM + DBLE(J) 
+       CALL sleep(J)     ! Uses GNU and Intel Fortran extension for timing
+       CALL TIM%SAVE_LAP()
+    END DO    
+    !
+    DTMP = TIM%ELAPSED()
+    !
+    CALL UT%ASSERT(     TIM%LAP_NUM == 100        .AND. &
+                        ABS( TIM%LAPS(1) - 1d0 ) < TOL .AND. &
+                        ABS( TIM%LAPS(4) - 4d0 ) < TOL .AND. &
+                        ABS( TIM%LAPS( 50)-2d0 ) < TOL .AND. &
+                        ABS( TIM%LAPS(100)-4d0 ) < TOL .AND. &
+                        ABS( DTMP       - DTIM ) < 0.5d0, MSG='CPU_TIM%SAVE_LAP() done 4 times')
+  END BLOCK
+  !
+  BLOCK 
+    TYPE(CPU_TIMER):: TIM
+    DOUBLE PRECISION:: DTMP, LAP1, LAP2, LAP3
+    !
+    CALL TIM%START()
+    !
+    CALL sleep(4)     ! Uses GNU and Intel Fortran extension for timing
+    CALL TIM%LAP(LAP1)
+    !
+    CALL sleep(6)
+    CALL TIM%LAP(LAP2)
+    !
+    CALL sleep(5)
+    CALL TIM%LAP(LAP3)
+    !
+    DTMP = TIM%ELAPSED()
+    !
+    CALL UT%ASSERT(ABS( LAP1 -  4d0 ) < TOL .AND. &
+                        ABS( LAP2 -  6d0 ) < TOL .AND. &
+                        ABS( LAP3 -  5d0 ) < TOL .AND. &
+                        ABS( DTMP - 15d0 ) < TOL, MSG='CPU_TIM%LAP(LAP3)')
+    !
+  END BLOCK
+  !
+  !!!BLOCK 
+  !!!  TYPE(CPU_TIMER):: TIM
+  !!!  !
+  !!!  WRITE(*,*)
+  !!!  CALL TIM%START()
+  !!!  !
+  !!!  CALL sleep(4)     ! Uses GNU and Intel Fortran extension for timing
+  !!!  CALL TIM%PRINT_LAP(TXT='Lap 1', HED='Timer Output')
+  !!!  !
+  !!!  CALL sleep(6)
+  !!!  CALL TIM%PRINT_LAP(TXT='Lap 2')
+  !!!  !
+  !!!  CALL sleep(5)
+  !!!  CALL TIM%PRINT_LAP(TXT='Lap 3')
+  !!!  !
+  !!!END BLOCK
+  !!!CONTINUE
+  !!!!
+  !!!BLOCK 
+  !!!  TYPE(CPU_TIMER):: TIM
+  !!!  !
+  !!!  CALL TIM%START()
+  !!!  !
+  !!!  CALL sleep(4)     ! Uses GNU and Intel Fortran extension for timing
+  !!!  CALL TIM%SAVE_LAP()
+  !!!  CALL sleep(6)
+  !!!  CALL TIM%SAVE_LAP()
+  !!!  CALL sleep(3)
+  !!!  CALL TIM%SAVE_LAP()
+  !!!  !
+  !!!  WRITE(*,*)
+  !!!  CALL TIM%PRINT_LAPS(HED='Lap Output')
+  !!!  !
+  !!!END BLOCK
+  !!!CONTINUE
+  !
+END SUBROUTINE
+!
+SUBROUTINE test_TRANSIENT_FILE_READER_INSTRUCTION(UT)
+  USE UNIT_TESTING_INSTRUCTION, ONLY: UNIT_TESTS
+  USE TRANSIENT_FILE_READER_INSTRUCTION, ONLY: TRANSIENT_FILE_READER
+  IMPLICIT NONE
+  TYPE(UNIT_TESTS), INTENT(INOUT):: UT
+  TYPE(TRANSIENT_FILE_READER):: TFR
+  !
+  INTEGER:: I, J, K
+  DOUBLE PRECISION:: DTMP
+  !
+  CALL UT%NEXT_SECTION("TRANSIENT_FILE_READER_INSTRUCTION")
+  !CALL UT%NEXT_TEST("")
+  !
+
+  !
+END SUBROUTINE
+!
+SUBROUTINE test_ULOAD_AND_SFAC_INTERFACE(UT)
+  USE UNIT_TESTING_INSTRUCTION, ONLY: UNIT_TESTS
+  USE ULOAD_AND_SFAC_INTERFACE, ONLY: SFAC_DATA, ULOAD
+  IMPLICIT NONE
+  TYPE(UNIT_TESTS), INTENT(INOUT):: UT
+  TYPE(SFAC_DATA):: SFAC
+  !
+  INTEGER:: I, J, K
+  DOUBLE PRECISION:: DTMP
+  !
+  CALL UT%NEXT_SECTION("ULOAD_AND_SFAC_INTERFACE")
+  !CALL UT%NEXT_TEST("")
+  !
+
+  !
+END SUBROUTINE
+!
+SUBROUTINE test_UTIL_INTERFACE(UT)
+  USE UNIT_TESTING_INSTRUCTION, ONLY: UNIT_TESTS
+  USE UTIL_INTERFACE, ONLY:   CELLID_TO_LRC, LRC_TO_CELLID, TO_SNGL,                   &
+                              DIM_MISMATCH, DIM_OVERFLOW,                              &
+                              NEAR_ZERO, NOT_NEAR_ZERO, MAKE_ZERO_IF_POS,              &
+                              MAKE_ZERO_IF_NEG, ONLY_ZERO_TO_ONE_RANGE, SET_NEAR_ZERO, &
+                              ZERO_OR_GREATER, ZERO_OR_LESS,                           &
+                              VEC_ADJUST_MAXSUM, REDUCE_SUM_BY
+  IMPLICIT NONE
+  TYPE(UNIT_TESTS), INTENT(INOUT):: UT
+  !
+  INTEGER:: I, J, K
+  DOUBLE PRECISION:: DTMP
+  !
+  CALL UT%NEXT_SECTION("UTIL_INTERFACE")
+  !CALL UT%NEXT_TEST("")
+  !
+
+
+  !
+END SUBROUTINE
+!
+SUBROUTINE test_VARIABLE_POINTER_LIST_INTERFACE(UT)
+  USE UNIT_TESTING_INSTRUCTION, ONLY: UNIT_TESTS
+  USE VARIABLE_POINTER_LIST_INTERFACE, ONLY: VAR_POINTER_LIST
+  IMPLICIT NONE
+  TYPE(UNIT_TESTS), INTENT(INOUT):: UT
+  TYPE(VAR_POINTER_LIST):: VPNT
+  !
+  INTEGER:: I, J, K
+  DOUBLE PRECISION:: DTMP
+  !
+  CALL UT%NEXT_SECTION("VARIABLE_POINTER_LIST_INTERFACE")
+  !CALL UT%NEXT_TEST("")
+  !
+
+  !
+END SUBROUTINE
+!
+SUBROUTINE test_WARNING_TYPE_INSTRUCTION(UT)
+  USE UNIT_TESTING_INSTRUCTION, ONLY: UNIT_TESTS
+  USE WARNING_TYPE_INSTRUCTION, ONLY: WARNING_TYPE, WARNING_TYPE_DEPOINT
+  IMPLICIT NONE
+  TYPE(UNIT_TESTS), INTENT(INOUT):: UT
+  TYPE(WARNING_TYPE):: WRN
+  !
+  INTEGER:: I, J, K
+  DOUBLE PRECISION:: DTMP
+  !
+  CALL UT%NEXT_SECTION("")
+  CALL UT%NEXT_TEST("")
+  !
+
+  !
+END SUBROUTINE
+!
+SUBROUTINE test_XY_GRID_COORDINATE_INTERFACE(UT)
+  USE UNIT_TESTING_INSTRUCTION, ONLY: UNIT_TESTS
+  USE XY_GRID_COORDINATE_INTERFACE, ONLY: XY_GRID_COODINATES
+  IMPLICIT NONE
+  TYPE(UNIT_TESTS), INTENT(INOUT):: UT
+  TYPE(XY_GRID_COODINATES):: XY
+  !
+  INTEGER:: I, J, K
+  DOUBLE PRECISION:: DTMP
+  !
+  CALL UT%NEXT_SECTION("XY_GRID_COORDINATE_INTERFACE")
+  !CALL UT%NEXT_TEST("")
+  !
+
+  !
+END SUBROUTINE
+!
