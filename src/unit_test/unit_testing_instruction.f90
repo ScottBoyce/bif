@@ -3725,7 +3725,7 @@ MODULE UNIT_TESTING_INSTRUCTION
   SUBROUTINE ASSERT_UNIT_TEST_0D_NONZERO_INT8(UT, INT, WANT, MSG, KILL)
     CLASS(UNIT_TESTS),      intent(inout):: UT
     INTEGER(INT8),          intent(in   ):: INT
-    LOGICAL,      optional, intent(in   ):: WANT
+    INTEGER(INT8),optional, intent(in   ):: WANT
     CHARACTER(*), optional, intent(in   ):: MSG
     LOGICAL,      optional, intent(in   ):: KILL
     LOGICAL:: PASSED
@@ -3743,11 +3743,11 @@ MODULE UNIT_TESTING_INSTRUCTION
   ! ---------------------------------------------------------------------------------------------
   !
   SUBROUTINE ASSERT_UNIT_TEST_0D_NONZERO_INT16(UT, INT, WANT, MSG, KILL)
-    CLASS(UNIT_TESTS),      intent(inout):: UT
-    INTEGER(INT16),         intent(in   ):: INT
-    LOGICAL,      optional, intent(in   ):: WANT
-    CHARACTER(*), optional, intent(in   ):: MSG
-    LOGICAL,      optional, intent(in   ):: KILL
+    CLASS(UNIT_TESTS),       intent(inout):: UT
+    INTEGER(INT16),          intent(in   ):: INT
+    INTEGER(INT16),optional, intent(in   ):: WANT
+    CHARACTER(*),  optional, intent(in   ):: MSG
+    LOGICAL,       optional, intent(in   ):: KILL
     LOGICAL:: PASSED
     !
     if(present(WANT)) then
@@ -3763,11 +3763,11 @@ MODULE UNIT_TESTING_INSTRUCTION
   ! ---------------------------------------------------------------------------------------------
   !
   SUBROUTINE ASSERT_UNIT_TEST_0D_NONZERO_INT32(UT, INT, WANT, MSG, KILL)
-    CLASS(UNIT_TESTS),      intent(inout):: UT
-    INTEGER(INT32),         intent(in   ):: INT
-    LOGICAL,      optional, intent(in   ):: WANT
-    CHARACTER(*), optional, intent(in   ):: MSG
-    LOGICAL,      optional, intent(in   ):: KILL
+    CLASS(UNIT_TESTS),       intent(inout):: UT
+    INTEGER(INT32),          intent(in   ):: INT
+    INTEGER(INT32),optional, intent(in   ):: WANT
+    CHARACTER(*),  optional, intent(in   ):: MSG
+    LOGICAL,       optional, intent(in   ):: KILL
     LOGICAL:: PASSED
     !
     if(present(WANT)) then
@@ -3783,11 +3783,11 @@ MODULE UNIT_TESTING_INSTRUCTION
   ! ---------------------------------------------------------------------------------------------
   !
   SUBROUTINE ASSERT_UNIT_TEST_0D_NONZERO_INT64(UT, INT, WANT, MSG, KILL)
-    CLASS(UNIT_TESTS),      intent(inout):: UT
-    INTEGER(INT64),         intent(in   ):: INT
-    LOGICAL,      optional, intent(in   ):: WANT
-    CHARACTER(*), optional, intent(in   ):: MSG
-    LOGICAL,      optional, intent(in   ):: KILL
+    CLASS(UNIT_TESTS),       intent(inout):: UT
+    INTEGER(INT64),          intent(in   ):: INT
+    INTEGER(INT64),optional, intent(in   ):: WANT
+    CHARACTER(*),  optional, intent(in   ):: MSG
+    LOGICAL,       optional, intent(in   ):: KILL
     LOGICAL:: PASSED
     !
     if(present(WANT)) then
