@@ -105,6 +105,23 @@ SUBMODULE (SORT_INTERFACE) SORT_INTERFACE_REL64
     LOGICAL:: HAS_P
     !
     dim = SIZE(A)
+    !
+    HAS_P = .FALSE.
+    IF( present(P) ) THEN
+        IF( dim > SIZE(P) ) THEN
+            P = -1
+        ELSE
+            HAS_P = .TRUE.
+            IF( present(INIT_P) ) HAS_P = INIT_P  !Temp use for checking if it needs to be initialized
+            !
+            IF(HAS_P) THEN
+                           CALL INIT_PERMUTATION(dim, P)
+            ELSE
+                           HAS_P = .TRUE.
+            END IF
+        END IF
+    END IF
+    !
     IF( dim < 2 ) RETURN
     !
     if(present(SORT_TYPE)) then
@@ -121,22 +138,6 @@ SUBMODULE (SORT_INTERFACE) SORT_INTERFACE_REL64
     !
     IF(present(DESCEND) .and. sTYP /= ZER) THEN
             IF(DESCEND)  CALL SIGN_FLIP_1D(dim,A)
-    END IF
-    !
-    HAS_P = .FALSE.
-    IF( present(P) ) THEN
-        IF( dim > SIZE(P) ) THEN
-            P = -1
-        ELSE
-            HAS_P = .TRUE.
-            IF( present(INIT_P) ) HAS_P = INIT_P  !Temp use for checking if it needs to be initialized
-            !
-            IF(HAS_P) THEN
-                           CALL INIT_PERMUTATION(dim, P)
-            ELSE
-                           HAS_P = .TRUE.
-            END IF
-        END IF
     END IF
     !
     IF    (sTYP == 1) THEN
@@ -1088,15 +1089,6 @@ SUBMODULE (SORT_INTERFACE) SORT_INTERFACE_REL64
     !
     IF( dim1 < 1 .OR. dim2 < 1 .OR. SORT_INDEX == 0) RETURN
     !
-    IF( dim1 == 1 .OR. dim2 == 1 ) THEN  ! Array really is 1D, so use those optimized routines
-        IF(dim1 > 1) THEN
-                CALL SORT_1D_REL64( A(:,1), DESCEND, STABLE=STABLE, P=P)
-        ELSE
-                CALL SORT_1D_REL64( A(1,:), DESCEND, STABLE=STABLE, P=P)
-        END IF
-        RETURN
-    END IF
-    !
     !~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~
     IF( SORT_INDEX > 0 ) THEN
         sortIDX     = SORT_INDEX
@@ -1108,7 +1100,19 @@ SUBMODULE (SORT_INTERFACE) SORT_INTERFACE_REL64
     IF(present(SORT_BY_ROW)) SORT_BY_COL = .NOT. SORT_BY_ROW
     !~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~
     !
-    IF( SORT_BY_COL ) THEN
+    IF( dim1 == 1 .OR. dim2 == 1 ) THEN  ! Array really is 1D, so use those optimized routines
+        IF    (dim1 > 1 .AND.       SORT_BY_COL .AND. sortIDX==1) THEN
+              !
+              CALL SORT_1D_REL64( A(:,1), DESCEND, STABLE=STABLE, P=P)
+              !
+        ELSEIF(dim2 > 1 .AND. .NOT. SORT_BY_COL .AND. sortIDX==1) THEN
+              !
+              CALL SORT_1D_REL64( A(1,:), DESCEND, STABLE=STABLE, P=P)
+              !
+        ELSEIF(PRESENT(P)) THEN
+                           CALL INIT_PERMUTATION(size(P), P)
+        END IF
+    ELSEIF( SORT_BY_COL ) THEN
         CALL SORT_2D_COL_REL64(dim1, dim2, A, sortIDX, STABLE, DESCEND, P)
     ELSE
         CALL SORT_2D_ROW_REL64(dim1, dim2, A, sortIDX, STABLE, DESCEND, P)
@@ -1244,19 +1248,9 @@ SUBMODULE (SORT_INTERFACE) SORT_INTERFACE_REL64
     STABLE = .TRUE.
     if(present(NO_STABLE)) STABLE = .not. NO_STABLE
     !
-    IF( dim1 < 1 .OR. dim2 < 1 .OR. SORT_INDICES(1) == 0) RETURN
-    !
-    IF( dim1 == 1 .OR. dim2 == 1 ) THEN  ! Array really is 1D, so use those optimized routines
-        !
-        SORT_BY_COL = present(DESCEND)
-        IF(SORT_BY_COL) SORT_BY_COL = DESCEND(1)
-        !
-        IF(dim1 > 1) THEN                   !DESCEND=
-                CALL SORT_1D_REL64( A(:,1), SORT_BY_COL, STABLE=STABLE, P=P)
-        ELSE
-                CALL SORT_1D_REL64( A(1,:), SORT_BY_COL, STABLE=STABLE, P=P)
-        END IF
-        RETURN
+    IF( dim1 < 1 .OR. dim2 < 1 .OR. SORT_INDICES(1) == 0) THEN
+                                                    IF(PRESENT(P)) CALL INIT_PERMUTATION(size(P), P)
+                                                    RETURN
     END IF
     !
     if( present(DESCEND) ) then
@@ -1266,7 +1260,7 @@ SUBMODULE (SORT_INTERFACE) SORT_INTERFACE_REL64
         DCEND = .FALSE.
     end if
     !
-    IF( sdim == 1 ) THEN
+    IF( sdim == 1 .OR. dim1 == 1 .OR. dim2 == 1) THEN   ! Do single index sort or array is 1D, so use those optimized routines
         CALL SORT_2D_INDEX_REL64(A, SORT_INDICES(1), DCEND(1), SORT_BY_ROW, P, NO_STABLE)
         RETURN
     END IF
@@ -1516,6 +1510,8 @@ SUBMODULE (SORT_INTERFACE) SORT_INTERFACE_REL64
     REAL(REL64):: TMP
     INTEGER:: i, j, k
     !
+    if( dim < 2 ) return
+    !
     DO i=1, dim
         if( P(i)  < 1 ) cycle
         if( P(i) == i ) then
@@ -1548,6 +1544,8 @@ SUBMODULE (SORT_INTERFACE) SORT_INTERFACE_REL64
     INTEGER,        dimension(dim2),      intent(inout) :: P
     REAL(REL64):: TMP
     INTEGER:: i, j, k
+    !
+    if( dim2 < 2 ) return
     !
     DO i=1, dim2
         if( P(i)  < 1 ) cycle

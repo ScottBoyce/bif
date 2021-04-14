@@ -110,15 +110,6 @@ SUBMODULE (SORT_INTERFACE) SORT_INTERFACE_WILD
     LOGICAL:: HAS_P
     !
     dim = SIZE(A)
-    IF( dim < 2 ) RETURN
-    !
-    sTYP = SORT_TYPE_WILD(dim, STABLE, QSORT, HEAP, ISORT, SymMerge)
-    !   1 - ISORT            - Odd options are stable sorts
-    !   2 - HEAPsort
-    !   3 - SYM-MERGE sort
-    !   4 - QSORT         (Techically its an Intro-Sort with Dual Pivot Quick, Heap, and Insertion Sorts)
-    !   5 - TIMSORT       (not implimented yet - Requires buffer size diBm/2)
-    !
     !
     HAS_P = .FALSE.
     IF( present(P) ) THEN
@@ -135,6 +126,15 @@ SUBMODULE (SORT_INTERFACE) SORT_INTERFACE_WILD
             END IF
         END IF
     END IF
+    !
+    IF( dim < 2 ) RETURN
+    !
+    sTYP = SORT_TYPE_WILD(dim, STABLE, QSORT, HEAP, ISORT, SymMerge)
+    !   1 - ISORT            - Odd options are stable sorts
+    !   2 - HEAPsort
+    !   3 - SYM-MERGE sort
+    !   4 - QSORT         (Techically its an Intro-Sort with Dual Pivot Quick, Heap, and Insertion Sorts)
+    !   5 - TIMSORT       (not implimented yet - Requires buffer size diBm/2)
     !
     IF    (sTYP == 1) THEN
                      IF( HAS_P ) THEN
@@ -982,6 +982,8 @@ SUBMODULE (SORT_INTERFACE) SORT_INTERFACE_WILD
     INTEGER,  dimension(dim), intent(inout) :: P
     PROCEDURE(SWAP_METHOD):: SWAP
     INTEGER:: i, j, k
+    !
+    if( dim < 2 ) return
     !
     DO i=1, dim
         if( P(i)  < 1 ) cycle

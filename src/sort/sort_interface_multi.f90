@@ -83,7 +83,10 @@ SUBMODULE (SORT_INTERFACE) SORT_INTERFACE_1D_MULTI
     LOGICAL:: SortB, HAS_P
     !
     dim = SIZE(A)
-    if(dim > size(B)) return
+    if(dim > size(B) .or. dim <= 1) then
+                          if(present(P)) call INIT_PERMUTATION(size(P), P)
+                          RETURN
+    end if
     !
     HAS_P = present(P)
     !
@@ -151,7 +154,10 @@ SUBMODULE (SORT_INTERFACE) SORT_INTERFACE_1D_MULTI
     LOGICAL:: SortB, HAS_P
     !
     dim = SIZE(A)
-    if(dim > size(B)) return
+    if(dim > size(B) .or. dim <= 1) then
+                          if(present(P)) call INIT_PERMUTATION(size(P), P)
+                          RETURN
+    end if
     !
     HAS_P = present(P)
     !
@@ -219,7 +225,10 @@ SUBMODULE (SORT_INTERFACE) SORT_INTERFACE_1D_MULTI
     LOGICAL:: SortB, HAS_P
     !
     dim = SIZE(A)
-    if(dim > size(B)) return
+    if(dim > size(B) .or. dim <= 1) then
+                          if(present(P)) call INIT_PERMUTATION(size(P), P)
+                          RETURN
+    end if
     !
     HAS_P = present(P)
     !
@@ -287,7 +296,10 @@ SUBMODULE (SORT_INTERFACE) SORT_INTERFACE_1D_MULTI
     LOGICAL:: SortB, HAS_P
     !
     dim = SIZE(A)
-    if(dim > size(B)) return
+    if(dim > size(B) .or. dim <= 1) then
+                          if(present(P)) call INIT_PERMUTATION(size(P), P)
+                          RETURN
+    end if
     !
     HAS_P = present(P)
     !
@@ -355,7 +367,10 @@ SUBMODULE (SORT_INTERFACE) SORT_INTERFACE_1D_MULTI
     LOGICAL:: SortB, HAS_P
     !
     dim = SIZE(A)
-    if(dim > size(B)) return
+    if(dim > size(B) .or. dim <= 1) then
+                          if(present(P)) call INIT_PERMUTATION(size(P), P)
+                          RETURN
+    end if
     !
     HAS_P = present(P)
     !
@@ -427,7 +442,10 @@ SUBMODULE (SORT_INTERFACE) SORT_INTERFACE_1D_MULTI
     LOGICAL:: SortB, HAS_P
     !
     dim = SIZE(A)
-    if(dim > size(B)) return
+    if(dim > size(B) .or. dim <= 1) then
+                          if(present(P)) call INIT_PERMUTATION(size(P), P)
+                          RETURN
+    end if
     !
     HAS_P = present(P)
     !
@@ -495,7 +513,10 @@ SUBMODULE (SORT_INTERFACE) SORT_INTERFACE_1D_MULTI
     LOGICAL:: SortB, HAS_P
     !
     dim = SIZE(A)
-    if(dim > size(B)) return
+    if(dim > size(B) .or. dim <= 1) then
+                          if(present(P)) call INIT_PERMUTATION(size(P), P)
+                          RETURN
+    end if
     !
     HAS_P = present(P)
     !
@@ -563,7 +584,10 @@ SUBMODULE (SORT_INTERFACE) SORT_INTERFACE_1D_MULTI
     LOGICAL:: SortB, HAS_P
     !
     dim = SIZE(A)
-    if(dim > size(B)) return
+    if(dim > size(B) .or. dim <= 1) then
+                          if(present(P)) call INIT_PERMUTATION(size(P), P)
+                          RETURN
+    end if
     !
     HAS_P = present(P)
     !
@@ -631,7 +655,10 @@ SUBMODULE (SORT_INTERFACE) SORT_INTERFACE_1D_MULTI
     LOGICAL:: SortB, HAS_P
     !
     dim = SIZE(A)
-    if(dim > size(B)) return
+    if(dim > size(B) .or. dim <= 1) then
+                          if(present(P)) call INIT_PERMUTATION(size(P), P)
+                          RETURN
+    end if
     !
     HAS_P = present(P)
     !
@@ -699,7 +726,10 @@ SUBMODULE (SORT_INTERFACE) SORT_INTERFACE_1D_MULTI
     LOGICAL:: SortB, HAS_P
     !
     dim = SIZE(A)
-    if(dim > size(B)) return
+    if(dim > size(B) .or. dim <= 1) then
+                          if(present(P)) call INIT_PERMUTATION(size(P), P)
+                          RETURN
+    end if
     !
     HAS_P = present(P)
     !
@@ -771,7 +801,10 @@ SUBMODULE (SORT_INTERFACE) SORT_INTERFACE_1D_MULTI
     LOGICAL:: SortB, HAS_P
     !
     dim = SIZE(A)
-    if(dim > size(B)) return
+    if(dim > size(B) .or. dim <= 1) then
+                          if(present(P)) call INIT_PERMUTATION(size(P), P)
+                          RETURN
+    end if
     !
     HAS_P = present(P)
     !
@@ -839,7 +872,10 @@ SUBMODULE (SORT_INTERFACE) SORT_INTERFACE_1D_MULTI
     LOGICAL:: SortB, HAS_P
     !
     dim = SIZE(A)
-    if(dim > size(B)) return
+    if(dim > size(B) .or. dim <= 1) then
+                          if(present(P)) call INIT_PERMUTATION(size(P), P)
+                          RETURN
+    end if
     !
     HAS_P = present(P)
     !
@@ -907,7 +943,10 @@ SUBMODULE (SORT_INTERFACE) SORT_INTERFACE_1D_MULTI
     LOGICAL:: SortB, HAS_P
     !
     dim = SIZE(A)
-    if(dim > size(B)) return
+    if(dim > size(B) .or. dim <= 1) then
+                          if(present(P)) call INIT_PERMUTATION(size(P), P)
+                          RETURN
+    end if
     !
     HAS_P = present(P)
     !
@@ -975,7 +1014,10 @@ SUBMODULE (SORT_INTERFACE) SORT_INTERFACE_1D_MULTI
     LOGICAL:: SortB, HAS_P
     !
     dim = SIZE(A)
-    if(dim > size(B)) return
+    if(dim > size(B) .or. dim <= 1) then
+                          if(present(P)) call INIT_PERMUTATION(size(P), P)
+                          RETURN
+    end if
     !
     HAS_P = present(P)
     !
@@ -1043,7 +1085,10 @@ SUBMODULE (SORT_INTERFACE) SORT_INTERFACE_1D_MULTI
     LOGICAL:: SortB, HAS_P
     !
     dim = SIZE(A)
-    if(dim > size(B)) return
+    if(dim > size(B) .or. dim <= 1) then
+                          if(present(P)) call INIT_PERMUTATION(size(P), P)
+                          RETURN
+    end if
     !
     HAS_P = present(P)
     !
@@ -1115,7 +1160,10 @@ SUBMODULE (SORT_INTERFACE) SORT_INTERFACE_1D_MULTI
     LOGICAL:: SortB, HAS_P
     !
     dim = SIZE(A)
-    if(dim > size(B)) return
+    if(dim > size(B) .or. dim <= 1) then
+                          if(present(P)) call INIT_PERMUTATION(size(P), P)
+                          RETURN
+    end if
     !
     HAS_P = present(P)
     !
@@ -1183,7 +1231,10 @@ SUBMODULE (SORT_INTERFACE) SORT_INTERFACE_1D_MULTI
     LOGICAL:: SortB, HAS_P
     !
     dim = SIZE(A)
-    if(dim > size(B)) return
+    if(dim > size(B) .or. dim <= 1) then
+                          if(present(P)) call INIT_PERMUTATION(size(P), P)
+                          RETURN
+    end if
     !
     HAS_P = present(P)
     !
@@ -1251,7 +1302,10 @@ SUBMODULE (SORT_INTERFACE) SORT_INTERFACE_1D_MULTI
     LOGICAL:: SortB, HAS_P
     !
     dim = SIZE(A)
-    if(dim > size(B)) return
+    if(dim > size(B) .or. dim <= 1) then
+                          if(present(P)) call INIT_PERMUTATION(size(P), P)
+                          RETURN
+    end if
     !
     HAS_P = present(P)
     !
@@ -1319,7 +1373,10 @@ SUBMODULE (SORT_INTERFACE) SORT_INTERFACE_1D_MULTI
     LOGICAL:: SortB, HAS_P
     !
     dim = SIZE(A)
-    if(dim > size(B)) return
+    if(dim > size(B) .or. dim <= 1) then
+                          if(present(P)) call INIT_PERMUTATION(size(P), P)
+                          RETURN
+    end if
     !
     HAS_P = present(P)
     !
@@ -1387,7 +1444,10 @@ SUBMODULE (SORT_INTERFACE) SORT_INTERFACE_1D_MULTI
     LOGICAL:: SortB, HAS_P
     !
     dim = SIZE(A)
-    if(dim > size(B)) return
+    if(dim > size(B) .or. dim <= 1) then
+                          if(present(P)) call INIT_PERMUTATION(size(P), P)
+                          RETURN
+    end if
     !
     HAS_P = present(P)
     !
@@ -1463,7 +1523,10 @@ SUBMODULE (SORT_INTERFACE) SORT_INTERFACE_1D_MULTI
     LOGICAL:: SortB, HAS_P
     !
     dim = SIZE(A)
-    if(dim > size(B)) return
+    if(dim > size(B) .or. dim <= 1) then
+                          if(present(P)) call INIT_PERMUTATION(size(P), P)
+                          RETURN
+    end if
     !
     HAS_P = present(P)
     !
@@ -1535,7 +1598,10 @@ SUBMODULE (SORT_INTERFACE) SORT_INTERFACE_1D_MULTI
     LOGICAL:: SortB, HAS_P
     !
     dim = SIZE(A)
-    if(dim > size(B)) return
+    if(dim > size(B) .or. dim <= 1) then
+                          if(present(P)) call INIT_PERMUTATION(size(P), P)
+                          RETURN
+    end if
     !
     HAS_P = present(P)
     !
@@ -1607,7 +1673,10 @@ SUBMODULE (SORT_INTERFACE) SORT_INTERFACE_1D_MULTI
     LOGICAL:: SortB, HAS_P
     !
     dim = SIZE(A)
-    if(dim > size(B)) return
+    if(dim > size(B) .or. dim <= 1) then
+                          if(present(P)) call INIT_PERMUTATION(size(P), P)
+                          RETURN
+    end if
     !
     HAS_P = present(P)
     !
@@ -1679,7 +1748,10 @@ SUBMODULE (SORT_INTERFACE) SORT_INTERFACE_1D_MULTI
     LOGICAL:: SortB, HAS_P
     !
     dim = SIZE(A)
-    if(dim > size(B)) return
+    if(dim > size(B) .or. dim <= 1) then
+                          if(present(P)) call INIT_PERMUTATION(size(P), P)
+                          RETURN
+    end if
     !
     HAS_P = present(P)
     !
@@ -1751,7 +1823,10 @@ SUBMODULE (SORT_INTERFACE) SORT_INTERFACE_1D_MULTI
     LOGICAL:: SortB, HAS_P
     !
     dim = SIZE(A)
-    if(dim > size(B)) return
+    if(dim > size(B) .or. dim <= 1) then
+                          if(present(P)) call INIT_PERMUTATION(size(P), P)
+                          RETURN
+    end if
     !
     HAS_P = present(P)
     !
