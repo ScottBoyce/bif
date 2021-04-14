@@ -2220,9 +2220,9 @@ MODULE DATE_OPERATOR_INSTRUCTION!, ONLY: DATE_OPERATOR
         !
         ALLOCATE(CHARACTER(DIM+5):: DYEAR)
         IF(DIM+5 > 10) THEN
-             WRITE(FMT,'("(F",I2,".",I1)') DIM+5,DIM
+             WRITE(FMT,'("(F",I2,".",I1,")")') DIM+5,DIM
         ELSE
-             WRITE(FMT,'("(F",I1,".",I1)') DIM+5,DIM
+             WRITE(FMT,'("(F",I1,".",I1,")")') DIM+5,DIM
         END IF
         WRITE(DYEAR, FMT) DT%DYEAR
     ELSE
