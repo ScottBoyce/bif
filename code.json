@@ -2,15 +2,15 @@
   {
     "name": "Batteries Included Fortran Library (BiF-Lib)",
 
-    "version": "1.0.0",
-    "status": "Production",
+    "version": "1.0.1",
+    "status": "Provisional",
 
     "organization": "U.S. Geological Survey",
     "description": "Fortran source files that assist in file I/O, common operations that are present in other languages, and include data types that mimic python data types (such as, list and dict).",
 
-    "downloadURL": "https://code.usgs.gov/fortran/bif/-/archive/1.0/bif-1.0.zip",
+    "downloadURL": "https://code.usgs.gov/fortran/bif/-/archive/main/bif-main.zip",
     "homepageURL": "https://code.usgs.gov/fortran/bif",
-    "disclaimerURL": "https://code.usgs.gov/fortran/bif/-/raw/1.0/DISCLAIMER.md",
+    "disclaimerURL": "https://code.usgs.gov/fortran/bif/-/raw/main/DISCLAIMER.md",
 
     "repositoryURL": "https://code.usgs.gov/fortran/bif.git",
     "vcs": "git",
@@ -26,7 +26,7 @@
       "licenses": [
         {
           "name": "Apache License, Version 2.0",
-          "URL": "https://code.usgs.gov/fortran/bif/-/raw/1.0/LICENSE.md"
+          "URL": "https://code.usgs.gov/fortran/bif/-/raw/main/LICENSE.md"
         }
       ]
     },
@@ -60,7 +60,7 @@
     ],
 
     "date": {
-      "metadataLastUpdated": "2021-03-15"
+      "metadataLastUpdated": "2021-14-15"
     }
   }
 ]
