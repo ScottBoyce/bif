@@ -323,7 +323,7 @@ MODULE ERROR_INTERFACE
     !    
     IF(WARN_IU /= Z .AND. WARN_IU /= IOUT) THEN
                                            WRITE(WARN_IU,'(/A/)') ERR
-                                           CALL EPIC_FAIL(IOUT)
+                                           CALL EPIC_FAIL(WARN_IU)
     END IF
     !
     IF(IOUT /= Z) WRITE(IOUT,'(A/)') ERR

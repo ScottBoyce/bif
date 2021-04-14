@@ -80,7 +80,7 @@ MAIN := ./tests/src/array_data_types_test.f90 \
 #
 #
 # Define the Fortran Compiler
-#                    ===> For example: gfortran, gfortran-9, ifort
+#                    ===> For example: gfortran, gfortran-9, gfortran-10, ifort
 #                         ****Note that the version of your Fortran compiler may not support all of the Fortran Standards (viz 2003, 2008, 2015)
 F90 := ifort
 #
@@ -99,7 +99,7 @@ STATIC := YES
 # Should compilation force DOUBLE PRECISION for all REAL variables? That is: REAL => DOUBLE PRECIONS.
 # ===> Accepted Answers: YES, NO
 #
-DBLE := YES
+DBLE := NO
 #
 # Pass Command Arguments when running executable.
 #  This is only used for "make run", for example "make run ARG=Name.nam"
@@ -131,32 +131,7 @@ obj_dir :=$(strip $(shell echo $(CONFIG) | tr A-Z a-z))_$(strip $(shell echo $(F
 int_dir ?=./obj/$(obj_dir)
 #int_dir:= ./obj
 #
-# Source Group Directories
-GROUPS := $(src_dir)/datetime             \
-          $(src_dir)/dynamic_arrays       \
-          $(src_dir)/error                \
-          $(src_dir)/input_reader         \
-          $(src_dir)/io                   \
-          $(src_dir)/math_numbers         \
-          $(src_dir)/sort                 \
-          $(src_dir)/spatial              \
-          $(src_dir)/strings              \
-          $(src_dir)/system               \
-          $(src_dir)/types_and_containers \
-          $(src_dir)/unicode              \
-          $(src_dir)/unit_test            \
-          $(src_dir)/util_misc
-
 TESTDIR := ./tests/src
-#
-#
-#############################################################################
-#
-#Define the source code directory search path (really only need source directories)
-#
-#
-VPATH := $(src_dir)   $(int_dir)   $(bin_dir)   $(dir $(MAIN))  $(GROUPS)  $(TESTDIR) 
-#
 #
 #############################################################################
 #
@@ -176,7 +151,7 @@ sp4 := ${null}    ${null}
 #
 # Define the Fortran source files.
 #
-bif_src:= \
+main_src:= \
            $(src_dir)/util_misc/constants.f90                                  \
            $(src_dir)/datetime/calendar_functions.f90                          \
            $(src_dir)/datetime/sleep_interface.f90                             \
@@ -251,8 +226,39 @@ bif_src:= \
            $(src_dir)/input_reader/list_array_input_interface.f90              \
            $(src_dir)/input_reader/sub_block_input_interface.f90 
 #
-all_src := $(bif_src) $(MAIN)
+#############################################################################
 #
+# Listing of all source files (if multiple variables for specifying source locations)
+#
+all_src := $(main_src) $(MAIN)
+#
+#############################################################################
+#
+#Define the source code directory search path (really only need source directories)
+#      $(sort $(dir $(all_src))) gets all the directories that source files reside in 
+#                                -? "$(sort" XYZ) removes duplicates
+#
+VPATH := $(sort $(dir $(all_src)))  $(int_dir)  $(bin_dir)  $(TESTDIR) 
+#
+# Source Group Directories
+#GROUPS := $(src_dir)/datetime             \
+#          $(src_dir)/dynamic_arrays       \
+#          $(src_dir)/error                \
+#          $(src_dir)/input_reader         \
+#          $(src_dir)/io                   \
+#          $(src_dir)/math_numbers         \
+#          $(src_dir)/sort                 \
+#          $(src_dir)/spatial              \
+#          $(src_dir)/strings              \
+#          $(src_dir)/system               \
+#          $(src_dir)/types_and_containers \
+#          $(src_dir)/unicode              \
+#          $(src_dir)/unit_test            \
+#          $(src_dir)/util_misc
+#VPATH := $(src_dir)   $(int_dir)   $(bin_dir)   $(dir $(MAIN))  $(GROUPS)  $(TESTDIR) 
+#############################################################################
+#
+# Change all source names with extension changed to ".o"
 obj:=  $(patsubst               %.f90, %.o,   \
          $(patsubst             %.f,   %.o,   \
            $(patsubst           %.fpp, %.o,   \
@@ -276,6 +282,56 @@ ifeq ($(OS),Windows_NT)
 else
     ext:=.nix
 endif
+#
+########################################################################
+#
+# Note bash on windows sometimes calls C:\Windows\System32\find.exe, 
+#   but want Bash "find" with no extension
+# Check if windows, if so, then find bash find equivalent.
+#
+ifeq ($(OS),Windows_NT)
+    FIND:=$(strip $(shell                                       \
+                   (                                            \
+                   notSET="T";                                  \
+                   for FP in `which --all find`; do             \
+                      if [[ $$FP == *Win* ]] ||                 \
+                         [[ $$FP == *WIN* ]] ||                 \
+                         [[ $$FP == *win* ]];                   \
+                         then continue ;                        \
+                         else                                   \
+                             echo "$$FP";                       \
+                             notSET="F";                        \
+                             break;  fi;                        \
+                   done;                                        \
+                   if [ $$notSET = "T" ]; then echo "find"; fi; \
+                   FP=;                                         \
+                   notSET=;                                     \
+                   )                                            \
+           ) )
+else
+    FIND:=find
+endif
+#
+########################################################################
+#
+# Check for if Windows and set resource file for icon  -> windres ./icon/*.rc  ./icon/*.res
+#  
+#  --> windres and gfortran can have issues so skipping makefile icon generation
+#  
+###icon_rc  := ./icon/XYZ.rc
+###icon_res := ./icon/XYZ.res
+####
+###ifeq ($(OS),Windows_NT)
+###    res:=$(shell windres $(icon_rc) $(icon_res) || echo )
+###	ifeq ($(res), )
+###        res:=$(icon_res)
+###    else
+###        res:=
+###    endif
+###    
+###else
+###        res:=
+###endif
 #
 # ------------------------------------
 define echo2
@@ -452,6 +508,8 @@ startMSG:
 	@echo "              Batteries Included Fortran"
 	${echo2}
 #
+#@echo "                   $(strip $(shell echo $(PROGRAM) | tr a-z A-Z))"
+#
 CompFlags:
 	@echo "--------------------------------------------------------------------------------"
 	@echo 
@@ -504,21 +562,21 @@ completed:
 #          If you get an error on windows, its using the wrong one --> See MinGW or MySYS64)
 clean: 
 	@echo
-	find ./obj -not -name 'obj' -name '*.o'    -delete
-	find ./obj -not -name 'obj' -name '*.mod'  -delete
-	find ./obj -not -name 'obj' -name '*.smod' -delete
+	$(FIND) ./obj -not -name 'obj' -name '*.o'    -delete
+	$(FIND) ./obj -not -name 'obj' -name '*.mod'  -delete
+	$(FIND) ./obj -not -name 'obj' -name '*.smod' -delete
 	${echo2}
 #
 cleanOBJ: 
 	@echo
-	find ./obj -not -name 'obj' -not -name '.keep' -name '*'  -delete
+	$(FIND) ./obj -not -name 'obj' -not -name '.keep' -name '*'  -delete
 	${echo2}
 #
 quietClean: 
 	@echo
-	find $(int_dir) -name '*.o'    -delete  2>/dev/null  ||  true
-	find $(int_dir) -name '*.mod'  -delete  2>/dev/null  ||  true
-	find $(int_dir) -name '*.smod' -delete  2>/dev/null  ||  true
+	$(FIND) $(int_dir) -name '*.o'    -delete  2>/dev/null  ||  true
+	$(FIND) $(int_dir) -name '*.mod'  -delete  2>/dev/null  ||  true
+	$(FIND) $(int_dir) -name '*.smod' -delete  2>/dev/null  ||  true
 	${echo2}
 #
 errorClean: 
@@ -538,13 +596,13 @@ errorClean:
 #
 reset: 
 	@echo
-	find . -name '*.o'    -delete
-	find . -name '*.mod'  -delete
-	find . -name '*.smod' -delete
+	$(FIND) . -name '*.o'    -delete
+	$(FIND) . -name '*.mod'  -delete
+	$(FIND) . -name '*.smod' -delete
 	@echo
-	find ./obj -not -name 'obj' -not -name '.keep' -name '*'  -delete
+	$(FIND) ./obj -not -name 'obj' -not -name '.keep' -name '*'  -delete
 	@echo
-	find $(notdir $(bin_dir)) -not -name '$(notdir $(bin_dir))' -not -name '.keep' -name '*'  -delete
+	$(FIND) $(notdir $(bin_dir)) -not -name '$(notdir $(bin_dir))' -not -name '.keep' -name '*'  -delete
 	${echo2}
 #
 # The following target allows for printing a specific variable.  old method: @echo $*=$($*)
@@ -609,7 +667,7 @@ $(int_dir)/%.o : %.for
 #
 # #############################################################################
 #
-# Supress echoing of commands
+# Suppress echoing of commands
 .SILENT: startMSG CompFlags dashes completed print-%
 #
 #

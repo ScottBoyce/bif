@@ -47,7 +47,7 @@ Minor release
 
   
 
-#### Fixes
+#### Bug Fixes
 
 - `sort` minor optimization but not sorting arrays of size 1.
 

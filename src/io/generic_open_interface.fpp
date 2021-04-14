@@ -34,7 +34,6 @@
 !                     UNIT_IS_BOM (IU)       <= Checks if unit IU contains the UTF8 BOM header - does this by calling open_new_read_unit
 !                         
 !    
-    
       MODULE GENERIC_OPEN_INTERFACE!, ONLY: GENERIC_OPEN, GENERIC_SCRATCH_FILE, NULL_FILE, GENERIC_NULL_FILE_OPEN, FORCE_UNIT_CLOSE, SET_GENERIC_OPEN_WARN_IU, UTF8_BOM_OFFSET_REWIND, OPEN_NEW_READ_UNIT, UNIT_IS_BOM, SET_TO_NULL_UNIT
       USE PATH_INTERFACE, ONLY: MAKE_DIRECTORY
       IMPLICIT NONE

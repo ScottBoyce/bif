@@ -33,7 +33,7 @@
 !
 !
 MODULE STRINGS
-!
+  !
   USE CONSTANTS,                 ONLY: Z, ONE, TWO, inf_I, inf_R, ninf_R, DNEG, DZ, UNO, INF, NINF, BLNK, NL, BLN, TAB, LF, CR, lowerCHAR, upperCHAR, TRUE, FALSE
   USE PARSE_WORD_INTERFACE,      ONLY: PARSE_WORD
   USE DATE_OPERATOR_INSTRUCTION, ONLY: DATE_OPERATOR
@@ -41,7 +41,7 @@ MODULE STRINGS
   USE ERROR_INTERFACE,           ONLY: STOP_ERROR, WARNING_MESSAGE
   USE FILE_IO_INTERFACE,         ONLY: COMMENT_INDEX
   !
-  USE, INTRINSIC:: IEEE_ARITHMETIC, ONLY: IEEE_VALUE, IEEE_QUIET_NAN, IEEE_IS_NAN
+  USE, INTRINSIC:: IEEE_ARITHMETIC, ONLY: IEEE_VALUE, IEEE_QUIET_NAN, IEEE_IS_NAN, IEEE_POSITIVE_INF, IEEE_NEGATIVE_INF
   USE, INTRINSIC:: ISO_FORTRAN_ENV, ONLY: REAL32, REAL64, REAL128, INT8, INT16, INT32, INT64
   !
   IMPLICIT NONE
@@ -712,8 +712,6 @@ MODULE STRINGS
                 READ(LN(ISTART:ISTOP),*, IOSTAT=IERR) VAL
     END SELECT
     !
-
-    !
     IF(IERR /= Z .OR. LN(ISTART:ISTOP)==BLNK) THEN
           CHECK = TRUE
           IF(PRESENT(ERROR_VAL)) THEN
@@ -1017,8 +1015,6 @@ MODULE STRINGS
                 READ(LN(ISTART:ISTOP),*, IOSTAT=IERR) VAL
     END SELECT
     !
-
-    !
     IF(IERR /= Z .OR. LN(ISTART:ISTOP)==BLNK) THEN
           CHECK = TRUE
           IF(PRESENT(ERROR_VAL)) THEN
@@ -1089,8 +1085,8 @@ MODULE STRINGS
               !
               SELECT CASE(LN(ISTART:ISTOP))
               CASE('NAN',  'NaN', 'nan'); VAL(I) = IEEE_VALUE(VAL(I), IEEE_QUIET_NAN)
-              CASE('INF',  'inf', 'Inf'); VAL(I) =  inf_R
-              CASE('-INF','-inf','-Inf'); VAL(I) = ninf_R
+              CASE('INF',  'inf', 'Inf'); VAL(I) = IEEE_VALUE(VAL(I), IEEE_POSITIVE_INF)
+              CASE('-INF','-inf','-Inf'); VAL(I) = IEEE_VALUE(VAL(I), IEEE_NEGATIVE_INF)
               CASE(  '-1', '-1.','-1.0'); VAL(I) = -1.0
               CASE(   '0',  '0.', '0.0'); VAL(I) =  0.0
               CASE(   '1',  '1.', '1.0'); VAL(I) =  1.0
@@ -1171,16 +1167,14 @@ MODULE STRINGS
     IERR = Z
     SELECT CASE(LN(ISTART:ISTOP))
     CASE('NAN',  'NaN', 'nan'); VAL = IEEE_VALUE(VAL, IEEE_QUIET_NAN)
-    CASE('INF',  'inf', 'Inf'); VAL =  inf_R
-    CASE('-INF','-inf','-Inf'); VAL = ninf_R
+    CASE('INF',  'inf', 'Inf'); VAL = IEEE_VALUE(VAL, IEEE_POSITIVE_INF)
+    CASE('-INF','-inf','-Inf'); VAL = IEEE_VALUE(VAL, IEEE_NEGATIVE_INF)
     CASE(  '-1', '-1.','-1.0'); VAL = -1.0
     CASE(   '0',  '0.', '0.0'); VAL =  0.0
     CASE(   '1',  '1.', '1.0'); VAL =  1.0
     CASE DEFAULT
                 READ(LN(ISTART:ISTOP),*, IOSTAT=IERR) VAL
     END SELECT
-    !
-
     !
     IF(IERR /= Z .OR. LN(ISTART:ISTOP)==BLNK) THEN
           CHECK = TRUE
