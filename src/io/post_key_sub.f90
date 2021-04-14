@@ -21,7 +21,7 @@ MODULE POST_KEY_SUB
   !
   CONTAINS
   !
-  SUBROUTINE CHECK_FOR_POST_KEY(LLOC,LN,IN,IOUT,BUF,SPLIT,SCALE,FILSTAT,FILACT,ASYN, BINARY, NOPRINT, GO_TO_TOP, DIM, OLDLOC, FMT, MSG)
+  SUBROUTINE CHECK_FOR_POST_KEY(LLOC,LN,IN,IOUT,BUF,SPLIT,SCALE,FILSTAT,FILACT,ASYN, BINARY, NOPRINT, GO_TO_TOP, DIM, OLDLOC, FMT, ONLY_CHECK, MSG)
     CHARACTER(*),              INTENT(IN   ):: LN                  !LN IS NOT MODIFIED, BUT NEEDS INOUT TO PASS TO PARSEWORD
     INTEGER,                   INTENT(IN   ):: IN, IOUT            !INFILE THAT LN CAME FROM, ERROR UNIT TO WRITE TOO
     INTEGER,                   INTENT(INOUT):: LLOC, BUF, SPLIT    !BUF=Returned buffer size, SPLIT=Returned Split size
@@ -32,11 +32,16 @@ MODULE POST_KEY_SUB
     INTEGER,                   INTENT(INOUT), OPTIONAL:: DIM
     INTEGER,                   INTENT(  OUT), OPTIONAL:: OLDLOC
     CHARACTER(:), ALLOCATABLE, INTENT(  OUT), OPTIONAL:: FMT
+    LOGICAL,                   INTENT(IN   ), OPTIONAL:: ONLY_CHECK
     CHARACTER(*),              INTENT(IN   ), OPTIONAL:: MSG
     CHARACTER(32):: KEY  !Note 32 is hardwired into case check
     CHARACTER(:), ALLOCATABLE:: ERR
     INTEGER:: I, N, ISTART, ISTOP, LLOC_BAK, IERR, C, OLD_LOC !,Z
     DOUBLE PRECISION:: SF
+    LOGICAL:: SKIP
+    !
+    SKIP = .FALSE.
+    IF(PRESENT(ONLY_CHECK)) SKIP = ONLY_CHECK
     !
     !Z = 0
     IF(PRESENT(SCALE    )) SCALE    = UNO
@@ -54,14 +59,14 @@ MODULE POST_KEY_SUB
     !
     LLOC_BAK = LLOC
     DO WHILE (LLOC < C)
-      
+      !
       CALL PARSE_WORD(LN(:C),LLOC,ISTART,ISTOP)   !CHECK FOR BUFFER OR SPLIT FLAG
       !
       IF(LN(ISTART:ISTOP) == BLNK .OR. LN(ISTART:ISTOP) == COM) EXIT
       !
       KEY=LN(ISTART:ISTOP)
       !
-      DO I=1, 32
+      DO I=1, ISTOP - ISTART + 1
           N = INDEX( lowerCHAR, KEY(I:I))
           !
           IF(N > 0) KEY(I:I) = upperCHAR(N:N)
@@ -89,7 +94,6 @@ MODULE POST_KEY_SUB
                                                    BUF = Z
                       END IF
                       LLOC_BAK = LLOC
-                      !
       CASE( 'SPLIT' )
                       LLOC_BAK = LLOC
                       CALL PARSE_WORD(LN,LLOC,ISTART,ISTOP)
@@ -128,7 +132,8 @@ MODULE POST_KEY_SUB
                               CALL STOP_ERROR(LN,IN,IOUT,ERR)
                           END IF
                           IF(SF.NE.DZ) SCALE = SCALE * SF
-                      ELSE
+                          !
+                      ELSEIF(.NOT. SKIP) THEN
                           ERR = 'FOUND KEYWORD "SF" OR "SCALE", BUT THIS MODEL FEATURE DOES NOT ALLOW SCALE FACTORS. PLEASE REMOVE KEYWORD SF OR SCALE.'
                           IF(PRESENT(MSG))  ERR=ERR//BLN//'THE FOLLOWING MESSAGE WAS PASSED TO CHECK_FOR_POST_KEY:'//BLN//MSG
                           CALL STOP_ERROR(LN,IN,IOUT,ERR)
@@ -146,20 +151,20 @@ MODULE POST_KEY_SUB
       CASE( 'BINARY' )
                       IF(PRESENT(BINARY)) THEN
                           BINARY = TRUE
-                      ELSE
+                      ELSEIF(.NOT. SKIP) THEN
                           ERR = ERR//'FOUND KEYWORD "BINARY", BUT THIS INPUT/OUTPUT LINE DOES NOT SUPPORT THE "BINARY" KEYWORD. IT WILL BE IGNORED.'//NL
                           !WRITE(IOUT,'(/A,/A,/A/)') 'CHECK_FOR_POST_KEY WARNING: WHILE PROCESSING LINE: ',TRIM(LN),'FOUND KEYWORD "BINARY", BUT THIS INPUT/OUTPUT LINE DOES NOT SUPPORT THE "BINARY" KEYWORD. IT WILL BE IGNORED.'
                       END IF
                       LLOC_BAK =  LLOC
       CASE( 'ASYNC' )
-                      ASYN='YES'
+                      IF(PRESENT(ASYN)) ASYN='YES'
                       LLOC_BAK =  LLOC
       CASE( 'NOPRINT' )
                       LLOC_BAK =  LLOC
                       IF(PRESENT(NOPRINT)) THEN
                           NOPRINT = TRUE
                           RETURN
-                      ELSE
+                      ELSEIF(.NOT. SKIP) THEN
                           ERR = ERR//'FOUND KEYWORD "NOPRINT", BUT THIS INPUT/OUTPUT LINE DOES NOT SUPPORT THE NOPRINT KEYWORD. IT WILL BE IGNORED.'//NL
                           !WRITE(IOUT,'(/A,/A,/A)') 'CHECK_FOR_POST_KEY WARNING: WHILE PROCESSING LINE: ',TRIM(LN),'FOUND KEYWORD "NOPRINT", BUT THIS INPUT/OUTPUT LINE DOES NOT SUPPORT THE NOPRINT KEYWORD. IT WILL BE IGNORED.'
                       END IF
@@ -167,7 +172,7 @@ MODULE POST_KEY_SUB
                       LLOC_BAK =  LLOC
                       IF(PRESENT(GO_TO_TOP)) THEN
                           GO_TO_TOP = TRUE
-                      ELSE
+                      ELSEIF(.NOT. SKIP) THEN
                           ERR = ERR//'FOUND KEYWORD "'//TRIM(KEY)//'", BUT THIS INPUT/OUTPUT LINE DOES NOT SUPPORT REWINDING THE FILE TO THE FIRST LINE. IT WILL BE IGNORED.'//NL
                           !WRITE(IOUT,'(/A,/A,/A)') 'CHECK_FOR_POST_KEY WARNING: WHILE PROCESSING LINE: ',TRIM(LN),'FOUND KEYWORD "'//TRIM(KEY)//'", BUT THIS INPUT/OUTPUT LINE DOES NOT SUPPORT REWINDING THE FILE TO THE FIRST LINE. IT WILL BE IGNORED.'
                       END IF
@@ -182,7 +187,7 @@ MODULE POST_KEY_SUB
                              IF(PRESENT(MSG))  ERR=ERR//BLN//'THE FOLLOWING MESSAGE WAS PASSED TO CHECK_FOR_POST_KEY:'//BLN//MSG
                              CALL STOP_ERROR(LN,IN,IOUT,ERR)
                           END IF
-                      ELSE
+                      ELSEIF(.NOT. SKIP) THEN
                           ERR = ERR//'FOUND KEYWORD "'//TRIM(KEY)//'", BUT THIS MODEL FEATURE DOES NOT USE A USER SPECIFIED DIMENSION. IT WILL BE IGNORED.'//NL
                           !CALL WARNING_MESSAGE(LN,IN,IOUT,'FOUND KEYWORD "'//TRIM(KEY)//'", BUT THIS MODEL FEATURE DOES NOT USE A USER SPECIFIED DIMENSION. IT WILL BE IGNORED.')
                       END IF
@@ -192,7 +197,7 @@ MODULE POST_KEY_SUB
                       LLOC_BAK = LLOC
                       IF(PRESENT(DIM)) THEN
                             DIM=Z
-                      ELSE
+                      ELSEIF(.NOT. SKIP) THEN
                           ERR = ERR//'FOUND KEYWORD "'//TRIM(KEY)//'", BUT THIS MODEL FEATURE DOES NOT SUPPORT AUTOMATIC DIMENSION CALCULATION. IT WILL BE IGNORED.'
                           !CALL WARNING_MESSAGE(LN,IN,IOUT,'FOUND KEYWORD "'//TRIM(KEY)//'", BUT THIS MODEL FEATURE DOES NOT SUPPORT AUTOMATIC DIMENSION CALCULATION. IT WILL BE IGNORED.')
                       END IF
@@ -207,12 +212,14 @@ MODULE POST_KEY_SUB
                              CALL STOP_ERROR(LN,IN,IOUT,ERR)
                           END IF
                           FMT = LN(ISTART:ISTOP)
-                      ELSE
+                      ELSEIF(.NOT. SKIP) THEN
                           ERR = ERR//'FOUND KEYWORD "'//TRIM(KEY)//'", BUT THIS MODEL FEATURE DOES NOT SUPPORT SPECIFYING THE NUMBER OF SIGNIFICANT DIGITS. IT WILL BE IGNORED.'
                           !CALL WARNING_MESSAGE(LN,IN,IOUT,'FOUND KEYWORD "'//TRIM(KEY)//'", BUT THIS MODEL FEATURE DOES NOT SUPPORT AUTOMATIC DIMENSION CALCULATION. IT WILL BE IGNORED.')
                       END IF
                       LLOC_BAK = LLOC
       CASE DEFAULT
+                      IF(SKIP) EXIT
+                      !
                       I = ONE
                       IF(PRESENT(SCALE)) THEN
                           SF = UNO
