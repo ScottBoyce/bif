@@ -221,7 +221,7 @@
           !----------------------------------------------------------------------------
         END IF
         !
-        IF(IERR.NE.0) THEN            ! Check to see if the error is cause directories need to be created.
+        IF(IERR /= 0) THEN            ! Check to see if the error is cause directories need to be created.
          !
          IF(PRESENT(NO_FIX_DIR)) THEN ! Only fix directory if NO_FIX_DIR is not present or NO_FIX_DIR=FALSE
                                  CHECK = .NOT. NO_FIX_DIR 
@@ -254,9 +254,9 @@
         !
         IF(PRESENT(ERROR)) THEN
             !
-            ERROR = IERR.NE.0
+            ERROR = IERR /= 0
             !
-        ELSEIF(IERR.NE.0) THEN
+        ELSEIF(IERR /= 0) THEN
            !
            INQUIRE(FILE=FNAME, OPENED=ISOPEN)
            !
@@ -291,14 +291,14 @@
      +                                              //NL//TRIM(LINE)//NL
            !
            IF(PRESENT(WARN)) THEN
-                 IF(WARN.NE.0) WRITE(WARN,'(// 27x,A,//A)') 
+                 IF(WARN /= 0) WRITE(WARN,'(// 27x,A,//A)') 
      +                                         'ONE-WATER ERROR',ERRMSG
-           ELSEIF(WARN_IU.NE.0) THEN
-                 IF(WARN_IU.NE.0) WRITE(WARN_IU,'(// 27x,A,//A)') 
+           ELSEIF(WARN_IU /= 0) THEN
+                 IF(WARN_IU /= 0) WRITE(WARN_IU,'(// 27x,A,//A)') 
      +                                         'ONE-WATER ERROR',ERRMSG
            END IF
            ERRMSG=NL//NL//'  ONE-WATER ERROR'//ERRMSG
-           IF(IO.NE.0) WRITE(IO,'(A)')ERRMSG
+           IF(IO /= 0) WRITE(IO,'(A)')ERRMSG
            WRITE(*,'(A)')ERRMSG
            ERROR STOP
         END IF
@@ -327,12 +327,12 @@
          REWIND(IU)
          READ(IU, '(A)', ADVANCE='NO', IOSTAT=IERR) BOM
          !
-         IF(IERR .NE. 0) THEN
+         IF(IERR /= 0) THEN
                          NOT_BOM = TRUE
          ELSE
-                         NOT_BOM = ICHAR(BOM(1:1)) .NE. 239 .OR.  
-     +                             ICHAR(BOM(2:2)) .NE. 187 .OR.  
-     +                             ICHAR(BOM(3:3)) .NE. 191     
+                         NOT_BOM = ICHAR(BOM(1:1)) /= 239 .OR.  
+     +                             ICHAR(BOM(2:2)) /= 187 .OR.  
+     +                             ICHAR(BOM(3:3)) /= 191     
          END IF
          !
          IF( NOT_BOM ) REWIND(IU)
@@ -352,7 +352,7 @@
          CHARACTER( 16):: ACCESS, FORM
          LOGICAL:: ISOPEN,ERROR
          !
-         IF(IU .NE. 0) THEN
+         IF(IU /= 0) THEN
              !
              INQUIRE(IU, ACCESS=ACCESS, FORM=FORM, 
      +               OPENED=ISOPEN, NAME=FNAME )
@@ -387,7 +387,7 @@
          !
          IS_BOM = FALSE
          !
-         IF(IU .NE. 0) THEN
+         IF(IU /= 0) THEN
              !
              INQUIRE(IU, ACCESS=ACCESS, FORM=FORM, 
      +               OPENED=ISOPEN, NAME=FNAME, ACTION=ACTION )
@@ -501,9 +501,9 @@
         !
         IF(PRESENT(ERROR)) THEN
             !
-            ERROR = IERR.NE.0
+            ERROR = IERR /= 0
             !
-        ELSEIF(IERR.NE.0) THEN
+        ELSEIF(IERR /= 0) THEN
            !
            NL=NEW_LINE(NL)
            WRITE(CERR,'(I15)') IERR
@@ -523,7 +523,7 @@
      +'THE LINE THAT CONTAINED THE REQUEST TO OPEN THE SCRATCH FILE IS:'
      +                                              //NL//TRIM(LINE)//NL
            !
-           IF(IO.NE.0) WRITE(IO,'(A)')ERRMSG
+           IF(IO /= 0) WRITE(IO,'(A)')ERRMSG
            WRITE(*,'(A)')ERRMSG
            ERROR STOP
         END IF
@@ -593,7 +593,7 @@
      +'THE INPUT LINE THAT CAUSED THIS ERROR AND NEEDS TO BE FIXED IS:'
      +                                        //NL//NL//TRIM(LINE)//NL
            !
-           IF(PRESENT(IOUT)) THEN; IF(IOUT.NE.0) WRITE(IOUT,'(A)')ERRMSG
+           IF(PRESENT(IOUT)) THEN; IF(IOUT /= 0) WRITE(IOUT,'(A)')ERRMSG
            END IF
            !
            WRITE(*,'(A)')ERRMSG
@@ -651,7 +651,7 @@
 !          OPEN(NEWUNIT=IU, FILE='nul', ACTION=FILACT, FORM=FMTARG,
 !     +         ACCESS=ACCARG, STATUS=FILSTAT, IOSTAT=IERR)
 !          !
-!          IF(IERR.NE.0) OPEN(UNIT=IU, FILE='/dev/null', 
+!          IF(IERR /= 0) OPEN(UNIT=IU, FILE='/dev/null', 
 !     +                      ACTION=FILACT, FORM=FMTARG,ACCESS=ACCARG, 
 !     +                      STATUS=FILSTAT, IOSTAT=IERR)
 !#endif 
@@ -665,7 +665,7 @@
 !          OPEN(UNIT=IU, FILE='nul', ACTION=FILACT, FORM=FMTARG,
 !     +         ACCESS=ACCARG, STATUS=FILSTAT, IOSTAT=IERR)
 !          !
-!          IF(IERR.NE.0) OPEN(UNIT=IU, FILE='/dev/null', 
+!          IF(IERR /= 0) OPEN(UNIT=IU, FILE='/dev/null', 
 !     +                      ACTION=FILACT, FORM=FMTARG,ACCESS=ACCARG, 
 !     +                      STATUS=FILSTAT, IOSTAT=IERR)
 !#endif 
@@ -674,9 +674,9 @@
 !        !
 !        IF(PRESENT(ERROR)) THEN
 !            !
-!            ERROR = IERR.NE.0
+!            ERROR = IERR /= 0
 !            !
-!        ELSEIF(IERR.NE.0) THEN
+!        ELSEIF(IERR /= 0) THEN
 !           !
 !           NL=NEW_LINE(NL)
 !           WRITE(CERR,'(I15)') IERR
@@ -689,7 +689,7 @@
 !     +'THE INPUT LINE THAT NEEDS TO BE FIXED IS:'
 !     +                                              //NL//TRIM(LINE)//NL
 !           !
-!           IF(IO.NE.0) WRITE(IO,'(A)')ERRMSG
+!           IF(IO /= 0) WRITE(IO,'(A)')ERRMSG
 !           WRITE(*,'(A)')ERRMSG
 !           ERROR STOP
 !        END IF
@@ -725,7 +725,7 @@
         TYPE(NULL_FILE_TYPE),  INTENT(INOUT):: NUL
         INTEGER:: I
         !
-        IF(NUL%IU .NE. 0) CLOSE(NUL%IU,IOSTAT=I)
+        IF(NUL%IU /= 0) CLOSE(NUL%IU,IOSTAT=I)
         !
       END SUBROUTINE
       !
@@ -734,11 +734,11 @@
       INTEGER:: I, IERR
       LOGICAL:: ISOPEN
       !
-      IF(IU.NE.0) THEN
+      IF(IU /= 0) THEN
          INQUIRE(IU,OPENED=ISOPEN)
          IF(ISOPEN) THEN
              FLUSH(IU,IOSTAT=IERR)
-             IF(IERR.NE.0) THEN
+             IF(IERR /= 0) THEN
                  DO I=1, 5
                           FLUSH(IU,IOSTAT=IERR)
                           IF(IERR==0) EXIT
@@ -746,7 +746,7 @@
              END IF
              !
              CLOSE(IU,IOSTAT=IERR)
-             IF(IERR.NE.0) THEN
+             IF(IERR /= 0) THEN
                  DO I=1, 5
                           CLOSE(IU,IOSTAT=IERR)
                           IF(IERR==0) EXIT

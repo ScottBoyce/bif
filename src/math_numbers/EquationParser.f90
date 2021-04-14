@@ -812,7 +812,7 @@ RECURSIVE PURE SUBROUTINE NextAtom(Eqn,R,ANS,NML,NMV,ERRMSG) !PULLS NEXT VARIABL
         IF(VALID) THEN
                     READ(Eqn(R)%T,*,IOSTAT=MP) ANS
                     !
-                    IF(MP .NE. Z) THEN
+                    IF(MP /= Z) THEN
                         ERRMSG = 'ERROR EVALUATING EQUATION - FALURE TO IDENTIFY VARIABLE NAME AMONG LIST OF PREVIOUSLY DEFINED NAMES'//NL//'OR CONVERT PART OF THE EQUATION TO A NUMBER.'//NL//                                                                                                                                         &
                                  'THE VARIABLE NAME BEING SEARCHED FOR/CONVERTED TO A NUMBER IS:'//BLN//'     "'//Eqn(R)%T//'"'//BLN//'THE VARIABLE NAME MAY NOT BE DEFINED OR CONTAINS A SPELLING ERROR.'//BLN//                                                                                                  &
                                  'IF THERE IS AN OPERATOR, + - / * IN THE NAME, THEN THE PARSER HAD AN ISSUE WITH THE EQUATION STRUCTURE'//NL//'MAYBE YOU HAVE TWO OPERATORS IN A ROW, LIKE "X+-Y"'//NL//'OR YOU HAVE A NEGATIVE SYMBOL WHEN YOU SHOULD USE THE NEG FUNCTION "-Y+X" INSTEAD OF "NEG(Y)+X"'//BLN//   &
@@ -896,7 +896,7 @@ RECURSIVE PURE SUBROUTINE PROCESS_INLINE_CONDITIONAL(Eqn,R,COND_ANS,NML,NMV,ERRM
   !R=R+1  !SKIP TO FALSE LOCATION
   !FALSE_LN=Eqn(R)%T
   !!
-  !DO WHILE (']' .NE. Eqn(R)%T)  !MOVE TO WHERE CLOSING BRACKET IS LOCATED
+  !DO WHILE (']' /= Eqn(R)%T)  !MOVE TO WHERE CLOSING BRACKET IS LOCATED
   !  R=R+1
   !END DO
   !R=R+1  !MOVE PAST CLOSING BRACKET SO NEXTATOM EITHER TERMINATES OR PROCESSES THE NEXT OPERATOR
@@ -914,7 +914,7 @@ RECURSIVE PURE SUBROUTINE PROCESS_INLINE_CONDITIONAL(Eqn,R,COND_ANS,NML,NMV,ERRM
      DEALLOCATE(SubEqn)
   ELSE
      R=R+1  !SKIP TO FALSE LOCATION
-     IF(RB .NE. Eqn(R)%T) THEN                   !CHECK FALSE LOCATION RB = ']'
+     IF(RB /= Eqn(R)%T) THEN                   !CHECK FALSE LOCATION RB = ']'
         CALL SplitFunc(Eqn(R)%T, SubEqn,ERRMSG)
         Rsub=1
         MP=1      
@@ -925,7 +925,7 @@ RECURSIVE PURE SUBROUTINE PROCESS_INLINE_CONDITIONAL(Eqn,R,COND_ANS,NML,NMV,ERRM
      END IF
   END IF
   !
-  DO WHILE (RB .NE. Eqn(R)%T .AND. R < NR)  !MOVE TO WHERE CLOSING BRACKET IS LOCATED  RB = ']'
+  DO WHILE (RB /= Eqn(R)%T .AND. R < NR)  !MOVE TO WHERE CLOSING BRACKET IS LOCATED  RB = ']'
     R=R+1
   END DO
   R=R+1  !MOVE PAST CLOSING BRACKET SO NEXTATOM EITHER TERMINATES OR PROCESSES THE NEXT OPERATOR
@@ -1246,7 +1246,7 @@ RECURSIVE PURE SUBROUTINE PROCESS_MINMAX(Eqn,R,MINMAX_ANS,NML,NMV, ERRMSG)
   DEALLOCATE(SubEqn)
   R=R+1
   !
-  DO WHILE ( RB .NE. Eqn(R)%T )  ! RB = ']'
+  DO WHILE ( RB /= Eqn(R)%T )  ! RB = ']'
       !VAL_LN(:)=Eqn(R)%T
       CALL SplitFunc(Eqn(R)%T, SubEqn, ERRMSG)
       Rsub=1
@@ -1348,7 +1348,7 @@ RECURSIVE PURE SUBROUTINE PROCESS_MAGIC(Eqn,R,MAGIC_ANS,NML,NMV,ERRMSG)
                                   R = R + ONE
                        IF(I == Z) CALL MAKE_INT_FROM_Eqn(Eqn(R)%T,D,SubEqn,Rsub,MP,NML,NMV,ERRMSG,I)
                                   R = R + ONE
-                       IF(Eqn(R)%T .NE. RB) THEN
+                       IF(Eqn(R)%T /= RB) THEN
                           IF(I == Z) CALL MAKE_INT_FROM_Eqn(Eqn(R)%T,HH,SubEqn,Rsub,MP,NML,NMV,ERRMSG,I)
                                      R = R + ONE
                           IF(I == Z) CALL MAKE_INT_FROM_Eqn(Eqn(R)%T,MM,SubEqn,Rsub,MP,NML,NMV,ERRMSG,I)
@@ -1924,7 +1924,7 @@ PURE SUBROUTINE SplitFunc(LN,Eqn,ERRMSG)  !SPLITS LINE BY VARIABLES,OPERATIONS, 
         !  !
         !  IF( IS_NUM ) THEN !MUST CHECK IF PRECEDED BY ED AND PROCEED BY A NUMBER
         !        READ(LN(II:I+ONE),*, IOSTAT = KK) TMP
-        !        IF( KK .NE. Z) THEN
+        !        IF( KK /= Z) THEN
         !                           J=J+1  !NOT A VALID NUMBER SO TREAT AS OPERATOR
         !                           II = I + ONE
         !        END IF
@@ -2338,7 +2338,7 @@ END SUBROUTINE
 !!!        IF( LN(I:I)=='+' .OR. LN(I:I) == '-' ) THEN
 !!!          IF( INDEX(NUMPNT,LN(I-TWO:I-TWO))>Z .AND. INDEX(ED,LN(I-ONE:I-ONE))>Z .AND. INDEX(NUMBERS,LN(I+ONE:I+ONE))>Z ) THEN !MUST CHECK IF PRECEDED BY ED AND PROCEED BY A NUMBER
 !!!                READ(LN(II:I+ONE),*, IOSTAT = KK) TMP
-!!!                IF( KK .NE. Z) THEN
+!!!                IF( KK /= Z) THEN
 !!!                                   J=J+1  !NOT A VALID NUMBER SO TREAT AS OPERATOR
 !!!                                   II = I + ONE
 !!!                END IF

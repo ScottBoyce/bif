@@ -132,7 +132,6 @@ MODULE PARSE_WORD_INTERFACE!, ONLY: PARSE_WORD, PARSE_WORD_UP, FIND_NONBLANK
                                 END DO
                                 ISTOP = LOC-1
                                 LOC = LOC+1
-
         ELSE
                                 ISTART = LOC
                                 LOC = LOC+1
