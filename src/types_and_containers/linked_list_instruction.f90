@@ -21,6 +21,8 @@
 !                               SUBROUTINES AVAILIBLE TO BOTH ARE LISTED IN TYPE, ABSTRACT:: ABSTRACT_LINKED_LIST
 !
 MODULE LINKED_LIST_INSTRUCTION!, ONLY: INTEGER_LINKED_LIST, CHARACTER_LINKED_LIST
+  USE, INTRINSIC:: ISO_FORTRAN_ENV, ONLY: rel32 => REAL32, rel64 => REAL64
+  USE, INTRINSIC:: IEEE_ARITHMETIC, ONLY: IEEE_VALUE, IEEE_QUIET_NAN
   IMPLICIT NONE
   PRIVATE
   PUBLIC:: INTEGER_LINKED_LIST, CHARACTER_LINKED_LIST
@@ -78,7 +80,7 @@ MODULE LINKED_LIST_INSTRUCTION!, ONLY: INTEGER_LINKED_LIST, CHARACTER_LINKED_LIS
       PROCEDURE, PASS(LST):: REVERSE         => INTEGER_REVERSE_LIST                 ! () REVERSE THE ORDER OF THE LIST
       PROCEDURE, PASS(LST):: DROP_DUPLICATES => INTEGER_LIST_DROP_DUPLICATES         ! () REMOVES ALL DUBLICATE VALUES WTIHIN THE LIST
       GENERIC::              TOARRAY         => INTEGER_LIST_TO_ARRAY_ALLOCATABLE, & ! (ARR,[SORT]) CONVERTS LIST TO ONE DIMENSIONAL ARRAY, ARR, WHICH MUST BE DECLARED AS "INTEGER, DIMENSION(:), ALLOCATABLE" OR "INTEGER, DIMENSION(:), POINTER". 
-                                                 INTEGER_LIST_TO_ARRAY_POINTER       !              [SORT] IS OPTIONAL AND WHEN PROVIDED AND SET TO TRUE WILL CAUSE THE RESULTING ARRAY TO BE SORTED FROM SMALLEST TO LARGEST.
+                                                INTEGER_LIST_TO_ARRAY_POINTER        !              [SORT] IS OPTIONAL AND WHEN PROVIDED AND SET TO TRUE WILL CAUSE THE RESULTING ARRAY TO BE SORTED FROM SMALLEST TO LARGEST.
       PROCEDURE, PASS(LST):: STR             => INTEGER_LIST_RETURN_AS_STRING        !(DELIM, PAD)
       PROCEDURE, PASS(LST), PRIVATE:: INTEGER_LIST_TO_ARRAY_ALLOCATABLE
       PROCEDURE, PASS(LST), PRIVATE:: INTEGER_LIST_TO_ARRAY_POINTER
@@ -119,6 +121,28 @@ MODULE LINKED_LIST_INSTRUCTION!, ONLY: INTEGER_LINKED_LIST, CHARACTER_LINKED_LIS
       PROCEDURE, PASS(LST), PRIVATE:: CHAR_LIST_TO_ARRAY_ASSUME_ALLOCATABLE
       PROCEDURE, PASS(LST), PRIVATE:: CHAR_LIST_TO_ARRAY_ASSUME_POINTER
       FINAL:: FINAL_CHARACTER_LINKED_LIST_DEALLOCATE
+  END TYPE
+  !
+  TYPE, EXTENDS(ABSTRACT_LINKED_LIST):: REAL64_LINKED_LIST
+      CONTAINS
+      PROCEDURE, PASS(LST):: GET             => REAL64_RETURN_VALUE                 ! ([POS]) RETURNS CURRENT POSITIONS INTEGER VALUE, IF POS IS PROVIDED THEN RETURNS THE POS POSITION INTEGER
+      GENERIC             :: ADD_UNIQUE      => REAL64_ADD_UNIQUE_VALUE_TO_ENDING, &! (IVAL,[POS])  ADDS IVAL TO END OF LIST ONLY IF IT IS NOT CURRENTLY PRESENT WITHIN THE LIST. POS IS OPTIONAL AND SET TO ZERO IF NOT FOUND OTHERWISE IS THE NON-UNIQUE LOCATION
+                                                REAL64_ADD_UNIQUE_VALUE_TO_ENDING_VECTOR!(VEC)
+      PROCEDURE, PASS(LST):: IS_UNIQUE       => REAL64_VALUE_UNIQUE_IN_LIST         ! (IVAL)  RETURNS LOGICAL THAT CHECKS IF IVAL IS WITHIN THE LIST. RETURNS TRUE IF IT IS NO WITHIN LIST (VIZ ITS UNIQUE).
+      PROCEDURE, PASS(LST):: NOT_UNIQUE      => REAL64_VALUE_NOT_UNIQUE_IN_LIST     ! (IVAL)  OPPOSITE OF ABOVE
+      PROCEDURE, PASS(LST):: SORT            => REAL64_SORT_LIST                    ! ([REVERSE])
+      PROCEDURE, PASS(LST):: MAX             => REAL64_LIST_MAXVAL                  ! () RETURNS MAX THE VALUE WITHIN THE LIST
+      PROCEDURE, PASS(LST):: MIN             => REAL64_LIST_MINVAL                  ! () RETURNS MIN THE VALUE WITHIN THE LIST
+      PROCEDURE, PASS(LST):: REVERSE         => REAL64_REVERSE_LIST                 ! () REVERSE THE ORDER OF THE LIST
+      PROCEDURE, PASS(LST):: DROP_DUPLICATES => REAL64_LIST_DROP_DUPLICATES         ! () REMOVES ALL DUBLICATE VALUES WTIHIN THE LIST
+      GENERIC::              TOARRAY         => REAL64_LIST_TO_ARRAY_ALLOCATABLE, & ! (ARR,[SORT]) CONVERTS LIST TO ONE DIMENSIONAL ARRAY, ARR, WHICH MUST BE DECLARED AS "INTEGER, DIMENSION(:), ALLOCATABLE" OR "INTEGER, DIMENSION(:), POINTER". 
+                                                REAL64_LIST_TO_ARRAY_POINTER        !              [SORT] IS OPTIONAL AND WHEN PROVIDED AND SET TO TRUE WILL CAUSE THE RESULTING ARRAY TO BE SORTED FROM SMALLEST TO LARGEST.
+      PROCEDURE, PASS(LST):: STR             => REAL64_LIST_RETURN_AS_STRING        !(DELIM, PAD)
+      PROCEDURE, PASS(LST), PRIVATE:: REAL64_LIST_TO_ARRAY_ALLOCATABLE
+      PROCEDURE, PASS(LST), PRIVATE:: REAL64_LIST_TO_ARRAY_POINTER
+      PROCEDURE, PASS(LST), PRIVATE:: REAL64_ADD_UNIQUE_VALUE_TO_ENDING
+      PROCEDURE, PASS(LST), PRIVATE:: REAL64_ADD_UNIQUE_VALUE_TO_ENDING_VECTOR
+      FINAL:: REAL64_LINKED_LIST_DEALLOCATE
   END TYPE
   !
   CONTAINS
@@ -1262,7 +1286,6 @@ MODULE LINKED_LIST_INSTRUCTION!, ONLY: INTEGER_LINKED_LIST, CHARACTER_LINKED_LIS
     !
   END FUNCTION
   !
-  !
   !##################################################################################################
   !
   SUBROUTINE INTEGER_LINKED_LIST_DEALLOCATE(LST)
@@ -1982,9 +2005,704 @@ MODULE LINKED_LIST_INSTRUCTION!, ONLY: INTEGER_LINKED_LIST, CHARACTER_LINKED_LIS
      !
   END SUBROUTINE
   !
+  !@@@@@@@@@@@@@@@@@@@@@@@@@@@@@@@@@@@@@@@@@@@@@@@@@@@@@@@@@@@@@@@@@@@@@@@@@@@@@@@@@@@@@@@@@@@@@@@@@@
+  !@@@@@@@@@@@@@@@@@@@@@@@@@@@@@@@@@@@@@@@@@@@@@@@@@@@@@@@@@@@@@@@@@@@@@@@@@@@@@@@@@@@@@@@@@@@@@@@@@@
+  !@@@@@@@@@@@@@@@@@@@@@@@@@@@@@@@@@@@@@@@@@@@@@@@@@@@@@@@@@@@@@@@@@@@@@@@@@@@@@@@@@@@@@@@@@@@@@@@@@@
+  !
+  FUNCTION REAL64_RETURN_VALUE(LST, POS)  RESULT(VAL)
+    CLASS(REAL64_LINKED_LIST), INTENT(INOUT):: LST
+    INTEGER, OPTIONAL,         INTENT(IN   ):: POS
+    REAL(rel64)                             :: VAL
+    !
+    IF (PRESENT(POS)) CALL GOTO_POSITION(LST, POS) 
+    !
+    SELECT TYPE (RVAL => LST%CUR%I)
+    TYPE IS (REAL(rel64));      VAL = RVAL
+    TYPE IS (REAL(rel32));      VAL = REAL(RVAL, rel64)
+    TYPE IS (INTEGER);          VAL = REAL(RVAL, rel64)
+    CLASS DEFAULT
+                                VAL = IEEE_VALUE(VAL, IEEE_QUIET_NAN)
+    END SELECT
+    !
+  END FUNCTION
+  !
+  !#######################################################################
+  !
+  SUBROUTINE REAL64_LIST_TO_ARRAY_ALLOCATABLE(LST,ARR,SORT)
+    CLASS(REAL64_LINKED_LIST),           INTENT(INOUT):: LST
+    REAL(rel64),DIMENSION(:),ALLOCATABLE,INTENT(INOUT):: ARR
+    LOGICAL, OPTIONAL:: SORT
+    LOGICAL:: SRT
+    INTEGER:: IDX, I, J
+    REAL(rel64):: VAL
+    !
+    IF(LST%N > 0) THEN
+                     IF(ALLOCATED(ARR)) THEN
+                          IF(SIZE(ARR).NE.LST%N) THEN
+                                             DEALLOCATE(ARR)
+                                               ALLOCATE(ARR(LST%N))
+                          END IF
+                     ELSE
+                         ALLOCATE(ARR(LST%N))
+                     END IF
+                     !
+                     SRT=.FALSE.
+                     IF(PRESENT(SORT)) SRT=SORT
+                     !
+                     CALL MOVE_TO_FIRST_POS(LST)
+                     DO IDX=1, LST%N
+                           ARR(IDX) = REAL64_RETURN_VALUE(LST)
+                           CALL LST%NEXT()
+                     END DO
+                     !
+                     IF (SRT) THEN                                   ! Rearrange array by insertion sort ascending order
+                         DO I=2, LST%N
+                             VAL=ARR(I)
+                             J=I
+                             DO WHILE ( J > 1 )
+                                                IF (ARR(J-1) < VAL) EXIT
+                                                ARR(J) = ARR(J-1)
+                                                J=J-1
+                             END DO
+                             ARR(J) = VAL
+                         END DO
+                     END IF
+    ELSEIF(ALLOCATED(ARR)) THEN 
+         DEALLOCATE(ARR)
+    END IF
+    !
+  END SUBROUTINE
+  !
+  !#######################################################################
+  !
+  SUBROUTINE REAL64_LIST_TO_ARRAY_POINTER(LST,ARR,SORT)
+    CLASS(REAL64_LINKED_LIST)       :: LST
+    REAL(rel64),DIMENSION(:),POINTER:: ARR
+    LOGICAL, OPTIONAL:: SORT
+    LOGICAL:: SRT
+    INTEGER:: IDX, I, J
+    REAL(rel64):: VAL
+    !
+    DEALLOCATE(ARR, STAT=I) !AUTODEALLOCATE IN CASE MEMORY WAS ALREADY IN USE.
+    ARR=>NULL()
+    !
+    IF(LST%N > 0) THEN
+                     !
+                     SRT=.FALSE.
+                     IF(PRESENT(SORT)) SRT=SORT
+                     !
+                     !
+                     ALLOCATE(ARR(LST%N))
+                     !
+                     CALL MOVE_TO_FIRST_POS(LST)
+                     DO IDX=1, LST%N
+                           ARR(IDX) = REAL64_RETURN_VALUE(LST)
+                           CALL LST%NEXT()
+                     END DO
+                     !
+                     IF (SRT) THEN                                   ! Rearrange array by insertion sort ascending order
+                         DO I=2, LST%N
+                             VAL=ARR(I)
+                             J=I
+                             DO WHILE ( J > 1 )
+                                                IF (ARR(J-1) < VAL) EXIT
+                                                ARR(J) = ARR(J-1)
+                                                J=J-1
+                             END DO
+                             ARR(J) = VAL
+                         END DO
+                     END IF
+    END IF
+    !
+  END SUBROUTINE
+  !
+  !#######################################################################
+  !
+  SUBROUTINE REAL64_LIST_DROP_DUPLICATES(LST, RTOL, ATOL)
+    CLASS(REAL64_LINKED_LIST):: LST
+    REAL(rel64),     OPTIONAL:: RTOL, ATOL
+    INTEGER:: POS, COMPARE_POS
+    REAL(rel64):: VAL, CMP
+    !
+    IF(LST%N > 0) THEN
+                     !
+                     COMPARE_POS = 1
+                     DO WHILE (COMPARE_POS < LST%N)
+                        !
+                        CALL LST%POS(COMPARE_POS)
+                        !
+                        VAL = REAL64_RETURN_VALUE(LST)
+                        !
+                        CALL LST%NEXT()
+                        POS = LST%GETPOS()
+                        DO WHILE (COMPARE_POS < POS .AND. POS <= LST%N)
+                              !
+                              CMP = REAL64_RETURN_VALUE(LST)
+                              !
+                              IF(IS_CLOSE_R64(VAL,CMP,RTOL,ATOL)) THEN
+                                  CALL LST%POP(0)
+                              ELSE
+                                  CALL LST%NEXT()
+                              END IF   
+                              !
+                              POS = LST%GETPOS()
+                        END DO
+                        !
+                        COMPARE_POS = COMPARE_POS + 1
+                     END DO
+    END IF
+    !
+  END SUBROUTINE
+  !
+  !#######################################################################
+  !
+  SUBROUTINE REAL64_SORT_LIST(LST, REVERSE)
+    CLASS(REAL64_LINKED_LIST):: LST
+    LOGICAL, OPTIONAL, INTENT(IN):: REVERSE
+    !
+    TYPE(LINK_ELEMENT),POINTER::BEG, LNK, PRV
+    !
+    INTEGER:: I,P
+    REAL(rel64):: VAL, CMP
+    !
+    IF(LST%N > 2) THEN
+                     NULLIFY(BEG)
+                     NULLIFY(LNK)
+                     NULLIFY(PRV)
+                     !
+                     CALL MOVE_TO_FIRST_POS(LST)
+                     !
+                     VAL = REAL64_RETURN_VALUE(LST)
+                     !
+                     P = 1
+                     !
+                     DO I=2, LST%N
+                         !
+                         CALL LST%NEXT()
+                         !
+                         CMP = REAL64_RETURN_VALUE(LST)
+                         IF(CMP < VAL)  THEN
+                             VAL = CMP
+                             P = LST%GETPOS()
+                         END IF
+                         !
+                     END DO
+                     !
+                     CALL LST%POS(P)                         ! MOVE CUR TO P
+                     CALL DISCONNECT_CUR_TO_MEMORY_LEAK(LST) ! CUR IS HELD IN MEMORY BY BEG DESPITE MEMORY LEAK
+                     !
+                     LST%CUR%PRV => NULL()
+                     LST%CUR%NXT => NULL()
+                     !
+                     BEG => LST%CUR   !NEW BEGINING
+                     LNK => LST%CUR   !CURRENT LINK IN LIST
+                     !
+                     LST%CUR  => NULL()
+                     !
+                     DO WHILE( ASSOCIATED(LST%BEG) ) 
+                           !
+                           CALL MOVE_TO_FIRST_POS(LST)
+                           !
+                           VAL = REAL64_RETURN_VALUE(LST)
+                           !
+                           P = 1
+                           CALL LST%NEXT()
+                           !
+                           DO WHILE(LST%IS_ASSOCIATED())
+                               !
+                               CMP = REAL64_RETURN_VALUE(LST)
+                               IF(CMP < VAL)  THEN
+                                   VAL = CMP
+                                   P = LST%GETPOS()
+                               END IF
+                               !
+                               CALL LST%NEXT()
+                           END DO
+                           !
+                           CALL LST%POS(P)
+                           CALL DISCONNECT_CUR_TO_MEMORY_LEAK(LST) !CUR IS HELD IN MEMORY BY BEG DESPITE MEMORY LEAK
+                           !
+                           IF(ASSOCIATED(LST%CUR)) THEN
+                               !
+                               LNK%NXT => LST%CUR   !UPDATE NEXT CONNECTION
+                               PRV     => LNK
+                               LNK     => LNK%NXT  ! = LST%CUR -- MOVE FORWARD
+                               LNK%NXT => NULL()
+                               LNK%PRV => PRV
+                               LST%CUR  => NULL()
+                           END IF
+                     END DO
+                     !
+                     ! REINITIALIZE THE LIST
+                     LST%BEG => BEG
+                     LST%END => LNK
+                     LST%CUR => LST%BEG
+                     !
+                     BEG => NULL()
+                     LNK => NULL()
+                     PRV => NULL()
+    END IF
+    !
+    IF(PRESENT(REVERSE)) THEN; IF(REVERSE) CALL REAL64_REVERSE_LIST(LST)
+    END IF
+    !
+  END SUBROUTINE
+  !
+  !#######################################################################
+  !
+  SUBROUTINE REAL64_REVERSE_LIST(LST)
+    CLASS(REAL64_LINKED_LIST):: LST
+    !
+    TYPE(LINK_ELEMENT),POINTER::BEG, LNK, PRV
+    !
+    IF(LST%N > 1) THEN
+                     NULLIFY(BEG)
+                     NULLIFY(LNK)
+                     NULLIFY(PRV)
+                     !
+                     CALL MOVE_TO_LAST_POS(LST)
+                     !
+                     CALL DISCONNECT_CUR_TO_MEMORY_LEAK(LST) ! CUR IS HELD IN MEMORY BY BEG DESPITE MEMORY LEAK
+                     !
+                     LST%CUR%PRV => NULL()
+                     LST%CUR%NXT => NULL()
+                     !
+                     BEG => LST%CUR   !NEW BEGINING
+                     LNK => LST%CUR   !CURRENT LINK IN LIST
+                     !
+                     LST%CUR  => NULL()
+                     !
+                     DO WHILE( ASSOCIATED(LST%BEG)) 
+                           !
+                           CALL MOVE_TO_LAST_POS(LST)
+                           !
+                           CALL DISCONNECT_CUR_TO_MEMORY_LEAK(LST) !CUR IS HELD IN MEMORY BY BEG DESPITE MEMORY LEAK
+                           !
+                           IF(ASSOCIATED(LST%CUR)) THEN
+                               !
+                               LNK%NXT => LST%CUR   !UPDATE NEXT CONNECTION
+                               PRV     => LNK
+                               LNK     => LNK%NXT  ! = LST%CUR -- MOVE FORWARD
+                               LNK%NXT => NULL()
+                               LNK%PRV => PRV
+                               LST%CUR  => NULL()
+                           END IF
+                     END DO
+                     !
+                     ! REINITIALIZE THE LIST
+                     LST%BEG => BEG
+                     LST%END => LNK
+                     LST%CUR => LST%BEG
+                     !
+                     BEG => NULL()
+                     LNK => NULL()
+                     PRV => NULL()
+                     !
+                     CALL RENUMBER_LIST_POSITIONS(LST)
+    END IF
+    !
+  END SUBROUTINE
+  !
+  !#######################################################################
+  !
+  SUBROUTINE REAL64_ADD_UNIQUE_VALUE_TO_ENDING(LST,VAL,POS,RTOL,ATOL)
+    CLASS(REAL64_LINKED_LIST)     :: LST
+    REAL(rel64), INTENT(IN )      :: VAL
+    INTEGER, INTENT(OUT), OPTIONAL:: POS
+    REAL(rel64), OPTIONAL, INTENT(IN):: RTOL, ATOL
+    INTEGER:: I
+    LOGICAL:: NOT_FOUND
+    REAL(rel64):: CMP
+    !
+    IF(LST%N > 0) THEN
+                     IF(PRESENT(POS)) POS = 0
+                     !
+                     NOT_FOUND=.TRUE.
+                     CALL MOVE_TO_FIRST_POS(LST)
+                     DO I=1, LST%N
+                                  CMP = REAL64_RETURN_VALUE(LST)
+                                  IF(IS_CLOSE_R64(VAL,CMP,RTOL,ATOL)) THEN
+                                                       NOT_FOUND = .FALSE.
+                                                       IF(PRESENT(POS)) POS = I
+                                                       EXIT
+                                  END IF 
+                                  CALL MOVE_TO_NEXT_POS(LST)
+                     END DO
+                     IF(NOT_FOUND) CALL EXTEND_LIST_FROM_ENDING(LST,VAL)
+    ELSE
+                                   CALL EXTEND_LIST_FROM_ENDING(LST,VAL)
+                                   IF(PRESENT(POS)) POS = 1
+    END IF
+    !
+  END SUBROUTINE
+  !
+  !#######################################################################
+  !
+  SUBROUTINE REAL64_ADD_UNIQUE_VALUE_TO_ENDING_VECTOR(LST,VEC)
+    CLASS(REAL64_LINKED_LIST)            :: LST
+    REAL(rel64), DIMENSION(:), INTENT(IN):: VEC
+    INTEGER:: I
+    !
+    DO I = 1, SIZE(VEC)
+        CALL REAL64_ADD_UNIQUE_VALUE_TO_ENDING(LST,VEC(I))
+    END DO
+    !
+  END SUBROUTINE
+  !
+  !#######################################################################
+  !
+  FUNCTION REAL64_VALUE_UNIQUE_IN_LIST(LST,VAL,RTOL,ATOL) RESULT(IS_UNIQUE)
+    CLASS(REAL64_LINKED_LIST)        :: LST
+    REAL(rel64),           INTENT(IN):: VAL
+    REAL(rel64), OPTIONAL, INTENT(IN):: RTOL, ATOL
+    REAL(rel64):: CMP
+    INTEGER:: I
+    LOGICAL:: IS_UNIQUE
+    !
+    IS_UNIQUE = .TRUE.
+    IF(LST%N > 0) THEN
+                     !
+                     CALL MOVE_TO_FIRST_POS(LST)
+                     DO I=1, LST%N
+                                  CMP = REAL64_RETURN_VALUE(LST)
+                                  IF(IS_CLOSE_R64(VAL,CMP,RTOL,ATOL)) THEN
+                                                                        IS_UNIQUE = .FALSE.
+                                                                        EXIT
+                                  END IF 
+                                  CALL MOVE_TO_NEXT_POS(LST)
+                     END DO
+    END IF
+    !
+  END FUNCTION
+  !
+  FUNCTION REAL64_VALUE_NOT_UNIQUE_IN_LIST(LST,VAL,RTOL,ATOL) RESULT(NOT_UNIQUE)
+    CLASS(REAL64_LINKED_LIST)        :: LST
+    REAL(rel64),           INTENT(IN):: VAL
+    REAL(rel64), OPTIONAL, INTENT(IN):: RTOL, ATOL
+    LOGICAL:: NOT_UNIQUE
+    !
+    NOT_UNIQUE = .NOT. REAL64_VALUE_UNIQUE_IN_LIST(LST,VAL,RTOL,ATOL)
+    !
+  END FUNCTION
+  !
+  !#######################################################################
+  !
+  FUNCTION REAL64_LIST_MAXVAL(LST) RESULT(VAL)
+    CLASS(REAL64_LINKED_LIST):: LST
+    REAL(rel64):: VAL
+    REAL(rel64):: CMP
+    INTEGER:: I
+    !
+    IF(LST%N > 0) THEN
+                     !
+                     CALL MOVE_TO_FIRST_POS(LST)
+                     !
+                     VAL = REAL64_RETURN_VALUE(LST)
+                     !
+                     DO I=2, LST%N
+                                  CALL MOVE_TO_NEXT_POS(LST)
+                                  CMP = REAL64_RETURN_VALUE(LST)
+                                  IF(VAL < CMP) VAL = CMP
+                     END DO
+    END IF
+    !
+  END FUNCTION
+  !
+  !#######################################################################
+  !
+  FUNCTION REAL64_LIST_MINVAL(LST) RESULT(VAL)
+    CLASS(REAL64_LINKED_LIST):: LST
+    REAL(rel64):: VAL
+    REAL(rel64):: CMP
+    INTEGER:: I
+    !
+    IF(LST%N > 0) THEN
+                     !
+                     CALL MOVE_TO_FIRST_POS(LST)
+                     !
+                     VAL = REAL64_RETURN_VALUE(LST)
+                     !
+                     DO I=2, LST%N
+                                  CALL MOVE_TO_NEXT_POS(LST)
+                                  CMP = REAL64_RETURN_VALUE(LST)
+                                  IF(VAL > CMP) VAL = CMP
+                     END DO
+    END IF
+    !
+  END FUNCTION
+  !
+  !#######################################################################
+  !
+  FUNCTION REAL64_LIST_RETURN_AS_STRING(LST, DELIM, PAD) RESULT(STR)
+    CLASS(REAL64_LINKED_LIST)      :: LST
+    CHARACTER(*),OPTIONAL,INTENT(IN):: DELIM
+    INTEGER,     OPTIONAL,INTENT(IN):: PAD
+    CHARACTER(:),ALLOCATABLE:: STR
+    CHARACTER(:),ALLOCATABLE:: TXT
+    CHARACTER(30)::NUM
+    INTEGER:: I
+    !
+    IF    (LST%N == 0) THEN
+                     STR = ' '
+    ELSEIF(LST%N == 1) THEN
+                     CALL MOVE_TO_FIRST_POS(LST)
+                     SELECT TYPE(VAL => LST%CUR%I)
+                     TYPE IS (REAL(rel64));      STR = DBLE2STR(VAL, PAD)
+                     TYPE IS (REAL(rel32));      STR = SNGL2STR(VAL, PAD)
+                     TYPE IS (INTEGER)
+                                                 WRITE(NUM,'(I16)') VAL
+                                                 STR = TRIM(ADJUSTL(NUM))
+                     TYPE IS (CHARACTER(*));     STR = VAL
+                     CLASS DEFAULT
+                                                 STR = 'NaN'
+                     END SELECT
+    ELSE
+                     IF(PRESENT(DELIM)) THEN
+                         TXT=DELIM
+                     ELSE
+                         TXT = ' '
+                     END IF
+                     !
+                     CALL MOVE_TO_FIRST_POS(LST)
+                     SELECT TYPE(VAL => LST%CUR%I)
+                     TYPE IS (REAL(rel64));      STR = DBLE2STR(VAL, PAD)
+                     TYPE IS (REAL(rel32));      STR = SNGL2STR(VAL, PAD)
+                     TYPE IS (INTEGER)
+                                                 WRITE(NUM,'(I16)') VAL
+                                                 STR = TRIM(ADJUSTL(NUM))
+                     TYPE IS (CHARACTER(*));     STR = VAL
+                     CLASS DEFAULT
+                                                 STR = 'NaN'
+                     END SELECT
+                     !
+                     DO I=2, LST%N-1
+                           SELECT TYPE(VAL => LST%CUR%I)
+                           TYPE IS (REAL(rel64));      STR = STR//DBLE2STR(VAL, PAD)//TXT
+                           TYPE IS (REAL(rel32));      STR = STR//SNGL2STR(VAL, PAD)//TXT
+                           TYPE IS (INTEGER)
+                                                       WRITE(NUM,'(I16)') VAL
+                                                       STR = STR//TRIM(ADJUSTL(NUM))//TXT
+                           TYPE IS (CHARACTER(*));     STR = STR//VAL//TXT
+                           CLASS DEFAULT
+                                                       STR = STR//'NaN'//TXT
+                           END SELECT
+                           CALL MOVE_TO_NEXT_POS(LST)
+                     END DO
+                     SELECT TYPE(VAL => LST%CUR%I)
+                     TYPE IS (REAL(rel64));      STR = STR//DBLE2STR(VAL, PAD)
+                     TYPE IS (REAL(rel32));      STR = STR//SNGL2STR(VAL, PAD)
+                     TYPE IS (INTEGER)
+                                                 WRITE(NUM,'(I16)') VAL
+                                                 STR = STR//TRIM(ADJUSTL(NUM))
+                     TYPE IS (CHARACTER(*));     STR = STR//VAL
+                     CLASS DEFAULT
+                                                 STR = STR//'NaN'
+                     END SELECT
+    END IF
+    !
+  END FUNCTION
+  !
+  !##################################################################################################
+  !
+  SUBROUTINE REAL64_LINKED_LIST_DEALLOCATE(LST)
+     TYPE(REAL64_LINKED_LIST):: LST
+     !
+     CALL DELETE_ALL_LINKED_LIST_ENTRIES(LST)
+     !
+  END SUBROUTINE
+  !
+  !@@@@@@@@@@@@@@@@@@@@@@@@@@@@@@@@@@@@@@@@@@@@@@@@@@@@@@@@@@@@@@@@@@@@@@@@@@@@@@@@@@@@@@@@@@@@@@@@@@
+  !@@@@@@@@@@@@@@@@@@@@@@@@@@@@@@@@@@@@@@@@@@@@@@@@@@@@@@@@@@@@@@@@@@@@@@@@@@@@@@@@@@@@@@@@@@@@@@@@@@
+  !@@@@@@@@@@@@@@@@@@@@@@@@@@@@@@@@@@@@@@@@@@@@@@@@@@@@@@@@@@@@@@@@@@@@@@@@@@@@@@@@@@@@@@@@@@@@@@@@@@
+  !
+  PURE FUNCTION IS_CLOSE_R64(VAR1,VAR2,RTOL,ATOL) RESULT(IS_CLOSE) !Default RTOL=1E-6, ATOL=1E-10 - Match 7 digits or less than 1E-10
+    REAL(rel64),           INTENT(IN):: VAR1, VAR2
+    REAL(rel64), OPTIONAL, INTENT(IN):: RTOL, ATOL
+    LOGICAL:: IS_CLOSE
+    REAL(rel64):: CHK, DIFF, DZ, DNEG
+    !ABS(VAR1-VAR2) <= (ATOL + RTOL * ABS(VAR2))
+    !
+    IF(VAR1 /= VAR1 .OR. VAR2 /= VAR2) THEN
+        IS_CLOSE = .FALSE.
+    ELSE
+        DZ   =  0.0_rel64
+        DNEG = -1.0_rel64
+        IF(VAR1 > VAR2) THEN
+            !
+            IF    (VAR2 >= DZ) THEN           ! Solve CHK = MIN(ABS(VAR1), ABS(VAR2))
+                               CHK = VAR2
+            ELSEIF(VAR1 <= DZ) THEN 
+                               CHK = DNEG*VAR1
+            ELSEIF(DNEG*VAR2 > VAR1) THEN         !Only here if VAR1 > 0 and VAR2 < 0 and VAR1 > VAR2
+                               CHK = VAR1
+            ELSE
+                               CHK = DNEG*VAR2
+            END IF
+            !
+            DIFF  = VAR1 - VAR2
+        ELSE
+            IF    (VAR1 >= DZ) THEN           ! Solve CHK = MIN(ABS(VAR1), ABS(VAR2))
+                               CHK = VAR1
+            ELSEIF(VAR2 <= DZ) THEN 
+                               CHK = DNEG*VAR2
+            ELSEIF(DNEG*VAR1 > VAR2) THEN         !Only here if VAR2 > 0 and VAR1 < 0 and VAR2 > VAR1
+                               CHK = VAR2
+            ELSE
+                               CHK = DNEG*VAR1
+            END IF
+            !
+            DIFF   = VAR2 - VAR1
+        END IF
+        !
+        IF(PRESENT(RTOL)) THEN
+            CHK = CHK * RTOL
+        ELSE
+            CHK = CHK * 1.D-6  !COMPARE AGAINST 7th DIGIT (SINGLE PRECISION)
+        END IF
+        !
+        IF(PRESENT(ATOL)) THEN
+            IS_CLOSE = DIFF <= ATOL + CHK
+        ELSE
+            IS_CLOSE = DIFF <= 1.D-10 + CHK
+        END IF
+        !
+    END IF
+    !
+  END FUNCTION
+  !
+  PURE FUNCTION IS_CLOSE_R32(VAR1,VAR2,RTOL,ATOL) RESULT(IS_CLOSE) !Default RTOL=1E-6, ATOL=1E-10 - Match 7 digits or less than 1E-10
+    REAL(rel32),           INTENT(IN):: VAR1, VAR2
+    REAL(rel32), OPTIONAL, INTENT(IN):: RTOL, ATOL
+    LOGICAL:: IS_CLOSE
+    REAL(rel32):: CHK, DIFF, DZ, DNEG
+    !ABS(VAR1-VAR2) <= (ATOL + RTOL * ABS(VAR2))
+    !
+    IF(VAR1 /= VAR1 .OR. VAR2 /= VAR2) THEN
+        IS_CLOSE = .FALSE.
+    ELSE
+        DZ   =  0.0_rel32
+        DNEG = -1.0_rel32
+        IF(VAR1 > VAR2) THEN
+            !
+            IF    (VAR2 >= DZ) THEN           ! Solve CHK = MIN(ABS(VAR1), ABS(VAR2))
+                               CHK = VAR2
+            ELSEIF(VAR1 <= DZ) THEN 
+                               CHK = DNEG*VAR1
+            ELSEIF(DNEG*VAR2 > VAR1) THEN         !Only here if VAR1 > 0 and VAR2 < 0 and VAR1 > VAR2
+                               CHK = VAR1
+            ELSE
+                               CHK = DNEG*VAR2
+            END IF
+            !
+            DIFF  = VAR1 - VAR2
+        ELSE
+            IF    (VAR1 >= DZ) THEN           ! Solve CHK = MIN(ABS(VAR1), ABS(VAR2))
+                               CHK = VAR1
+            ELSEIF(VAR2 <= DZ) THEN 
+                               CHK = DNEG*VAR2
+            ELSEIF(DNEG*VAR1 > VAR2) THEN         !Only here if VAR2 > 0 and VAR1 < 0 and VAR2 > VAR1
+                               CHK = VAR2
+            ELSE
+                               CHK = DNEG*VAR1
+            END IF
+            !
+            DIFF   = VAR2 - VAR1
+        END IF
+        !
+        IF(PRESENT(RTOL)) THEN
+            CHK = CHK * RTOL
+        ELSE
+            CHK = CHK * 1.D-6  !COMPARE AGAINST 7th DIGIT (SINGLE PRECISION)
+        END IF
+        !
+        IF(PRESENT(ATOL)) THEN
+            IS_CLOSE = DIFF <= ATOL + CHK
+        ELSE
+            IS_CLOSE = DIFF <= 1.D-10 + CHK
+        END IF
+        !
+    END IF
+    !
+  END FUNCTION
+  !
+  !#########################################################################################################################
+  !
+  PURE FUNCTION DBLE2STR(DVAL,PAD)
+    REAL(rel64),       INTENT(IN):: DVAL
+    INTEGER, OPTIONAL, INTENT(IN):: PAD
+    CHARACTER(:),    ALLOCATABLE :: DBLE2STR
+    REAL(rel64):: DVAL1C, DVAL10, DVAL1K
+    CHARACTER(16)::NUM !LARGEST POSSIBLE NUMBER IS 14 CHARACTERS
+    !
+    NUM=''
+    DVAL10 = 10._rel64*DVAL;   DVAL1C = 100._rel64*DVAL;   DVAL1K = 1000._rel64*DVAL
+    !
+    IF(DVAL /= DVAL) THEN
+        NUM='NaN'
+    ELSEIF(DVAL >= huge(DVAL)) THEN
+        NUM = 'inf'
+    ELSEIF(DVAL <= -huge(DVAL)) THEN
+        NUM = '-inf'
+    ELSEIF(DVAL==0.0_rel64)                     THEN
+       WRITE(NUM,'(F3.1)') DVAL
+    ELSEIF(DVAL>=1D100 .OR. DVAL<=-1D100)       THEN
+       WRITE(NUM,'(ES16.7E3)') DVAL
+    ELSEIF(DVAL>=1D10 .OR. DVAL<=-1D10)         THEN
+       WRITE(NUM,'(ES16.7E2)') DVAL
+    ELSEIF( DVAL10 == AINT(DVAL10) .AND. (DVAL10>=1.0_rel64.OR.DVAL10<=-1.0_rel64) ) THEN
+       WRITE(NUM,'(F16.1)') DVAL
+    ELSEIF( DVAL1C == AINT(DVAL1C) .AND. (DVAL1C>=1.0_rel64.OR.DVAL1C<=-1.0_rel64) ) THEN
+       WRITE(NUM,'(F16.2)') DVAL
+    ELSEIF( DVAL1K == AINT(DVAL1K) .AND. (DVAL1K>=1.0_rel64.OR.DVAL1K<=-1.0_rel64) ) THEN
+       WRITE(NUM,'(F16.3)') DVAL
+    ELSEIF(DVAL>=1D6 .OR. DVAL<=-1D6)           THEN
+       WRITE(NUM,'(ES16.7E1)') DVAL
+    ELSEIF(DVAL>=1D2 .OR. DVAL<=-1D2 )          THEN
+       WRITE(NUM,'(F16.5)') DVAL
+    ELSEIF(DVAL>=0.00099D0 .OR. DVAL<=-0.00099D0 )  THEN
+       WRITE(NUM,'(F16.7)') DVAL
+    ELSEIF(DVAL>=1D-9 .OR. DVAL<=-1D-9)         THEN
+       WRITE(NUM,'(ES16.7E1)') DVAL
+    ELSEIF(DVAL>=1D-99 .OR. DVAL<=-1D-99)       THEN
+       WRITE(NUM,'(ES16.7E2)') DVAL
+    ELSE!IF(DVAL>0D0 .OR. DVAL<0D0)              THEN
+       WRITE(NUM,'(ES16.7E3)') DVAL
+    END IF
+    !
+    IF(PRESENT(PAD)) THEN
+        !
+        NUM = ADJUSTL(NUM)
+        !
+        IF( LEN_TRIM(NUM) < ABS(PAD)) THEN
+                IF (PAD>0) THEN
+                           DBLE2STR = TRIM( REPEAT(' ',PAD-LEN_TRIM(NUM))//NUM )
+                ELSE
+                           DBLE2STR = TRIM(NUM)//REPEAT(' ',ABS(PAD)-LEN_TRIM(NUM))
+                END IF
+        ELSE
+                           DBLE2STR = TRIM(NUM)
+        END IF
+    ELSE
+        DBLE2STR = TRIM(ADJUSTL(NUM))
+    END IF
+    !
+  END FUNCTION
+  !
+  !#########################################################################################################################
+  !
+  PURE FUNCTION SNGL2STR(VAL,PAD)
+    REAL(rel32),       INTENT(IN):: VAL
+    INTEGER, OPTIONAL, INTENT(IN):: PAD
+    CHARACTER(:),    ALLOCATABLE :: SNGL2STR
+    REAL(rel64):: DVAL
+    DVAL = REAL(VAL, rel32)
+    SNGL2STR = DBLE2STR(DVAL,PAD)
+    !
+  END FUNCTION
+  !
+  !@@@@@@@@@@@@@@@@@@@@@@@@@@@@@@@@@@@@@@@@@@@@@@@@@@@@@@@@@@@@@@@@@@@@@@@@@@@@@@@@@@@@@@@@@@@@@@@@@@@@@@@@@@@@@@@@@@@@@@@@@
+  !@@@@@@@@@@@@@@@@@@@@@@@@@@@@@@@@@@@@@@@@@@@@@@@@@@@@@@@@@@@@@@@@@@@@@@@@@@@@@@@@@@@@@@@@@@@@@@@@@@@@@@@@@@@@@@@@@@@@@@@@@
+  !@@@@@@@@@@@@@@@@@@@@@@@@@@@@@@@@@@@@@@@@@@@@@@@@@@@@@@@@@@@@@@@@@@@@@@@@@@@@@@@@@@@@@@@@@@@@@@@@@@@@@@@@@@@@@@@@@@@@@@@@@
+  !    
+  !
 END MODULE
-!
-!@@@@@@@@@@@@@@@@@@@@@@@@@@@@@@@@@@@@@@@@@@@@@@@@@@@@@@@@@@@@@@@@@@@@@@@@@@@@@@@@@@@@@@@@@@@@@@@@@@@@@@@@@@@@@@@@@@@@@@@@@
-!@@@@@@@@@@@@@@@@@@@@@@@@@@@@@@@@@@@@@@@@@@@@@@@@@@@@@@@@@@@@@@@@@@@@@@@@@@@@@@@@@@@@@@@@@@@@@@@@@@@@@@@@@@@@@@@@@@@@@@@@@
-!@@@@@@@@@@@@@@@@@@@@@@@@@@@@@@@@@@@@@@@@@@@@@@@@@@@@@@@@@@@@@@@@@@@@@@@@@@@@@@@@@@@@@@@@@@@@@@@@@@@@@@@@@@@@@@@@@@@@@@@@@
-!    
