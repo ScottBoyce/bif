@@ -4,17 +4,26 @@
 !
 ! Holds a list of file unit numbers files and provides a convenient method of closing the files.
 !    
-! MODULE CONTAINS SINGLE ULTITY SUBROUTINE: CHECK_FOR_POST_KEY
-!   This routine is used to parse for various file post-keywords for Generic_Input and Generic_Output
+! MODULE CONTAINS:
+!
+!    CHECK_FOR_POST_KEY(LLOC,LN,IN,IOUT,BUF,SPLIT,SCALE,FILSTAT,FILACT,ASYN, BINARY, NOPRINT, GO_TO_TOP, DIM, OLDLOC, FMT, ONLY_CHECK, MSG)
+!                    !
+!                    This routine is used to parse for various file post-keywords for Generic_Input and Generic_Output
+!
+!    FILE_AND_POST_KEY_PARSE(LLOC, LN, ISTART, ISTOP, CHECK_SCALE_WITHOUT_SF)
+!                    !
+!                    This routine sets ISTART and ISTOP such that it includes file directive, file name, and postkeywords in LN(ISTART:ISTOP)
+!                    That is, it returns what the part of LN that CHECK_FOR_POST_KEY would use, and returns LLOC just beyond it search.
 !
 !
-MODULE POST_KEY_SUB
+MODULE POST_KEY_SUB!, ONLY: CHECK_FOR_POST_KEY, FILE_AND_POST_KEY_PARSE
   USE CONSTANTS, ONLY: Z, ONE, TWO, FOUR, SEV, EIGHT, THOU, QUIN, DZ, UNO, NL, BLN, BLNK, COM, NO, TRUE, FALSE
   USE ERROR_INTERFACE,      ONLY: STOP_ERROR, WARNING_MESSAGE
   USE PARSE_WORD_INTERFACE, ONLY: PARSE_WORD
   IMPLICIT NONE
   PRIVATE
   PUBLIC:: CHECK_FOR_POST_KEY
+  PUBLIC:: FILE_AND_POST_KEY_PARSE
   !
   CHARACTER(*), PARAMETER:: lowerCHAR="abcdefghijklmnopqrstuvwxyz"
   CHARACTER(*), PARAMETER:: upperCHAR="ABCDEFGHIJKLMNOPQRSTUVWXYZ"
@@ -62,7 +71,9 @@ MODULE POST_KEY_SUB
       !
       CALL PARSE_WORD(LN(:C),LLOC,ISTART,ISTOP)   !CHECK FOR BUFFER OR SPLIT FLAG
       !
-      IF(LN(ISTART:ISTOP) == BLNK .OR. LN(ISTART:ISTOP) == COM) EXIT
+      IF(LN(ISTOP:ISTOP) == COM ) ISTOP = ISTOP - ONE
+      !
+      IF(ISTART > ISTOP .OR. LN(ISTART:ISTOP) == BLNK) EXIT
       !
       KEY=LN(ISTART:ISTOP)
       !
@@ -242,6 +253,157 @@ MODULE POST_KEY_SUB
     IF(PRESENT(OLDLOC)) OLDLOC = OLD_LOC
     !
     IF(ERR.NE.NL) CALL WARNING_MESSAGE(LN,IN,IOUT,MSG='...CHECK_FOR_POST_KEY WARNINGS...'//NL//' THE FOLLOWING MESSAGES WERE PASSED WHILE CHECKING FOR ANY ADDITIONAL KEYWORDS ON LOADED LINE.'//BLN//ERR)
+    !
+  END SUBROUTINE
+  !
+  SUBROUTINE FILE_AND_POST_KEY_PARSE(LLOC, LN, ISTART, ISTOP, CHECK_SCALE_WITHOUT_SF)
+    INTEGER,                   INTENT(INOUT):: LLOC                    ! Position to start search from, returns as ISTOP+1
+    CHARACTER(*),              INTENT(IN   ):: LN                      ! LN IS NOT MODIFIED, BUT NEEDS INOUT TO PASS TO PARSEWORD
+    INTEGER,                   INTENT(INOUT):: ISTART, ISTOP           ! Holds portion of line that contains DIRECTIVE, FILENAME, and POSTkeywords.
+    LOGICAL,         OPTIONAL, INTENT(IN    ):: CHECK_SCALE_WITHOUT_SF ! Default is False, if TRUE, then will check for scale factor even if SF is not present.
+    CHARACTER(32):: KEY  !Note 32 is hardwired into case check
+    CHARACTER(:), ALLOCATABLE:: ERR
+    INTEGER:: I, N, ISTR, ISTP, LLOC_BAK, IERR, C, ITMP !,Z
+    DOUBLE PRECISION:: SF
+    LOGICAL:: CHECK_SCALE
+    !
+    CHECK_SCALE = FALSE
+    IF(PRESENT(CHECK_SCALE_WITHOUT_SF)) CHECK_SCALE = CHECK_SCALE_WITHOUT_SF
+    !
+    C = INDEX(LN,COM)   !COM = '#'
+    IF( C==Z ) C = MIN( LEN_TRIM(LN)+ONE, LEN(LN) )   !NO # FOUND, SO GET THE SMALLER OF THE TWO LENGTHS
+    !
+    ISTART = LLOC
+    ISTOP  = C
+    !
+    CALL PARSE_WORD(LN(:C),LLOC,ISTR,ISTP)  
+    IF(LN(ISTP:ISTP) == COM ) ISTP = ISTP - ONE
+    !
+    IF( IS_EOL(ln, ISTR, ISTP) ) THEN  ! Line is empty, nothing to parse
+        LLOC = ISTART
+        RETURN
+    END IF
+    !
+    ISTART = ISTR
+    !
+    KEY=LN(ISTR:ISTP)
+    CALL UPCASE(KEY)
+    !
+    IF( KEY == 'BINARY' ) THEN
+        ISTOP = ISTP
+        CALL PARSE_WORD(LN(:C),LLOC,ISTR,ISTP)  
+        CALL CHECK_COM(LN, ISTP, LLOC)
+        KEY=LN(ISTR:ISTP)
+        CALL UPCASE(KEY)
+    END IF
+    !
+    IF ( KEY == 'CONSTANT'   .OR. &  ! Check for Directive that reads second argument
+         KEY == 'EXTERNAL'   .OR. &
+         KEY == 'DATAUNIT'   .OR. &
+         KEY == 'OPEN/CLOSE' .OR. &
+         KEY == 'DATAFILE'   ) THEN
+                                   ISTOP = ISTP
+                                   CALL PARSE_WORD(LN(:C),LLOC,ISTR,ISTP)  
+                                   CALL CHECK_COM(LN, ISTP, LLOC)
+    END IF
+    !
+    ! Start search for post keywords
+    DO WHILE (ISTR <= ISTP)                   ! PARSE_WORD sets ISTP < ISTR when end of line is reached
+        ISTOP = ISTP
+        !
+        CALL PARSE_WORD(LN(:C),LLOC,ISTR,ISTP)  
+        CALL CHECK_COM(LN, ISTP, LLOC)
+        !
+        IF( IS_EOL(lN,ISTR,ISTP) ) EXIT
+        !
+        KEY=LN(ISTR:ISTP)
+        CALL UPCASE(KEY)
+        !
+        IF ( KEY == 'BUFFER' .OR. &
+             KEY == 'BUFER'  .OR. &
+             KEY == 'BUF'    .OR. & 
+             KEY == 'BUFF'   .OR. &
+             KEY == 'SPLIT'  ) THEN
+                                   ISTOP = ISTP
+                                   CALL PARSE_WORD(LN(:C),LLOC,ISTR,ISTP)  
+                                   CALL CHECK_COM(LN, ISTP, LLOC)
+                                   !
+                                   IF( IS_EOL(lN,ISTR,ISTP) ) EXIT
+                                   !
+                                   READ(LN(ISTR:ISTP),*,IOSTAT=IERR) ITMP
+                                   IF(IERR /= Z) THEN
+                                              LLOC = ISTOP + ONE
+                                              ISTP = ISTOP
+                                   END IF
+        ELSE IF ( KEY == 'SF'        .OR. &
+                  KEY == 'SCALE'     .OR. &
+                  KEY == 'SIGFIG'    .OR. &
+                  KEY == 'DIM'       .OR. &
+                  KEY == 'DIMENSION' ) THEN
+                                   CALL PARSE_WORD(LN(:C),LLOC,ISTR,ISTP)  
+                                   CALL CHECK_COM(LN, ISTP, LLOC)
+        ELSE IF ( KEY == 'BINARY'     .OR. &
+                  KEY == 'ASYNC'      .OR. &
+                  KEY == 'OLD'        .OR. &
+                  KEY == 'READ'       .OR. &
+                  KEY == 'REPLACE'    .OR. &
+                  KEY == 'WRITE'      .OR. &
+                  KEY == 'NOPRINT'    .OR. &
+                  KEY == 'REWIND'     .OR. &
+                  KEY == 'GO_TO_TOP'  .OR. &
+                  KEY == 'AUTO'       .OR. &
+                  KEY == 'AUTOCOUNT'  .OR. &
+                  KEY == 'AUTO-COUNT' ) THEN
+                                   CYCLE
+        ELSE IF(CHECK_SCALE) THEN
+                                   READ(LN(ISTR:ISTP),*,IOSTAT=IERR) SF
+                                   IF(IERR /= Z) EXIT
+        ELSE
+            EXIT  ! Unknown keyword, so done searching
+        END IF
+    END DO
+    !
+    LLOC = ISTOP + ONE
+    !
+    CONTAINS
+    !
+    PURE SUBROUTINE UPCASE(KEY)
+       CHARACTER(*),  INTENT(INOUT):: KEY
+       INTEGER:: I, N
+       !
+       N = LEN_TRIM(KEY)
+       !
+       DO I=1, N
+           N = INDEX( lowerCHAR, KEY(I:I))
+           !
+           IF(N > 0) KEY(I:I) = upperCHAR(N:N)
+       END DO
+       !
+    END SUBROUTINE
+    !
+    PURE SUBROUTINE CHECK_COM(LN, ISTP, LLOC)
+       CHARACTER(*),  INTENT(IN   ):: LN
+       INTEGER,       INTENT(INOUT):: ISTP, LLOC
+       IF(LN(ISTP:ISTP) == COM ) THEN
+                  LLOC = ISTP
+                  ISTP = ISTP - ONE
+       END IF
+    END SUBROUTINE
+    !
+    PURE FUNCTION IS_EOL(LN, ISTART, ISTOP) RESULT(ANS)
+       CHARACTER(*), INTENT(IN):: LN
+       INTEGER,      INTENT(IN):: ISTART, ISTOP
+       LOGICAL:: ANS
+       !
+       IF     ( ISTART > ISTOP ) THEN
+                             ANS = TRUE
+       ELSE IF(LN(ISTART:ISTOP) == BLNK) THEN
+                             ANS = TRUE
+       ELSE
+                             ANS = FALSE
+       END IF
+       !
+    END FUNCTION
     !
   END SUBROUTINE
 END MODULE
