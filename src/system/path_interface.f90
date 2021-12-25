@@ -26,12 +26,33 @@ MODULE PATH_INTERFACE
   !
   !#############################################################################################################################################################
   !
-  FUNCTION IS_WINDOWS() RESULT(IS_WIN)
+  FUNCTION IS_WINDOWS(always_check) RESULT(IS_WIN)
+    LOGICAL, OPTIONAL, INTENT(IN):: always_check
     LOGICAL:: IS_WIN
+    INTEGER, SAVE:: WinNT = -1
+    !
+    IF(PRESENT(always_check)) THEN
+            IF(always_check) WinNT = -1
+    END IF
+    !
+    IF(WinNT < 0) THEN
+                  IF(HAS_WIN_OS_VARIABLE()) THEN
+                                            WinNT = 1
+                  ELSE
+                                            WinNT = 0
+                  END IF
+    END IF
+    !
+    IS_WIN = WinNT == 1
+    !
+  END FUNCTION
+  !
+  FUNCTION HAS_WIN_OS_VARIABLE() RESULT(HAS_WIN_OS)
+    LOGICAL:: HAS_WIN_OS
     CHARACTER(10):: OS
     !
     CALL GET_ENVIRONMENT_VARIABLE ( "OS", value=OS )
-    IS_WIN = OS == 'Windows_NT'                     !If any Windows variant then variable exists and is set to Windows_NT
+    HAS_WIN_OS = OS == 'Windows_NT'                    !If any Windows variant then variable exists and is set to Windows_NT
     !
   END FUNCTION
   !
@@ -99,57 +120,115 @@ MODULE PATH_INTERFACE
   !
   !#############################################################################################################################################################
   !
-  PURE SUBROUTINE ADD_DIR_SLASH(LN)  !Converts "./MyFile" to "./MyFile/" or ".\MyFile" to ".\MyFile\"   
-    CHARACTER(*), INTENT(INOUT):: LN
+  SUBROUTINE ADD_DIR_SLASH(LN, OS_SLASH, ONLY_SLASH, ONLY_BSLASH)  !Converts "./MyFile" to "./MyFile/" or ".\MyFile" to ".\MyFile\", This does not reconize UNIX escape \ symbol, such as a blank space "\ "
+    CHARACTER(*),      INTENT(INOUT):: LN
+    LOGICAL, OPTIONAL, INTENT(IN   ):: OS_SLASH, ONLY_SLASH, ONLY_BSLASH
     INTEGER:: DIM, I, J
+    INTEGER:: SLASH_FLAG
+    LOGICAL:: ADD_SLASH
     DIM = LEN_TRIM(LN)
     !
-    IF(DIM > Z) THEN
-    IF(LN(DIM:DIM) /= SLASH .AND. LN(DIM:DIM) /= BSLASH .AND. DIM+1 <= LEN(LN)) THEN
-        DIM = DIM + ONE
-        I = INDEX(LN,BSLASH) 
-        J = INDEX(LN, SLASH) 
-        IF     (I > Z .AND. J > Z) THEN
-                           LN(DIM:DIM) =  SLASH
-        ELSEIF (I > Z) THEN
-                           LN(DIM:DIM) = BSLASH
-        ELSE
-                           LN(DIM:DIM) =  SLASH
+    SLASH_FLAG = Z
+    !
+    IF(PRESENT(ONLY_SLASH)) THEN
+            IF(ONLY_SLASH)  SLASH_FLAG = ONE
+    END IF
+    !
+    IF(PRESENT(ONLY_BSLASH)) THEN
+            IF(ONLY_BSLASH) SLASH_FLAG = TWO
+    END IF
+    !
+    IF(PRESENT(  OS_SLASH)) THEN
+        IF(OS_SLASH) THEN
+            IF(IS_WINDOWS()) THEN
+                            SLASH_FLAG = TWO
+                
+            ELSE
+                            SLASH_FLAG = ONE    
+            END IF
         END IF
     END IF
-    END IF
+    !
+    IF(DIM > Z .AND. DIM+1 <= LEN(LN)) THEN
+        !
+        ADD_SLASH = LN(DIM:DIM) /= SLASH .AND. LN(DIM:DIM) /= BSLASH
+        !
+        DIM = DIM + ONE
+        IF(SLASH_FLAG == Z .AND. ADD_SLASH) THEN
+                                         I = INDEX(LN,BSLASH) 
+                                         J = INDEX(LN, SLASH) 
+                                         IF     (I > Z .AND. J > Z) THEN
+                                                            LN(DIM:DIM) =  SLASH
+                                         ELSEIF (I > Z) THEN
+                                                            LN(DIM:DIM) = BSLASH
+                                         ELSE
+                                                            LN(DIM:DIM) =  SLASH
+                                         END IF
+        ELSE IF(SLASH_FLAG == ONE) THEN  ! Use Forward slashes
+                                         CALL BSLASH_TO_SLASH(LN)
+                                         IF(ADD_SLASH) LN(DIM:DIM) =  SLASH
+        ELSE IF(SLASH_FLAG == TWO) THEN  ! Use Back    slashes
+                                         CALL SLASH_TO_BSLASH(LN)
+                                         IF(ADD_SLASH) LN(DIM:DIM) =  BSLASH
+        END IF
+    END  IF
     !
   END SUBROUTINE
   !
   !-------------------------------------------------------------------------------------------------------------------------------------------------
   !
-  PURE SUBROUTINE ADD_DIR_SLASH_ALLOC(LN)  !Converts "./MyFile" to "./MyFile/" or ".\MyFile" to ".\MyFile\"   
+  SUBROUTINE ADD_DIR_SLASH_ALLOC(LN, OS_SLASH, ONLY_SLASH, ONLY_BSLASH)  !Converts "./MyFile" to "./MyFile/" or ".\MyFile" to ".\MyFile\"   
     CHARACTER(:), ALLOCATABLE, INTENT(INOUT):: LN
+    LOGICAL,         OPTIONAL, INTENT(IN   ):: OS_SLASH, ONLY_SLASH, ONLY_BSLASH
     INTEGER:: DIM, I, J
+    LOGICAL:: CALL_ADD_DIR_SLASH, ADD_SLASH, GROW
     CHARACTER:: SL
     !
-    IF(ALLOCATED(LN)) THEN
-       DIM = LEN_TRIM(LN)
-       IF(DIM > Z) THEN
-          IF(LN(DIM:DIM) /= SLASH .AND. LN(DIM:DIM) /= BSLASH) THEN
-              I = INDEX(LN,BSLASH) 
-              J = INDEX(LN, SLASH) 
-              IF     (I > Z .AND. J > Z) THEN
-                                 SL =  SLASH
-              ELSEIF (I > Z) THEN
-                                 SL = BSLASH
-              ELSE
-                                 SL =  SLASH
-              END IF
-              !
-              DIM = DIM + ONE
-              IF(DIM <= LEN(LN)) THEN
-                   LN(DIM:DIM) =  SL
-              ELSE
-                   LN = LN//SL
-              END IF
-          END IF
-       END IF
+    IF(.NOT. ALLOCATED(LN)) RETURN
+    !
+    CALL_ADD_DIR_SLASH = FALSE
+    !
+    IF(PRESENT(ONLY_SLASH)) THEN
+            IF(ONLY_SLASH)  CALL_ADD_DIR_SLASH = ONLY_SLASH
+    END IF
+    !
+    IF(PRESENT(ONLY_BSLASH)) THEN
+            IF(ONLY_BSLASH) CALL_ADD_DIR_SLASH = ONLY_BSLASH
+    END IF
+    !
+    IF(PRESENT(  OS_SLASH)) THEN
+              IF(OS_SLASH) CALL_ADD_DIR_SLASH = OS_SLASH
+    END IF
+    !
+    DIM  = LEN_TRIM(LN)
+    GROW = DIM+1 > LEN(LN)
+    IF(DIM > Z) THEN
+        !
+        ADD_SLASH = LN(DIM:DIM) /= SLASH .AND. LN(DIM:DIM) /= BSLASH
+        !
+        IF(CALL_ADD_DIR_SLASH) THEN
+             !
+             IF(ADD_SLASH .AND. GROW) LN = LN//BLNK  ! Pad with one blank space
+             CALL ADD_DIR_SLASH(LN, OS_SLASH, ONLY_SLASH, ONLY_BSLASH)
+             !
+        ELSE IF(ADD_SLASH) THEN
+               I = INDEX(LN,BSLASH) 
+               J = INDEX(LN, SLASH) 
+               IF     (I > Z .AND. J > Z) THEN
+                                  SL =  SLASH
+               ELSEIF (I > Z) THEN
+                                  SL = BSLASH
+               ELSE
+                                  SL =  SLASH
+               END IF
+               !
+               DIM = DIM + ONE
+               IF(GROW) THEN
+                    LN = LN//SL
+               ELSE
+                    LN(DIM:DIM) =  SL
+               END IF
+        END IF
     END IF
     !
   END SUBROUTINE
