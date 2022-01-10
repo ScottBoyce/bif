@@ -2,7 +2,7 @@
   {
     "name": "Batteries Included Fortran Library (BiF-Lib)",
 
-    "version": "1.0.1",
+    "version": "1.0.2",
     "status": "Provisional",
 
     "organization": "U.S. Geological Survey",
@@ -60,7 +60,7 @@
     ],
 
     "date": {
-      "metadataLastUpdated": "2021-14-15"
+      "metadataLastUpdated": "2022-01-12"
     }
   }
 ]

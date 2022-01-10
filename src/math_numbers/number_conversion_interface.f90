@@ -310,7 +310,7 @@ MODULE NUMBER_CONVERSION_INTERFACE
   !~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~
   !
   PURE FUNCTION int2bin_INT8_GP(VAL32, GROUP) RESULT(BIN)
-    INTEGER(INT8),    intent(in):: VAL32
+    INTEGER(INT8),     intent(in):: VAL32
     INTEGER,           intent(in):: GROUP !Set to 0, 4, 8
     CHARACTER(:),     allocatable:: BIN
     CHARACTER(16):: TMP

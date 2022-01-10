@@ -19,7 +19,7 @@
 !
 !  CALL UT % SET_IOUT(IOUT)
 !
-!  CALL UT % NEXT_SECTION(HEADER)                  --> Start and name a group of individual tests
+!  CALL UT % NEXT_SECTION(HEADER)                    --> Start and name a group of individual tests
 !       CALL UT % NEXT_TEST(NAME, [assume_pass])     --> Start and Name a single test.
 !                                                        Test contains a single FAILED logical that is .FALSE. until an assertion test fails.
 !       CALL UT % ASSERT( arg )                      --> Performs a comparison (subtest). See below for full assert options.
@@ -204,7 +204,7 @@ MODULE UNIT_TESTING_INSTRUCTION
     !
     LOGICAL:: SECTION_HEADER = FALSE
     !
-	CHARACTER( 64):: NAME = BLNK !Test Name
+    CHARACTER( 64):: NAME = BLNK !Test Name
     CHARACTER(  4):: STAT = BLNK !PASS or FAIL
     !
     LOGICAL:: HAS_NOTE = FALSE
@@ -212,10 +212,10 @@ MODULE UNIT_TESTING_INSTRUCTION
     !
     CONTAINS
     !
-    PROCEDURE, pass(UT):: ADD_HEADER   => ADD_HEADER_UNIT_TEST
-    PROCEDURE, pass(UT):: ADD_NOTE     => ADD_NOTE_UNIT_TEST
-    GENERIC           :: ASSIGNMENT(=) => COPY_UNIT_TEST_TYPE
-    PROCEDURE, PRIVATE:: COPY_UNIT_TEST_TYPE
+    PROCEDURE, pass(UT):: ADD_HEADER    => ADD_HEADER_UNIT_TEST
+    PROCEDURE, pass(UT):: ADD_NOTE      => ADD_NOTE_UNIT_TEST
+    GENERIC            :: ASSIGNMENT(=) => COPY_UNIT_TEST_TYPE
+    PROCEDURE,  PRIVATE:: COPY_UNIT_TEST_TYPE
   END TYPE
   !
   TYPE UNIT_TESTS

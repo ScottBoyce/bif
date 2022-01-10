@@ -3,7 +3,7 @@ This readme is to explain what is the readme.md file
 
 ----------------------------------------------------------------
 
-readme.md is just a regular text file with Markdown syntax,
+readme.md is a regular text file with Markdown syntax,
 https://en.wikipedia.org/wiki/Markdown
 
 Markdown is used in code repositories to add additional formatting,
@@ -29,7 +29,7 @@ will render the final formatting of the .md file
 The following are some markdown viewers that are provided for convenience.
 They are not endorsed by the USGS, nor does the order indicate any order of preference.
 
- *	Just view the files on the the hosting website of the repository
+ *	Read the files on the the git hosting website
 		--Such as code.usgs.gov or gitlab.com
 
  *	Typora Markdown Editor
@@ -40,7 +40,7 @@ They are not endorsed by the USGS, nor does the order indicate any order of pref
 
  *	Notepad++
 	https://notepad-plus-plus.org/    with the Plugin MarkdownViewer++
-		--Need to install the plugin under the Plugin menu and selecting "Plugin Admin"
+		--Install the plugin under the Plugin menu by selecting "Plugin Admin"
 
  *	https://stackedit.io/
 		--Web Browser Interface
