@@ -362,8 +362,8 @@ MODULE ERROR_INTERFACE
     IF(PRESENT(INFILE)) THEN
         IF (INFILE /= Z) THEN
            IFILE=INFILE
-           INQUIRE(INFILE,NAME=LN)
-           INLINE=TRIM(ADJUSTL(LN))
+           INQUIRE(INFILE,NAME=LN,OPENED=ISOPEN)
+           IF(ISOPEN) INLINE=TRIM(ADJUSTL(LN))
         END IF
     END IF
     !
@@ -440,10 +440,15 @@ MODULE ERROR_INTERFACE
                     'FOR AN UNKNOWN FILE UNIT [POSSIBLE FAILURE TO OPEN/FIND FILE]'  //BLN//  &
                     'FOR THE REQUESTED FILE NAME: '//FN                              //BLN//  &
                     ERR_CODE
+           ELSEIF (FN /= BLNK) THEN
+         ERRMSG=NL//'FILE I/O ERROR:'                                                      //BLN//  &
+                    'FOR FILE UNIT '//NUM2STR(IU)//' [POSSIBLE FAILURE TO OPEN/FIND FILE]' //BLN//  &
+                    'FOR THE REQUESTED FILE NAME: '//NL//FN                               //BLN//  &
+                    ERR_CODE
            ELSE
          ERRMSG=NL//'FILE I/O ERROR:'                                                     //BLN//   &
-                    'FOR FILE UNIT '//NUM2STR(IU)//' [POSSIBLE FAILURE TO OPEN/FIND FILE]' //BLN//   &
-                    'WITH UNKNOWN FILE NAME'                                               //BLN//   &
+                    'FOR FILE UNIT '//NUM2STR(IU)//' [POSSIBLE FAILURE TO OPEN/FIND FILE]' //BLN//  &
+                    'WHICH HAS NO FILE NAME ASSOCIATED WITH IT'                            //BLN//  &
                     ERR_CODE
            END IF          
        ELSE
@@ -472,13 +477,16 @@ MODULE ERROR_INTERFACE
                     ERR_CODE                                                         //BLN//  &
                     'WHILE UTILIZING THE FOLLOWING LINE: '//NL//'"'//ERRLINE//'"'    //BLN//  &
                     'THAT IS ASSOCIATED WITH INPUT FILE: '//NL//'"'//INLINE//'"'
-           ELSE
+           ELSEIF (FN /= BLNK) THEN
          ERRMSG=NL//'FILE I/O ERROR:'                                                      //BLN//  &
                     'FOR FILE UNIT '//NUM2STR(IU)//' [POSSIBLE FAILURE TO OPEN/FIND FILE]' //BLN//  &
-                    'WITH UNKNOWN FILE NAME'                                               //BLN//  &
-                    ERR_CODE                                                               //BLN//  &
-                    'WHILE UTILIZING THE FOLLOWING LINE: '//NL//'"'//ERRLINE//'"'          //BLN// &
-                    'THAT IS ASSOCIATED WITH INPUT FILE: '//NL//'"'//INLINE//'"'
+                    'FOR THE REQUESTED FILE NAME: '//NL//FN                                //BLN//  &
+                    ERR_CODE
+           ELSE
+         ERRMSG=NL//'FILE I/O ERROR:'                                                     //BLN//   &
+                    'FOR FILE UNIT '//NUM2STR(IU)//' [POSSIBLE FAILURE TO OPEN/FIND FILE]' //BLN//  &
+                    'WHICH HAS NO FILE NAME ASSOCIATED WITH IT'                            //BLN//  &
+                    ERR_CODE
            END IF          
        ELSE
          ERRMSG=NL//'FILE I/O ERROR:'                                                       //BLN//  &
