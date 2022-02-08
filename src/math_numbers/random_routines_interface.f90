@@ -21,7 +21,7 @@
 !
 !~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~
 !
-! The Normal and Expontial Distribution Random Variables are generated using the Ziggurat Method as originally described by 
+! The Normal and Exponential Distribution Random Variables are generated using the Ziggurat Method as originally described by 
 !    Marsaglia G, Tsang WW. The ziggurat method for generating random variables. Journal of Statistical Software. 2000; 5(8):1–7.
 !    Doornik, JA. An improved ziggurat method to generate normal random samples. University of Oxford; 2005.
 ! With the final algorithm based on
@@ -58,14 +58,14 @@
 !  CALL RG%INIT([SEED], [ID], [NJUMP])  ! Run one time to set a SEED based on the date and time
 !                                             SEED overrides the random seed with the user specified
 !                                             ID is a value added to the SEED--useful for different process IDs
-!                                             NJUMP runs the xoshiro256** jump routine NJUMP times, which move sthe SEED forward 2^64 random numbers.
+!                                             NJUMP runs the xoshiro256** jump routine NJUMP times, which moves the SEED forward 2^64 random numbers.
 ! 
-!  CALL RG%EXPONENTIAL(RAND, [lambda])               ! Set RAND to next Exponetial   Distribution pseudo-random number; lambda is the exponetial rate parameter (λ > 0)
-!  CALL RG%NORMAL     (RAND, [mean], [stdev], [var]) ! Set RAND to next Normal/Gauss Distribution pseudo-random number; mean is the normal mean; stdev is the normal population standard devation, var is the normal population variance. If stdev and var are specified, then only stdev is used.
+!  CALL RG%EXPONENTIAL(RAND, [lambda])               ! Set RAND to next Exponential  Distribution pseudo-random number; lambda is the Exponential rate parameter (λ > 0)
+!  CALL RG%NORMAL     (RAND, [mean], [stdev], [var]) ! Set RAND to next Normal/Gauss Distribution pseudo-random number; mean is the normal mean; stdev is the normal population standard deviation, var is the normal population variance. If stdev and var are specified, then only stdev is used.
 ! 
 !  CALL RG%GET(RAND, [LOWER, UPPER]) ! Set RAND to next pseudo-random number between 0.0 and 1.0, or 0 and 2147483647, or between LOWER and UPPER. If RAND is a CHARACTER(*) then range is all non-blank ASCII characters, ie ACHAR(33) to ACHAR(126), and lower and upper are set to a letter, eg. ('A','F')
 !  CALL RG%GET(RAND, [SIGN])         ! SIGN set to true indicates that float random is from -1 to 1, instead of 0 to 1.
-!  CALL RG%GET(RAND, [CHAR])         ! CHAR is a string of characte that can be accepted as options.
+!  CALL RG%GET(RAND, [CHAR])         ! CHAR is a string of character that can be accepted as options.
 !                                    ! This routine is PURE and rand can be a scalar, or 1D, 2D, or 3D array.
 ! 
 !  CALL RG%SHUFFLE(A)                ! Pseudo-random shuffle of the values in A. This routine is PURE
@@ -98,11 +98,11 @@ MODULE RANDOM_ROUTINES!, ONLY: RANDOM_GENERATOR, SHUFFLE, SET_FORTRAN_SEED, COIN
   PUBLIC:: COIN_TOSS       !()  RESULT(T or F)
   PUBLIC:: BINARY_TOSS     !()  RESULT(1 or 0)
   !
-  PUBLIC:: SET_FORTRAN_SEED     ! Helper subrotunie that sets the Fortran SEED. It has nothing to do with the RANDOM_GENERATOR type
+  PUBLIC:: SET_FORTRAN_SEED     ! Helper subroutine that sets the Fortran SEED. It has nothing to do with the RANDOM_GENERATOR type
   !
   ! Constants used internally to module ----------------------------------------------------
   !
-  INTEGER(INT64), dimension(4), parameter:: Default_seed = [integer(int64):: -3300711175878204139,   8258803693257250632, &  ! Based on an arbtrary number run in splitmix64 to create a starting point when SEED is not requested.
+  INTEGER(INT64), dimension(4), parameter:: Default_seed = [integer(int64):: -3300711175878204139,   8258803693257250632, &  ! Based on an arbitrary number run in splitmix64 to create a starting point when SEED is not requested.
                                                                               1051100212301966062,  -7302830465610773213   ]
   !~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~
   INTEGER(INT32),  PARAMETER:: NEG   = -1_int32
@@ -143,7 +143,7 @@ MODULE RANDOM_ROUTINES!, ONLY: RANDOM_GENERATOR, SHUFFLE, SET_FORTRAN_SEED, COIN
   !
   ! ----------------------------------------------------------------------------------------
   !
-  TYPE RANDOM_GENERATOR                      ! Uses a xoshiro256** method decribed in Blackman, D., & Vigna, S. (2018). Scrambled linear pseudorandom number generators. arXiv preprint arXiv:1805.01407.
+  TYPE RANDOM_GENERATOR                      ! Uses a xoshiro256** method described in Blackman, D., & Vigna, S. (2018). Scrambled linear pseudorandom number generators. arXiv preprint arXiv:1805.01407.
       !
       INTEGER(INT64), dimension(4):: seed = Default_seed
       !
@@ -184,7 +184,7 @@ MODULE RANDOM_ROUTINES!, ONLY: RANDOM_GENERATOR, SHUFFLE, SET_FORTRAN_SEED, COIN
                               SHUFFLE_INT32_2D_RG, SHUFFLE_INT64_2D_RG, SHUFFLE_REL32_2D_RG, SHUFFLE_REL64_2D_RG, SHUFFLE_CHAR_2D_RG, &
                               SHUFFLE_INT32_3D_RG, SHUFFLE_INT64_3D_RG, SHUFFLE_REL32_3D_RG, SHUFFLE_REL64_3D_RG, SHUFFLE_CHAR_3D_RG
       !
-      PROCEDURE, nopass::    splitmix64     ! %splitmix64(seed, rnd) - sumplimental random generator used internally for genating random seeds. Provided in case user wants to use it.
+      PROCEDURE, nopass::    splitmix64     ! %splitmix64(seed, rnd) - supplemental random generator used internally for generating random seeds. Provided in case user wants to use it.
       !
       PROCEDURE, pass(rg), private:: GENERATE_RANDOM_INT32_0D_RG, GENERATE_RANDOM_INT32_0D_LU
       PROCEDURE, pass(rg), private:: GENERATE_RANDOM_INT64_0D_RG, GENERATE_RANDOM_INT64_0D_LU, GENERATE_RANDOM_INT64_0D_LU32
@@ -274,7 +274,7 @@ MODULE RANDOM_ROUTINES!, ONLY: RANDOM_GENERATOR, SHUFFLE, SET_FORTRAN_SEED, COIN
   !@@@@@@@@@@@@@@@@@@@@@@@@@@@@@@@@@@@@@@@@@@@@@@@@@@@@@@@@@@@@@@@@@@@@@@@@@@@@@@@@@@@@@@@@@@@@@@@@@@@@@@@@@@@@@@@@@@@@@@@@@
   ! 
   ! Uses the splitmix64 algorithm to generate a set of seeds for 
-  ! splitmix64 was modified from the original implimentation 
+  ! splitmix64 was modified from the original implementation 
   !   to ensure that x and s do not have an INT64 overflow, 
   !   which otherwise would work for an unsigned INT64.
   PURE SUBROUTINE splitmix64(s, r)      ! s is a seed for generating the random integer r
@@ -293,7 +293,7 @@ MODULE RANDOM_ROUTINES!, ONLY: RANDOM_GENERATOR, SHUFFLE, SET_FORTRAN_SEED, COIN
     !
   END SUBROUTINE
   !
-  PURE SUBROUTINE Seed_RANDOMIZER(s)      ! Runs the splitmix64 seed forward 8191 (2^13-1) times and then randmizes it with splitmix64
+  PURE SUBROUTINE Seed_RANDOMIZER(s)      ! Runs the splitmix64 seed forward 8191 (2^13-1) times and then randomizes it with splitmix64
     INTEGER(INT64), intent(inout) :: s
     INTEGER:: I
     !
@@ -428,7 +428,7 @@ MODULE RANDOM_ROUTINES!, ONLY: RANDOM_GENERATOR, SHUFFLE, SET_FORTRAN_SEED, COIN
     REAL   (REL64) :: y
     y = REAL(SHIFTR(x, 11), rel64) * pow53
     !
-    if(sgn .AND. BTEST(x, 10)) y = y * -1.0_rel64
+    if(sgn .AND. BTEST(x, 10)) y = -1.0_rel64 * y
     !
     IF(y < DNEG) y = DNEG 
     IF(y > UNO ) y = UNO
@@ -496,7 +496,7 @@ MODULE RANDOM_ROUTINES!, ONLY: RANDOM_GENERATOR, SHUFFLE, SET_FORTRAN_SEED, COIN
   !@@@@@@@@@@@@@@@@@@@@@@@@@@@@@@@@@@@@@@@@@@@@@@@@@@@@@@@@@@@@@@@@@@@@@@@@@@@@@@@@@@@@@@@@@@@@@@@@@@@@@@@@@@@@@@@@@@@@@@@@@
   !@@@@@@@@@@@@@@@@@@@@@@@@@@@@@@@@@@@@@@@@@@@@@@@@@@@@@@@@@@@@@@@@@@@@@@@@@@@@@@@@@@@@@@@@@@@@@@@@@@@@@@@@@@@@@@@@@@@@@@@@@
   !@@@@@@@@@@@@@@@@@@@@@@@@@@@@@@@@@@@@@@@@@@@@@@@@@@@@@@@@@@@@@@@@@@@@@@@@@@@@@@@@@@@@@@@@@@@@@@@@@@@@@@@@@@@@@@@@@@@@@@@@@
-  ! Initlization Routines
+  ! Initialization Routines
   !
   IMPURE ELEMENTAL SUBROUTINE INITIALIZE_RG(rg, SEED, ID, NJUMP)
     CLASS(RANDOM_GENERATOR), intent(inout):: rg
@@ -542,13 +542,13 @@ MODULE RANDOM_ROUTINES!, ONLY: RANDOM_GENERATOR, SHUFFLE, SET_FORTRAN_SEED, COIN
           INTEGER, dimension(8) :: T
           CALL DATE_AND_TIME(VALUES = T)  !GET CURRENT TIME VALUES
           !
-          S =     INT(T(1), INT64)                                                                       ! yr 
-          S = S + INT(T(2), INT64) * b'0000000000000000000000000000000000000000000000000000000000000101' ! mon | bit-> 5
-          S = S + INT(T(3), INT64) * b'0000000000000000000000000000000000000000000000000000000101110000' ! day | bit-> 368
-          S = S + INT(T(5), INT64) * b'0000000000000000000000000000000000000000000001101101110000000000' ! hr  | bit-> 449536
-          S = S + INT(T(6), INT64) * b'0000000000000000000000000000000000011110110100000000000000000000' ! min | bit-> 516947968
-          S = S + INT(T(7), INT64) * b'0000000000000000000000101101111010000000000000000000000000000000' ! sec | bit-> 3154653478912
-          S = S + INT(T(8), INT64) * b'0000000000010111011100000000000000000000000000000000000000000000' ! ms  | bit-> 6597069766656000
+          S =     INT(T(1), int64)                                                                                   ! yr 
+          S = S + INT(T(2), int64) * INT(b'0000000000000000000000000000000000000000000000000000000000000101', int64) ! mon | bit-> 5
+          S = S + INT(T(3), int64) * INT(b'0000000000000000000000000000000000000000000000000000000101110000', int64) ! day | bit-> 368
+          S = S + INT(T(5), int64) * INT(b'0000000000000000000000000000000000000000000001101101110000000000', int64) ! hr  | bit-> 449536
+          S = S + INT(T(6), int64) * INT(b'0000000000000000000000000000000000011110110100000000000000000000', int64) ! min | bit-> 516947968
+          S = S + INT(T(7), int64) * INT(b'0000000000000000000000101101111010000000000000000000000000000000', int64) ! sec | bit-> 3154653478912
+          S = S + INT(T(8), int64) * INT(b'0000000000010111011100000000000000000000000000000000000000000000', int64) ! ms  | bit-> 6597069766656000
         END BLOCK
     END IF
     !
@@ -592,13 +592,13 @@ MODULE RANDOM_ROUTINES!, ONLY: RANDOM_GENERATOR, SHUFFLE, SET_FORTRAN_SEED, COIN
   !@@@@@@@@@@@@@@@@@@@@@@@@@@@@@@@@@@@@@@@@@@@@@@@@@@@@@@@@@@@@@@@@@@@@@@@@@@@@@@@@@@@@@@@@@@@@@@@@@@@@@@@@@@@@@@@@@@@@@@@@@
   !@@@@@@@@@@@@@@@@@@@@@@@@@@@@@@@@@@@@@@@@@@@@@@@@@@@@@@@@@@@@@@@@@@@@@@@@@@@@@@@@@@@@@@@@@@@@@@@@@@@@@@@@@@@@@@@@@@@@@@@@@
   !@@@@@@@@@@@@@@@@@@@@@@@@@@@@@@@@@@@@@@@@@@@@@@@@@@@@@@@@@@@@@@@@@@@@@@@@@@@@@@@@@@@@@@@@@@@@@@@@@@@@@@@@@@@@@@@@@@@@@@@@@
-  ! Generate Normal and Expontial Distribution Random Variable
+  ! Generate Normal and Exponential Distribution Random Variable
   !  Uses the Ziggurat Method as originally described by 
   !    Marsaglia G, Tsang WW. The ziggurat method for generating random variables. Journal of Statistical Software. 2000; 5(8):1–7.
   !    Doornik, JA. An improved ziggurat method to generate normal random samples. University of Oxford; 2005.
   !  With the final algorithm based on
   !    McFarland, C. D. (2016). A modified ziggurat algorithm for generating exponentially and normally distributed pseudorandom numbers. Journal of statistical computation and simulation, 86(7), 1281-1294.
-  !  With modifications that involve fortran specific improvements
+  !  With modifications that involve Fortran specific improvements
   !
   PURE SUBROUTINE GENERATE_NORMAL_0D(rg, rnd, mean, stdev, var)
     CLASS(RANDOM_GENERATOR), intent(inout):: rg
@@ -711,8 +711,8 @@ MODULE RANDOM_ROUTINES!, ONLY: RANDOM_GENERATOR, SHUFFLE, SET_FORTRAN_SEED, COIN
     !ilay = RG_TO_256_INT16(r)    ! get first 3 digits of r for Ziggurat layer
     !CALL GET_RAND_INT64(s4, r)   ! Refresh random value
     !
-    if (ilay < exp_X_dim) then ! Accepted layer, return cooresponding rng
-                              rnd = exp_X(ilay) * real( IAND(r, b63_MASK) , rel64 ) ! only use the first 63 bits of r. -> Eqivalent to IAND(r, z'7fffffffffffffff')  or IAND(r, b'0111111111111111111111111111111111111111111111111111111111111111') 
+    if (ilay < exp_X_dim) then ! Accepted layer, return corresponding rng
+                              rnd = exp_X(ilay) * real( IAND(r, b63_MASK) , rel64 ) ! only use the first 63 bits of r. -> Equivalent to IAND(r, z'7fffffffffffffff')  or IAND(r, b'0111111111111111111111111111111111111111111111111111111111111111') 
                               return 
     end if
     !~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~
@@ -759,7 +759,7 @@ MODULE RANDOM_ROUTINES!, ONLY: RANDOM_GENERATOR, SHUFFLE, SET_FORTRAN_SEED, COIN
     !ilay = RG_TO_256_INT16(r)  ! get first 3 digits of r for Ziggurat layer
     !CALL GET_RAND_INT64(s4, r) ! Refresh random value
     !
-    if (ilay < nrm_X_dim) then ! Accepted layer, return cooresponding rng
+    if (ilay < nrm_X_dim) then ! Accepted layer, return corresponding rng
                               rnd = nrm_X(ilay) * real( r, rel64 )        ! r includes the sign bit cause normal has both pos and neg values
                               return 
     end if
@@ -776,7 +776,7 @@ MODULE RANDOM_ROUTINES!, ONLY: RANDOM_GENERATOR, SHUFFLE, SET_FORTRAN_SEED, COIN
       IF( BTEST(r, 63) ) r = IAND(r, b63_MASK)  ! Only use first 63 bits for Ux
       Ux = r
       !
-      CALL GET_RAND_INT64(s4, r)  ! Refresh to r to get new ilay for th Alias Sample
+      CALL GET_RAND_INT64(s4, r)  ! Refresh to r to get new ilay for the Alias Sample
       !
       ilay = FIRST_BYTE_INT16(r)
       !
@@ -892,7 +892,7 @@ MODULE RANDOM_ROUTINES!, ONLY: RANDOM_GENERATOR, SHUFFLE, SET_FORTRAN_SEED, COIN
   !  CALL GET_RAND_INT64(s4, r) 
   !  ilay = FIRST_BYTE_INT16(r)  ! get last 3 digits of r for Ziggurat layer
   !  !
-  !  if (ilay < nrm_X_dim) then ! Accepted layer, return cooresponding rng
+  !  if (ilay < nrm_X_dim) then ! Accepted layer, return corresponding rng
   !                            rnd = nrm_X(ilay) * real( r , rel64 )        ! r includes the sign bit cause normal has both pos and neg values
   !                            return 
   !  end if
@@ -909,7 +909,7 @@ MODULE RANDOM_ROUTINES!, ONLY: RANDOM_GENERATOR, SHUFFLE, SET_FORTRAN_SEED, COIN
   !    IF( BTEST(r, 63) ) r = IAND(r, b63_MASK)  ! Only use first 63 bits for Ux
   !    Ux = r
   !    !
-  !    CALL GET_RAND_INT64(s4, r)  ! Refresh to r to get new ilay for th Alias Sample
+  !    CALL GET_RAND_INT64(s4, r)  ! Refresh to r to get new ilay for the Alias Sample
   !    !
   !    ilay = FIRST_BYTE_INT16(r)
   !    !
@@ -2635,7 +2635,7 @@ MODULE RANDOM_ROUTINES!, ONLY: RANDOM_GENERATOR, SHUFFLE, SET_FORTRAN_SEED, COIN
   !@@@@@@@@@@@@@@@@@@@@@@@@@@@@@@@@@@@@@@@@@@@@@@@@@@@@@@@@@@@@@@@@@@@@@@@@@@@@@@@@@@@@@@@@@@@@@@@@@@@@@@@@@@@@@@@@@@@@@@@@@
   !@@@@@@@@@@@@@@@@@@@@@@@@@@@@@@@@@@@@@@@@@@@@@@@@@@@@@@@@@@@@@@@@@@@@@@@@@@@@@@@@@@@@@@@@@@@@@@@@@@@@@@@@@@@@@@@@@@@@@@@@@
   !@@@@@@@@@@@@@@@@@@@@@@@@@@@@@@@@@@@@@@@@@@@@@@@@@@@@@@@@@@@@@@@@@@@@@@@@@@@@@@@@@@@@@@@@@@@@@@@@@@@@@@@@@@@@@@@@@@@@@@@@@
-  ! Helper routine for setting the internal fortran seed or making the seed random
+  ! Helper routine for setting the internal Fortran seed or making the seed random
   ! 
   SUBROUTINE SET_FORTRAN_SEED(SEED)
      INTEGER, optional, intent(in):: SEED
@@ -2668,7 +2668,7 @@ END MODULE
 !@@@@@@@@@@@@@@@@@@@@@@@@@@@@@@@@@@@@@@@@@@@@@@@@@@@@@@@@@@@@@@@@@@@@@@@@@@@@@@@@@@@@@@@@@@@@@@@@@@@@@@@@@@@@@@@@@@@@@@@@@
 !@@@@@@@@@@@@@@@@@@@@@@@@@@@@@@@@@@@@@@@@@@@@@@@@@@@@@@@@@@@@@@@@@@@@@@@@@@@@@@@@@@@@@@@@@@@@@@@@@@@@@@@@@@@@@@@@@@@@@@@@@
 ! Routine that generates the tables used by the Ziggurat algorithm as described by McFarland (2016)
-!    See for original implimentation:
+!    See for original implementation:
 !                      Marsaglia, G., & Tsang, W. W. (2000). The ziggurat method for generating random variables. Journal of statistical software, 5(8), 1-7.
 !                      McFarland, C. D. (2016). A modified ziggurat algorithm for generating exponentially and 
 !  
@@ -2723,7 +2723,7 @@ MODULE ZIGGURAT_LAYERS
     !
     call resize(x, dim, zer)
     !
-    last_Y = zer  ! variable inhertited by gen_X
+    last_Y = zer  ! variable inherited by gen_X
     I = 0
     DO WHILE( a > volume )
         i = i + 1
@@ -2731,7 +2731,7 @@ MODULE ZIGGURAT_LAYERS
         !
         x(i) = BISECTION_QP(gen_X, a, b)
         !
-        if(x(i) == HUGE(a)) THEN           ! No solution, solve again with a slidly wider range
+        if(x(i) == HUGE(a)) THEN           ! No solution, solve again with a slightly wider range
                         a = a * 0.9_qp
                         i = i - 1
         else
@@ -2883,7 +2883,7 @@ MODULE ZIGGURAT_LAYERS
     !
     call resize(x, dim, zer)
     !
-    last_Y = zer  ! variable inhertited by gen_X
+    last_Y = zer  ! variable inherited by gen_X
     I = 0
     DO WHILE( a > volume )
         i = i + 1
@@ -2983,7 +2983,7 @@ MODULE ZIGGURAT_LAYERS
     ! w is the deviations of f(x) from y_i  
     ! iE_min and iE_max are the Largest deviations of f(x) from y_i  
     !
-    !         last_Y -> variable inhertited by delta_i
+    !         last_Y -> variable inherited by delta_i
     !
     w = dY/dX            ! auto-allocate w instead of: ALLOCATE(w, source=dY); w = w/dX      ! m = dY/dX
     do i=2, size(X)
