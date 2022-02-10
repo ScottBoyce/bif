@@ -4,58 +4,6 @@
 !
 MODULE NUM2STR_INTERFACE!, ONLY: NUM2STR, NUM2STR7, INTFMT, NUMFMT
   !
-  ! STR = NUM2STR(VAL) => convert real, integer, or logical to string.
-  !                       Attempts pretty formatting, such as 3.14, is retured as '3.14' instead of '3.1400000'
-  !
-  ! Data Types Supported:
-  !   IVEC  - Integer type, 1D Array Structure
-  !   IVAL  - Integer type, scalar
-  !   RVEC  - Real    type, 1D Array Structure
-  !   RVAL  - Real    type, scalar
-  !   LVAL  - Logical type, scalar
- 
-  ! NUM2STR(IVEC, [PAD], [SEP], [ZPAD])
-  ! NUM2STR(IVAL, [PAD], [ZPAD],    [LS], [RS])
-  !
-  ! NUM2STR(RVEC, [SEP], [PAD], [GENERAL])
-  ! NUM2STR(RVAL, [PAD], [GENERAL], [LS], [RS])
-  !
-  ! Description:
-  !   PAD     - INTEGER      - Reserved minimum space for number.
-  !                              If the resulting string length is less than ABS(PAD),
-  !                              then blank spaces are used to make sure the length is equal to PAD
-  !                                 if PAD > 0, then number is right justified, 
-  !                                 if PAD < 0, then number is left justified
-  !   SEP     - CHARACTER(*) - Used as separate between stringed values in vector.
-  !                              If not present, then a single space is used to separate numbers.
-  !   ZPAD    - LOGICAL      - If .TRUE., then padding uses zeros rather than blank spaces.
-  !   LS      - LOGICAL      - If .TRUE., then if the start of the restuling string is not a blank space, then one space is prepended.
-  !   RS      - LOGICAL      - If .TRUE., then if the end   of the restuling string is not a blank space, then one space is postpended.
-  !   GENERAL - LOGICAL      - If .TRUE., then number is not auto-formatted and uses "ES16.6".
-  !
-  !
-  ! NUM2STR(RVAL, PAD, IPREC)
-  ! NUM2STR(RVAL, DIGIT)
-  !
-  !   IPREC   - INTEGER      - If set to > 0, then resulting string uses high precision output (>7 digits)
-  !   DIGIT   - CHARACTER(*) - Is set to an integer number, such as '12' and represents the number of significant digits to preserve. Results in TRIM(ADJUSTL("ES40."'//DIG))
-  !
-  ! NUM2STR(LVAL, FMT)
-  ! NUM2STR(LVAL, FMT, PAD)
-  ! NUM2STR(LVAL, PAD, FMT)
-  ! NUM2STR(LVAL, PAD)
-  !
-  !   FMT  - CHARACTER(*) - Indicates output format for logical type.
-  !                         If not present, then result is to print .false. => 'F'; .true. => 'T'
-  !                         Otherwise the following options are supported:
-  !                         fmt =
-  !                              'T'  or 'F'  to ouptut for .true. => 'T'     and  .false. => 'F'; (default)
-  !                              't'  or 'f'  to ouptut for .true. => 't'     and  .false. => 'f'
-  !                              '0'  or '1'  to ouptut for .true. => '1'     and  .false. => '0'
-  !                              'tr' or 'fa' to ouptut for .true. => 'true'  and  .false. => 'false'
-  !                              'Tr' or 'Fa' to ouptut for .true. => 'True'  and  .false. => 'False'
-  !                              'TR' or 'FA' to ouptut for .true. => 'TRUE'  and  .false. => 'FALSE'
-  !
   USE, INTRINSIC:: ISO_FORTRAN_ENV, ONLY: INT8, INT16, INT32, INT64, &
                                           rel32 => REAL32, rel64 => REAL64
   !
@@ -759,15 +707,16 @@ MODULE NUM2STR_INTERFACE!, ONLY: NUM2STR, NUM2STR7, INTFMT, NUMFMT
     LOGICAL, OPTIONAL, INTENT(IN):: GENERAL
     LOGICAL, OPTIONAL, INTENT(IN):: LS  ! If TRUE and there is no space on the front, add 1 space to end
     LOGICAL, OPTIONAL, INTENT(IN):: RS  ! If TRUE and there is no space on the end,   add 1 space to end
-    CHARACTER(:),  ALLOCATABLE :: STR
-    REAL(rel32):: RVAL1C, RVAL10, RVAL1K
+    CHARACTER(:),     ALLOCATABLE:: STR
+    REAL(rel32):: RTMP
+    LOGICAL    :: RVAL10_CHK, RVAL1C_CHK, RVAL1K_CHK
+    REAL(rel32):: TOL
     CHARACTER(16)::NUM !LARGEST POSSIBLE NUMBER IS 14 CHARACTERS
     LOGICAL::GEN
     !
     GEN=FALSE; IF(PRESENT(GENERAL))GEN=GENERAL
     !
     NUM=''
-    RVAL10 = 10._rel32*RVAL;   RVAL1C = 100._rel32*RVAL;   RVAL1K = 1000._rel32*RVAL
     !
     IF(RVAL /= RVAL) THEN
         NUM='NaN'
@@ -775,27 +724,30 @@ MODULE NUM2STR_INTERFACE!, ONLY: NUM2STR, NUM2STR7, INTFMT, NUMFMT
         NUM = 'inf'
     ELSEIF(RVAL <= ninf_R) THEN
         NUM = '-inf'
+    ELSEIF(.NOT. GEN .and. (RVAL>=1.E10_rel32 .OR. RVAL<=-1.E10_rel32)) THEN
+       WRITE(NUM,'(ES16.7E2)') RVAL
+    ELSEIF(.NOT. GEN .and. RVAL>=1.E6_rel32 .OR. RVAL<=-1.E6_rel32) THEN
+       WRITE(NUM,'(ES16.7E1)') RVAL
     ELSEIF(.NOT. GEN) THEN
     !
-    IF(RVAL==0.E0_rel32)                 THEN
-       WRITE(NUM,'(F3.1)') RVAL
-    ELSEIF(RVAL>=1.E10_rel32 .OR. RVAL<=-1.E10_rel32)         THEN
-       WRITE(NUM,'(ES16.7E2)') RVAL
-    ELSEIF( RVAL10 == AINT(RVAL10) .AND. (RVAL10>=1._rel32.OR.RVAL10<=-1._rel32) ) THEN
+    TOL    = 1.e-6_rel32
+    RTMP =   10._rel32*RVAL;  RVAL10_CHK = ABS(RTMP - ANINT(RTMP)) < RTMP * TOL  .and. ( RTMP>=1._rel32 .or. RTMP<=-1._rel32 )
+    RTMP =  100._rel32*RVAL;  RVAL1C_CHK = ABS(RTMP - ANINT(RTMP)) < RTMP * TOL  .and. ( RTMP>=1._rel32 .or. RTMP<=-1._rel32 )
+    RTMP = 1000._rel32*RVAL;  RVAL1K_CHK = ABS(RTMP - ANINT(RTMP)) < RTMP * TOL  .and. ( RTMP>=1._rel32 .or. RTMP<=-1._rel32 )
+    !
+    IF    ( RVAL10_CHK ) THEN
        WRITE(NUM,'(F16.1)') RVAL
-    ELSEIF( RVAL1C == AINT(RVAL1C) .AND. (RVAL1C>=1._rel32.OR.RVAL1C<=-1._rel32) ) THEN
+    ELSEIF( RVAL1C_CHK ) THEN
        WRITE(NUM,'(F16.2)') RVAL
-    ELSEIF( RVAL1K == AINT(RVAL1K) .AND. (RVAL1K>=1._rel32.OR.RVAL1K<=-1._rel32) ) THEN
+    ELSEIF( RVAL1K_CHK ) THEN
        WRITE(NUM,'(F16.3)') RVAL
-    ELSEIF(RVAL>=1.E6_rel32 .OR. RVAL<=-1.E6_rel32)          THEN
-       WRITE(NUM,'(ES16.7E1)') RVAL
-    ELSEIF(RVAL>=1.E2_rel32 .OR. RVAL<=-1.E2_rel32)          THEN
+    ELSEIF(RVAL>=1.E2_rel32 .OR. RVAL<=-1.E2_rel32)            THEN
        WRITE(NUM,'(F16.5)') RVAL
-    ELSEIF(RVAL>=0.00099E0_rel32 .OR. RVAL<=-0.00099E0_rel32 )  THEN
+    ELSEIF(RVAL>=0.00099E0_rel32 .OR. RVAL<=-0.00099E0_rel32 ) THEN
        WRITE(NUM,'(F16.7)') RVAL
-    ELSEIF(RVAL>=1.E-9_rel32 .OR. RVAL<=-1.E-9_rel32)         THEN
+    ELSEIF(RVAL>=1.E-9_rel32 .OR. RVAL<=-1.E-9_rel32)          THEN
        WRITE(NUM,'(ES16.7E1)') RVAL
-    ELSEIF(RVAL>0.E0_rel32 .OR. RVAL<0.E0_rel32)              THEN
+    ELSE
        WRITE(NUM,'(ES16.7E3)') RVAL
     END IF
     !
@@ -839,15 +791,16 @@ MODULE NUM2STR_INTERFACE!, ONLY: NUM2STR, NUM2STR7, INTFMT, NUMFMT
     LOGICAL, OPTIONAL, INTENT(IN):: GENERAL
     LOGICAL, OPTIONAL, INTENT(IN):: LS  ! If TRUE and there is no space on the front, add 1 space to end
     LOGICAL, OPTIONAL, INTENT(IN):: RS  ! If TRUE and there is no space on the end,   add 1 space to end
-    CHARACTER(:),  ALLOCATABLE :: STR
-    REAL(rel64):: DVAL1C, DVAL10, DVAL1K
+    CHARACTER(:),     ALLOCATABLE:: STR
+    REAL(rel64):: DTMP
+    LOGICAL    :: DVAL10_CHK, DVAL1C_CHK, DVAL1K_CHK, DVAL100K_CHK
+    REAL(rel64):: TOL
     CHARACTER(16)::NUM !LARGEST POSSIBLE NUMBER IS 14 CHARACTERS
     LOGICAL::GEN
     !
     GEN=FALSE; IF(PRESENT(GENERAL)) GEN=GENERAL
     !
     NUM=''
-    DVAL10 = 10._rel64*DVAL;   DVAL1C = 100._rel64*DVAL;   DVAL1K = 1000._rel64*DVAL
     !
     IF(DVAL /= DVAL) THEN
         NUM='NaN'
@@ -855,23 +808,27 @@ MODULE NUM2STR_INTERFACE!, ONLY: NUM2STR, NUM2STR7, INTFMT, NUMFMT
         NUM = 'inf'
     ELSEIF(DVAL <= ninf) THEN
         NUM = '-inf'
+    ELSEIF(.NOT. GEN .and. (DVAL>=1.D100 .OR. DVAL<=-1.D100)) THEN
+       WRITE(NUM,'(ES16.7E3)') DVAL
+    ELSEIF(.NOT. GEN .and. (DVAL>=1.D10 .OR. DVAL<=-1.D10)) THEN
+       WRITE(NUM,'(ES16.7E2)') DVAL
+    ELSEIF(.NOT. GEN .and. (DVAL>=1.D6 .OR. DVAL<=-1.D6)) THEN
+       WRITE(NUM,'(ES16.7E1)') DVAL
     ELSEIF(.NOT. GEN) THEN
     !
-    IF(DVAL==DZ)                 THEN
-       WRITE(NUM,'(F3.1)') DVAL
-    ELSEIF(DVAL>=1.D100 .OR. DVAL<=-1.D100)       THEN
-       WRITE(NUM,'(ES16.7E3)') DVAL
-    ELSEIF(DVAL>=1.D10 .OR. DVAL<=-1.D10)         THEN
-       WRITE(NUM,'(ES16.7E2)') DVAL
-    ELSEIF( DVAL10 == AINT(DVAL10) .AND. (DVAL10>=UNO.OR.DVAL10<=DNEG) ) THEN
+    TOL    = 1.e-13_rel64
+    DTMP =     10._rel64*DVAL;    DVAL10_CHK = ABS(DTMP - ANINT(DTMP)) < DTMP * TOL  .and. ( DTMP>=UNO .or. DTMP<=DNEG )
+    DTMP =    100._rel64*DVAL;    DVAL1C_CHK = ABS(DTMP - ANINT(DTMP)) < DTMP * TOL  .and. ( DTMP>=UNO .or. DTMP<=DNEG )
+    DTMP =   1000._rel64*DVAL;    DVAL1K_CHK = ABS(DTMP - ANINT(DTMP)) < DTMP * TOL  .and. ( DTMP>=UNO .or. DTMP<=DNEG )
+    DTMP = 100000._rel64*DVAL;  DVAL100K_CHK = ABS(DTMP - ANINT(DTMP)) < DTMP * TOL  .and. ( DTMP>=UNO .or. DTMP<=DNEG )
+    !
+    IF( DVAL10_CHK ) THEN
        WRITE(NUM,'(F16.1)') DVAL
-    ELSEIF( DVAL1C == AINT(DVAL1C) .AND. (DVAL1C>=UNO.OR.DVAL1C<=DNEG) ) THEN
+    ELSEIF( DVAL1C_CHK ) THEN
        WRITE(NUM,'(F16.2)') DVAL
-    ELSEIF( DVAL1K == AINT(DVAL1K) .AND. (DVAL1K>=UNO.OR.DVAL1K<=DNEG) ) THEN
+    ELSEIF( DVAL1K_CHK ) THEN
        WRITE(NUM,'(F16.3)') DVAL
-    ELSEIF(DVAL>=1.D6 .OR. DVAL<=-1.D6)            THEN
-       WRITE(NUM,'(ES16.7E1)') DVAL
-    ELSEIF(DVAL>=1.D2 .OR. DVAL<=-1.D2 )           THEN
+    ELSEIF(DVAL100K_CHK .OR. DVAL>=1.D2 .OR. DVAL<=-1.D2 )           THEN
        WRITE(NUM,'(F16.5)') DVAL
     ELSEIF(DVAL>=0.00099D0 .OR. DVAL<=-0.00099D0 ) THEN
        WRITE(NUM,'(F16.7)') DVAL
@@ -879,7 +836,7 @@ MODULE NUM2STR_INTERFACE!, ONLY: NUM2STR, NUM2STR7, INTFMT, NUMFMT
        WRITE(NUM,'(ES16.7E1)') DVAL
     ELSEIF(DVAL>=1.D-99 .OR. DVAL<=-1.D-99)        THEN
        WRITE(NUM,'(ES16.7E2)') DVAL
-    ELSEIF(DVAL>DZ .OR. DVAL<DZ)                   THEN
+    ELSE
        WRITE(NUM,'(ES16.7E3)') DVAL
     END IF
     !
