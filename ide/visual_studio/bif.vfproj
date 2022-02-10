@@ -91,7 +91,8 @@
 		<File RelativePath="..\..\src\io\generic_input_file_instruction.f90"/>
 		<File RelativePath="..\..\src\io\generic_open_interface.fpp"/>
 		<File RelativePath="..\..\src\io\generic_output_file_instruction.f90"/>
-		<File RelativePath="..\..\src\io\post_key_sub.f90"/></Filter>
+		<File RelativePath="..\..\src\io\post_key_sub.f90"/>
+		<File RelativePath="..\..\src\io\write_array_interface.f90"/></Filter>
 		<Filter Name="math_numbers">
 		<File RelativePath="..\..\src\math_numbers\descriptive_statistics.f90"/>
 		<File RelativePath="..\..\src\math_numbers\EquationParser.f90"/>
