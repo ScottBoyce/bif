@@ -1,6 +1,80 @@
 !
-! CODE DEVELOPED BY SCOTT E BOYCE
+!--------------------------------------------------------------------------------------------------------
+!
+! CODE DEVELOPED BY SCOTT E BOYCE 
 !                   CONTACT <seboyce@usgs.gov> or <Boyce@engineer.com>
+!
+!--------------------------------------------------------------------------------------------------------
+!
+! Functions that convert Fortran base data types to a CHARACTER(*) 
+!                           -- that is, convert a number to string
+!
+! This code refers to CHARACTER(*) and string, synonymously
+!
+! The converted string is allocated to only contain the minimum size to hold the number.
+!    For example,  NUM2STR(57)  returns the string '57'  and
+!                  NUM2STR(571) returns the string '571'
+!
+!--------------------------------------------------------------------------------------------------------
+!
+! The generical input structure is:
+!
+! STR = NUM2STR(VAL) => convert real, integer, or logical to string.
+!                       Attempts pretty formatting, such as 3.14, is retured as '3.14' instead of '3.1400000'
+!
+! Data Types Supported:
+!   IVEC  - Integer type, 1D Array Structure
+!   IVAL  - Integer type, scalar
+!   RVEC  - Real    type, 1D Array Structure
+!   RVAL  - Real    type, scalar
+!   LVAL  - Logical type, scalar
+!
+!--------------------------------------------------------------------------------------------------------
+!
+! NUM2STR(IVEC, [PAD], [SEP], [ZPAD])
+! NUM2STR(IVAL, [PAD], [ZPAD],    [LS], [RS])
+!
+! NUM2STR(RVEC, [SEP], [PAD], [GENERAL])
+! NUM2STR(RVAL, [PAD], [GENERAL], [LS], [RS])
+!
+! Description:
+!   PAD     - INTEGER      - Reserved minimum space for number.
+!                              If the resulting string length is less than ABS(PAD),
+!                              then blank spaces are used to make sure the length is equal to PAD
+!                                 if PAD > 0, then number is right justified, 
+!                                 if PAD < 0, then number is left justified
+!   SEP     - CHARACTER(*) - Used as separate between stringed values in vector.
+!                              If not present, then a single space is used to separate numbers.
+!   ZPAD    - LOGICAL      - If .TRUE., then padding uses zeros rather than blank spaces.
+!   LS      - LOGICAL      - If .TRUE., then if the start of the restuling string is not a blank space, then one space is prepended.
+!   RS      - LOGICAL      - If .TRUE., then if the end   of the restuling string is not a blank space, then one space is postpended.
+!   GENERAL - LOGICAL      - If .TRUE., then number is not auto-formatted and uses "ES16.6".
+!
+!--------------------------------------------------------------------------------------------------------
+!
+! NUM2STR(RVAL, PAD, IPREC)
+! NUM2STR(RVAL, DIGIT)
+!
+!   IPREC   - INTEGER      - If set to > 0, then resulting string uses high precision output (>7 digits)
+!   DIGIT   - CHARACTER(*) - Is set to an integer number, such as '12' and represents the number of significant digits to preserve. Results in TRIM(ADJUSTL("ES40."'//DIG))
+!
+! NUM2STR(LVAL, FMT)
+! NUM2STR(LVAL, FMT, PAD)
+! NUM2STR(LVAL, PAD, FMT)
+! NUM2STR(LVAL, PAD)
+!
+!   FMT  - CHARACTER(*) - Indicates output format for logical type.
+!                         If not present, then result is to print .false. => 'F'; .true. => 'T'
+!                         Otherwise the following options are supported:
+!                         fmt =
+!                              'T'  or 'F'  to ouptut for .true. => 'T'     and  .false. => 'F'; (default)
+!                              't'  or 'f'  to ouptut for .true. => 't'     and  .false. => 'f'
+!                              '0'  or '1'  to ouptut for .true. => '1'     and  .false. => '0'
+!                              'tr' or 'fa' to ouptut for .true. => 'true'  and  .false. => 'false'
+!                              'Tr' or 'Fa' to ouptut for .true. => 'True'  and  .false. => 'False'
+!                              'TR' or 'FA' to ouptut for .true. => 'TRUE'  and  .false. => 'FALSE'
+!
+!--------------------------------------------------------------------------------------------------------
 !
 MODULE NUM2STR_INTERFACE!, ONLY: NUM2STR, NUM2STR7, INTFMT, NUMFMT
   !
