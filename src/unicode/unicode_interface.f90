@@ -1,4 +1,152 @@
-
+!
+!--------------------------------------------------------------------------------------------------------
+!
+! CODE DEVELOPED BY SCOTT E BOYCE 
+!                   CONTACT <seboyce@usgs.gov> or <Boyce@engineer.com>
+!
+!--------------------------------------------------------------------------------------------------------
+!
+! Module provides access to routines that parse Unicode UTF8 strings.
+!
+! The only public routines are NEXT_UTF8, getUTF8, and UTF8_TO_INT
+!
+!   Unicode points are characters that are beyond the ASCII 0-127 code points
+!   For this to happen, a unicode point can occupy 1 to 4 bytes. (CHARACTER(1:4)
+!   One byte is represented by CHARACTER(1)
+!
+!   So a single Unicode point can be:
+!               CHARACTER(1), CHARACTER(2), CHARACTER(3), or CHARACTER(4)
+!   to represent a single Unicode character
+!
+!    --Note, this code refers to CHARACTER(*) and string, synonymously
+!
+!--------------------------------------------------------------------------------------------------------
+!
+! Input Structure Definitions
+!
+! USE UNICODE_INTERFACE, ONLY: NEXT_UTF8, getUTF8, and UTF8_TO_INT
+!
+!--------------------------------------------------------------------------------------------------------
+!
+! Parse line by Unicode characters
+!
+! CALL NEXT_UTF8(LN, I, J, [IOSTAT], [DEC], [HEX])
+!
+!   LN - CHARACTER(*)
+!      - The string that is parsed for Unicode characters
+!
+!    I - INTEGER
+!    J - INTEGER
+!      - Positional arguments and flags for the next Unicode character.
+!
+!      - J keeps track of the parsing position in the string.
+!           At the start of the routine, I is set to J + 1,
+!           At the exit  of the routine, J is updated to the ending location of the Unicode point.
+!
+!      - Set J to zero to start parsing at the begining of the string (ie. I = J+1 = 1)
+!
+!      - Upon exiting the routine
+!        the parsing is:
+!
+!        unsuccessful, if J < I with the following meanings:
+!                               J > len(LN) indicates the end of the line was reached
+!                               Otherwise,  J is the location of the bad Unicode byte
+!
+!        otherwise LN(I:J) is the next Unicode character (note, J-I ranges from 0 to 3)
+!
+! IOSTAT - INTEGER, OPTIONAL
+!        - Flag to indicate if routine is successful
+!          IOSTAT = 0,       indicates all is fine
+!          IOSTAT < 0,       indicates end of line was reached
+!          IOSTAT > 0,       indicates bad byte at LN(iostat:iostat), note J = IOSTAT  on error
+!          IOSTAT > LEN(LN), indicates unknown error occured        , note J = IOSTAT  on error
+!
+!    DEC - INTEGER, OPTIONAL
+!        - If present, then on exit is set to the decimal
+!             representation of the Unicode point
+!
+!    HEX - CHARACTER(8), OPTIONAL
+!        - If present, then on exit is set to the hexadecimal
+!             representation of the Unicode point
+!
+!--------------------------------------------------------------------------------------------------------
+!
+! Given a Unicode "Code Point" return the corresponding Unicode character
+!
+! UTF8 = getUTF8(CODE_POINT)
+!
+! UTF8 - CHARACTER(1), CHARACTER(2), CHARACTER(3), or CHARACTER(4)
+!      - Is the Unicode character for the CODE_POINT
+!        The size of UTF8 depends on the number of bytes required to represent it.
+!
+!
+!   CODE_POINT - Represent the Unicode "Code Point" to look up.
+!                The CODE_POINT can be one of three Fortran Types:
+! 
+!              -> INTEGER(INT32) and INTEGER(INT64) 
+!                   Then CODE_POINT is the decimal representation of the code point.
+!
+!              -> CHARACTER(*)  
+!                   Then CODE_POINT is the hexadecimal representation of the code point.
+!                   The hexadecimal numer maybe formatted as:
+!                      (this example is for the Question mark symbol "?")
+!                   3F
+!                   003F
+!                   U+003F
+!                   0x003F
+!                   0x3F
+!
+! Example Use:
+!             UTF8 = getUTF8(      63)
+!             UTF8 = getUTF8(    "3F")
+!             UTF8 = getUTF8(  "003F")
+!             UTF8 = getUTF8("0x003F")
+!             UTF8 = getUTF8(  "0x3F")
+!             UTF8 = getUTF8("U+003F")
+!
+!             sets UTF8 = "?"
+!
+!--------------------------------------------------------------------------------------------------------
+!
+! Given a Unicode "Code Point" return the corresponding Unicode character
+!
+! IPNT = UTF8_TO_INT(UTF8)
+!
+! UTF8 - CHARACTER(*)
+!      - Is the Unicode character whose Unicode "Code Point" is returned
+!        Only the first Unicode character code point is returned (That, is first found, which includes a blank space)
+!
+! IPNT - INTEGER(INT32)
+!      - The decimal representation of the Unicode "Code Point".
+!
+! Example Use:
+!             IPNT = UTF8_TO_INT("?")
+!
+!             sets IPNT = 63
+!
+!
+!--------------------------------------------------------------------------------------------------------
+!
+! Extraneous information.
+!
+! Files can have a Byte Order Mark (BOM) 
+!   to indicate that the file uses Unicode.
+!
+! The BOM is the U+FFFE Unicode point that is called: <Not a Character>
+!
+! The following table is how it is represented
+!
+! |-----------------------|-------------|--------------------|---------------|-------------------------------------|
+! | Encoding Form         |    Bytes    | INT8 Decimal Bytes | INT32 Decimal |                Binary               |
+! |-----------------------|-------------|--------------------|---------------|-------------------------------------|
+! | UTF-8                 | EF BB BF    | 239  187  191      |   15712190    |          11101111 10111111 10111110 |
+! | UTF-16, big-endian    | FE FF       | 254  255           |      65534    |                   11111111 11111110 |
+! | UTF-16, little-endian | FF FE       | 255  254           |      65279    |                   11111110 11111111 |
+! | UTF-32, big-endian    | 00 00 FE FF |   0    0  254  255 |      65534    | 00000000 00000000 11111111 11111110 |
+! | UTF-32, little-endian | FF FE 00 00 | 255  254    0    0 | 4278124544    | 11111110 11111111 00000000 00000000 |
+! |----------------------------------------------------------|---------------|-------------------------------------|
+!
+!
 MODULE UNICODE_INTERFACE
   USE, INTRINSIC:: ISO_FORTRAN_ENV, ONLY: INT8, INT16, INT32, INT64
   IMPLICIT NONE (TYPE, EXTERNAL)
