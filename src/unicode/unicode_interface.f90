@@ -22,9 +22,10 @@ MODULE UNICODE_INTERFACE
   CHARACTER(21),  PARAMETER:: HEX_LIST = '123456789ABCDEFabcdef'
   CHARACTER,      PARAMETER:: NUL     = TRANSFER(0_INT8, ' ')
   !
-  INTEGER(INT32), PARAMETER:: Z   = 0_INT32
-  INTEGER(INT32), PARAMETER:: ONE = 1_INT32
-  INTEGER(INT64), PARAMETER:: ZER = 0_INT64
+  INTEGER(INT32), PARAMETER:: NEG = -1_INT32
+  INTEGER(INT32), PARAMETER:: Z   =  0_INT32
+  INTEGER(INT32), PARAMETER:: ONE =  1_INT32
+  INTEGER(INT64), PARAMETER:: ZER =  0_INT64
   !
   LOGICAL, PARAMETER:: TRUE  = .TRUE.
   LOGICAL, PARAMETER:: FALSE = .FALSE.
@@ -69,13 +70,12 @@ MODULE UNICODE_INTERFACE
     ! ASSUMES COMPILER CAN HANDEL LN(I:I-1) AND SETS IT TO BLANK STRING
     CHARACTER(*),             INTENT(IN   ):: LN
     INTEGER,                  INTENT(INOUT):: I, J
-    INTEGER,                  INTENT(  OUT):: IOSTAT
+    INTEGER,        OPTIONAL, INTENT(  OUT):: IOSTAT
     INTEGER(INT32), OPTIONAL, INTENT(  OUT):: DEC
     CHARACTER(8),   OPTIONAL, INTENT(  OUT):: HEX
-    INTEGER:: DIM, K
+    INTEGER:: DIM, K, ST
     !
-    IOSTAT = Z
-    DIM    = LEN(LN)
+    DIM = LEN(LN)
     !
     IF (I < ONE .OR. J < ONE) THEN
                  I = ONE
@@ -90,29 +90,33 @@ MODULE UNICODE_INTERFACE
     !
     IF( I > DIM ) THEN
         I = DIM
-        J = I - 1
-        IOSTAT = -1
-        IF(PRESENT(DEC)) DEC = -1
+        J = I + NEG
+        ST = NEG
+        IF(PRESENT(DEC)) DEC = NEG
         IF(PRESENT(HEX)) HEX = ""
         RETURN
     END IF
+    !
+    ST = Z                      ! Default is Success
     !
     K = UTF_BIT_HEADER(LN(I:I)) ! Number of bytes equals the number of bits (eg 1110xxxx, indicates 3 bytes)
     !
     IF( K > Z ) J = J + K - 1  
     !
     IF    ( J > DIM ) THEN  !Should not happen, unless there is a missing byte in LN
-                      IOSTAT = DIM + 1
+                      ST = DIM + 1
     ELSEIF( I < J   ) THEN  ! >1 Bytes count
                       DO K=I+1, J
                           IF( UTF_BIT_HEADER(LN(K:K)) /= 1 ) THEN
-                                                        IOSTAT = K
+                                                        ST = K
                                                         EXIT
                           END IF
                       END DO
     END IF
     !
-    IF( IOSTAT > Z ) THEN
+    IF( ST > Z ) THEN
+                     J = ST
+                     I = ST + NEG
                      IF(PRESENT(DEC)) DEC = -1
                      IF(PRESENT(HEX)) HEX = ""
     ELSEIF( PRESENT(DEC) .OR. PRESENT(HEX) ) THEN
@@ -125,6 +129,8 @@ MODULE UNICODE_INTERFACE
            IF(PRESENT(HEX)) HEX = int2hex(ITMP)
         END BLOCK
     END IF
+    !
+    IF(PRESENT(IOSTAT)) IOSTAT = ST
     !
   END SUBROUTINE
   !
