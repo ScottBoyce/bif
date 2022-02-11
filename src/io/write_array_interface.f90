@@ -1,4 +1,185 @@
-MODULE WRITE_ARRAY_INTERFACE!, ONLY: WRITE_ARRAY 
+!
+!--------------------------------------------------------------------------------------------------------
+!
+! CODE DEVELOPED BY SCOTT E BOYCE
+!                   CONTACT <seboyce@usgs.gov> or <Boyce@engineer.com>
+!
+!--------------------------------------------------------------------------------------------------------
+!
+! Module provides the generic subroutine WRITE_ARRAY
+!   that writes DIMENSION(:) and DIMENSION(:,:) arrays to a file.
+!
+!--------------------------------------------------------------------------------------------------------
+!
+! Supports writing of the Fortran INTEGER types INT8, INT16, INT32, and INT64
+!                     and Fortran REAL    types REAL32 and REAL64
+!
+! *** The array is written with the first dimension being along the rows. ***
+! *** Fortran dimensions are defined as: TYPE, DIMENSION(dim1, dim2)      ***
+!
+!      For example, a DIMENSION(3,5) array would write an array with 3 columns that occupy 5 lines of text.
+!         That is, the first dimension is 3, and the second dimension is 5.
+!         Set the option, TRANSPOSE=.TRUE., if you want to write the transpose of the array (that is, 5 columns along 3 lines of text).
+!
+!      The following examples assume that a file is opened on unit number 56.
+!         The example output uses a \ is used to indicate the border of the output.
+!
+!
+!      Example 1:
+!                integer, dimension(5):: IARR = [ 1,  2,  3,  4 ]
+!                CALL WRITE_ARRAY(IU=56, IARR)
+!
+!                Writes to Unit 56:
+!                                  \1 2 3 4\
+!
+!      Example 2:
+!                integer, dimension(3,4):: IARR = [ 1,  4,  7,  10 ]
+!                                                 [ 2,  5,  8,  11 ]
+!                                                 [ 3,  6,  9,  12 ]
+!                CALL WRITE_ARRAY(IU=56, IARR)
+!
+!                Writes to Unit 56:
+!                                  \1 2 3\
+!                                  \4 5 6\
+!                                  \7 8 9\
+!                                  \10 11 12\
+!
+!      Example 3:
+!                integer, dimension(5,2):: IARR = [ 1, 6  ]
+!                                                 [ 2, 7  ]
+!                                                 [ 3, 8  ]
+!                                                 [ 4, 9  ]
+!                                                 [ 5, 10 ]
+!                CALL WRITE_ARRAY(IU=56, IARR)
+!
+!                Writes to Unit 56:
+!                                  \1 2 3 4 5\
+!                                  \6 7 8 9 10\
+!
+!      Example 4:
+!                Using optional formatting arguments. They are defined in the next section.
+!
+!                integer, dimension(3,4):: IARR = [ 1,  4,  7,  10 ]
+!                                                 [ 2,  5,  8,  11 ]
+!                                                 [ 3,  6,  9,  12 ]
+!
+!                CALL WRITE_ARRAY(IU=56, IARR, width=5)
+!
+!                Writes to Unit 56:
+!                                  \    1    2    3\
+!                                  \    4    5    6\
+!                                  \    7    8    9\
+!                                  \   10   11   12\
+!
+!      Example 5:
+!                Using optional formatting arguments. They are defined in the next section.
+!
+!                integer, dimension(3,4):: IARR = [ 1,  4,  7,  10 ]
+!                                                 [ 2,  5,  8,  11 ]
+!                                                 [ 3,  6,  9,  12 ]
+!
+!                CALL WRITE_ARRAY(IU=56, IARR, width=5, transpose=.TRUE.)
+!
+!                Writes to Unit 56:
+!                                  \    1    4    7   10\
+!                                  \    2    5    8   11\
+!                                  \    3    6    9   12\
+!
+!--------------------------------------------------------------------------------------------------------
+!
+! WRITE_ARRAY Interfaces
+!
+!~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~
+!
+! type, dimension(:):: ARR      -> 1D Array
+!
+!   CALL WRITE_ARRAY(IU,    ARR, [WIDTH], [FMT], [SEP], [TRANSPOSE], [HED], [SEP_ON_LAST], [ADVANCE])
+!   CALL WRITE_ARRAY(FNAME, ARR, [WIDTH], [FMT], [SEP], [TRANSPOSE], [HED], [SEP_ON_LAST], [ADVANCE], [APPEND], [NO_CLOSE], [IU], [IOSTAT])
+!
+!~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~
+!
+! type, dimension(:,:):: ARR    -> 2D Array
+!
+!   CALL WRITE_ARRAY(IU,    ARR, [WIDTH], [FMT], [SEP], [TRANSPOSE], [HED], [SEP_ON_LAST])
+!   CALL WRITE_ARRAY(FNAME, ARR, [WIDTH], [FMT], [SEP], [TRANSPOSE], [HED], [SEP_ON_LAST], [APPEND], [NO_CLOSE], [IU], [IOSTAT])
+!
+!~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~
+!
+!      ARR - type, dimension(:)    or
+!            type, dimension(:,:)
+!              where type is:
+!                            integer(int8), integer(int16), integer(int32), integer(int64),
+!                            real(real32), real(real64)
+!    
+!     FNAME - CHARACTER(*)
+!           - Is a file name write the array to.
+!               If the file exists, it is over written.
+!               If the file is already opened, then it is appended to.
+!                                              the unit number (IU) is determined by: "INQUIRE(file=FNAME, number=IU, opened=ISOPEN)"
+!    
+!        IU - INTEGER
+!           - Is a unit number connected to an open file to write to.
+!               If FNAME and IU are provided, then IU is the unit number to open the FNAME file on.
+!               If FNAME is provided and IU=0, then IU is set to the automatic unit number (NEWUNIT) that the FNAME file is opened with.
+!    
+!     WIDTH - INTEGER, OPTIONAL
+!           - Defines the minimum width when writing each number.
+!           - If the number exceeds the width, then it will occupy the minimal space
+!               to represent the number, plus 1 blank space afterwards.
+!               For example, width=6 will contain one number for every 6 characters.
+!                 If "1234567" is one of the numbers, then it is written as "1234567 "
+!    
+!       FMT - CHRACTER(*), OPTIONAL
+!           - Defines a Fortran format edit descriptor kernel.
+!               If specified, then WIDTH is ignored.
+!           - Each number is written using the format plus a 1 space buffer (1x) between numbers.
+!               If you want to disable the 1 space buffer you must specify SEP=""
+!           - The format kernel is a Fortran format code for a single number (does not contain the repeat count).
+!               For example, the format codes are used to transfer integer values is nIw.m
+!                 would not include the repeat count (n) and
+!                 can optionally include the width (w) and zero padding (m).
+!           -  The format kernel must match the array type (that is, I for integer and F, E, EN, ES, or G for real).
+!                For example, to have real number output of width 8 and 3 decimal places, then FMT = 'F8.3'
+!          
+!       SEP - CHRACTER(*), OPTIONAL
+!           - If present that the character appended to each number, except for the last one.
+!               For example, SEP="A b" would print the numbers [2, 4, 6] as "2A b4A b6" and
+!                            SEP=", "  would print "2, 4, 6".
+!           - If SEP and FMT are specified, then SEP is the separator between numbers and not the 1 space buffer.
+!          
+! TRANSPOSE - LOGICAL, OPTIONAL
+!           - If true, then the written array is transposed.
+!          
+!           - For Example:
+!               - 2D, an array with dimension(3,5)
+!                     transpose = .false. -> writes an array with 3 columns that occupy 5 lines of text (default).
+!                     transpose = .true . -> writes an array with 5 columns that occupy 3 lines of text
+!          
+!               - 1D array with dimension(3) with:
+!                     transpose = .false. -> writes an array with 3 values along a single line of text (default).
+!                     transpose = .true . -> writes an array with 1 value per line, occupying a total of 3 lines of text.
+!          
+!       HED - CHRACTER(*), OPTIONAL
+!           - If present, then it is written to the file before the actual array (a header).
+!          
+! SEP_ON_LAST - LOGICAL, OPTIONAL
+!             - If present, set to .true. and SEP is defined, then the separator is added to the last number on each line.
+!                 For example, SEP=", " and SEP_ON_LAST=.true. would print the numbers [2, 4, 6] as "2, 4, 6, "
+!             
+!     ADVANCE - LOGICAL, OPTIONAL
+!             - If present, and .true., the a 1D array will not include a carriage return (new line) after the numbers are written.
+!             
+!      APPEND - LOGICAL, OPTIONAL
+!             - If present, and .true. and the FNAME file exists, then the file is appended to rather than overwritten.
+!          
+!    NO_CLOSE - LOGICAL, OPTIONAL
+!             - If present, and .true., then the file that is opened is not closed when the routine exits. 
+!             - This is useful if you want to write arrays to the same file. 
+!                 Typically NO_CLOSE is used with APPEND to prevent overwriting the file.
+!
+!--------------------------------------------------------------------------------------------------------
+!
+MODULE WRITE_ARRAY_INTERFACE!, ONLY: WRITE_ARRAY
   !
   USE NUM2STR_INTERFACE, ONLY: NUM2STR
   !
