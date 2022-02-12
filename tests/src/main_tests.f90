@@ -2049,6 +2049,310 @@ SUBROUTINE test_WARNING_TYPE_INSTRUCTION(UT)
   !
 END SUBROUTINE
 !
+SUBROUTINE test_WRITE_ARRAY_INTERFACE(UT)
+  USE, INTRINSIC:: ISO_FORTRAN_ENV, ONLY: REAL32, REAL64, REAL128, INT8, INT16, INT32, INT64
+  USE UNIT_TESTING_INSTRUCTION, ONLY: UNIT_TESTS
+  USE WRITE_ARRAY_INTERFACE, ONLY: WRITE_ARRAY 
+  IMPLICIT NONE
+  TYPE(UNIT_TESTS), INTENT(INOUT):: UT
+  !
+  INTEGER:: I, J, K
+  DOUBLE PRECISION:: DTMP
+  INTEGER(INT8 ), DIMENSION(7,5):: ARR1_I08
+  INTEGER(INT16), DIMENSION(7,5):: ARR1_I16
+  INTEGER(INT32), DIMENSION(7,5):: ARR1_I32
+  INTEGER(INT64), DIMENSION(7,5):: ARR1_I64
+  REAL(REAL32),   DIMENSION(7,5):: ARR1_R32
+  REAL(REAL64),   DIMENSION(7,5):: ARR1_R64
+  !
+  INTEGER(INT8 ), DIMENSION(5,7):: ARR2_I08
+  INTEGER(INT16), DIMENSION(5,7):: ARR2_I16
+  INTEGER(INT32), DIMENSION(5,7):: ARR2_I32
+  INTEGER(INT64), DIMENSION(5,7):: ARR2_I64
+  REAL(REAL32),   DIMENSION(5,7):: ARR2_R32
+  REAL(REAL64),   DIMENSION(5,7):: ARR2_R64
+  !
+  ARR1_I08 = RESHAPE( [INTEGER(INT8 ):: 1 ,  2 ,  3 ,  4 ,  5 ,  6 ,  7 ,  8 ,  9 , 10 , 11 , 12 , 13 , 14 , 15 , 16 , 17 , 18 , 19 , 20 , 21 , 22 , 23 , 24 , 25 , 26 , 27 , 28 , 29 , 30 , 31 , 32 , 33 , 34 , 35 ], SHAPE(ARR1_I08) )
+  ARR1_I16 = RESHAPE( [INTEGER(INT16):: 1 ,  2 ,  3 ,  4 ,  5 ,  6 ,  7 ,  8 ,  9 , 10 , 11 , 12 , 13 , 14 , 15 , 16 , 17 , 18 , 19 , 20 , 21 , 22 , 23 , 24 , 25 , 26 , 27 , 28 , 29 , 30 , 31 , 32 , 33 , 34 , 35 ], SHAPE(ARR1_I16) )
+  ARR1_I32 = RESHAPE( [INTEGER(INT32):: 1 ,  2 ,  3 ,  4 ,  5 ,  6 ,  7 ,  8 ,  9 , 10 , 11 , 12 , 13 , 14 , 15 , 16 , 17 , 18 , 19 , 20 , 21 , 22 , 23 , 24 , 25 , 26 , 27 , 28 , 29 , 30 , 31 , 32 , 33 , 34 , 35 ], SHAPE(ARR1_I32) )
+  ARR1_I64 = RESHAPE( [INTEGER(INT64):: 1 ,  2 ,  3 ,  4 ,  5 ,  6 ,  7 ,  8 ,  9 , 10 , 11 , 12 , 13 , 14 , 15 , 16 , 17 , 18 , 19 , 20 , 21 , 22 , 23 , 24 , 25 , 26 , 27 , 28 , 29 , 30 , 31 , 32 , 33 , 34 , 35 ], SHAPE(ARR1_I64) )
+  ARR1_R32 = RESHAPE( [REAL(REAL32)  :: 1.23,  2.34,  3.45,  4.56,  5.67,  6.78,  7.89,  8.91,  9.12, 10.23, 11.23, 12.34, 13.45, 14.56, 15.67, 16.78, 17.89, 18.91, 19.12, 20.23, 21.23, 22.34, 23.45, 24.56, 25.67, 26.78, 27.89, 28.91, 29.12, 30., 31., 32., 33., 34., 35.], SHAPE(ARR1_R32) )
+  ARR1_R64 = RESHAPE( [REAL(REAL64)  :: 1.23,  2.34,  3.45,  4.56,  5.67,  6.78,  7.89,  8.91,  9.12, 10.23, 11.23, 12.34, 13.45, 14.56, 15.67, 16.78, 17.89, 18.91, 19.12, 20.23, 21.23, 22.34, 23.45, 24.56, 25.67, 26.78, 27.89, 28.91, 29.12, 30., 31., 32., 33., 34., 35.], SHAPE(ARR1_R64) )
+  !
+  ARR2_I08 = RESHAPE( [INTEGER(INT8 ):: 1 ,  2 ,  3 ,  4 ,  5 ,  6 ,  7 ,  8 ,  9 , 10 , 11 , 12 , 13 , 14 , 15 , 16 , 17 , 18 , 19 , 20 , 21 , 22 , 23 , 24 , 25 , 26 , 27 , 28 , 29 , 30 , 31 , 32 , 33 , 34 , 35 ], SHAPE(ARR2_I08) )
+  ARR2_I16 = RESHAPE( [INTEGER(INT16):: 1 ,  2 ,  3 ,  4 ,  5 ,  6 ,  7 ,  8 ,  9 , 10 , 11 , 12 , 13 , 14 , 15 , 16 , 17 , 18 , 19 , 20 , 21 , 22 , 23 , 24 , 25 , 26 , 27 , 28 , 29 , 30 , 31 , 32 , 33 , 34 , 35 ], SHAPE(ARR2_I16) )
+  ARR2_I32 = RESHAPE( [INTEGER(INT32):: 1 ,  2 ,  3 ,  4 ,  5 ,  6 ,  7 ,  8 ,  9 , 10 , 11 , 12 , 13 , 14 , 15 , 16 , 17 , 18 , 19 , 20 , 21 , 22 , 23 , 24 , 25 , 26 , 27 , 28 , 29 , 30 , 31 , 32 , 33 , 34 , 35 ], SHAPE(ARR2_I32) )
+  ARR2_I64 = RESHAPE( [INTEGER(INT64):: 1 ,  2 ,  3 ,  4 ,  5 ,  6 ,  7 ,  8 ,  9 , 10 , 11 , 12 , 13 , 14 , 15 , 16 , 17 , 18 , 19 , 20 , 21 , 22 , 23 , 24 , 25 , 26 , 27 , 28 , 29 , 30 , 31 , 32 , 33 , 34 , 35 ], SHAPE(ARR2_I64) )
+  ARR2_R32 = RESHAPE( [REAL(REAL32)  :: 1.23,  2.34,  3.45,  4.56,  5.67,  6.78,  7.89,  8.91,  9.12, 10.23, 11.23, 12.34, 13.45, 14.56, 15.67, 16.78, 17.89, 18.91, 19.12, 20.23, 21.23, 22.34, 23.45, 24.56, 25.67, 26.78, 27.89, 28.91, 29.12, 30., 31., 32., 33., 34., 35.], SHAPE(ARR2_R32) )
+  ARR2_R64 = RESHAPE( [REAL(REAL64)  :: 1.23,  2.34,  3.45,  4.56,  5.67,  6.78,  7.89,  8.91,  9.12, 10.23, 11.23, 12.34, 13.45, 14.56, 15.67, 16.78, 17.89, 18.91, 19.12, 20.23, 21.23, 22.34, 23.45, 24.56, 25.67, 26.78, 27.89, 28.91, 29.12, 30., 31., 32., 33., 34., 35.], SHAPE(ARR2_R64) )
+  !
+  !   CALL WRITE_ARRAY(IU,    ARR, [WIDTH], [FMT], [SEP], [TRANSPOSE], [HED], [SEP_ON_LAST], [ADVANCE])
+  !   CALL WRITE_ARRAY(FNAME, ARR, [WIDTH], [FMT], [SEP], [TRANSPOSE], [HED], [SEP_ON_LAST], [ADVANCE], [APPEND], [NO_CLOSE], [IU], [IOSTAT])
+
+  !
+  ! WRITE_ARRAY(FNAME, ARR, [WIDTH, FMT, SEP, TRANSPOSE, HED, SEP_ON_LAST, ADVANCE, NO_CLOSE, IU, IOSTAT])
+  ! WRITE_ARRAY(FNAME, ARR, [WIDTH, FMT, SEP, TRANSPOSE, HED, SEP_ON_LAST,          NO_CLOSE, IU, IOSTAT])
+  !
+  CALL UT%NEXT_SECTION("WRITE_ARRAY_INTERFACE")
+  !
+  CALL UT%NEXT_TEST("FILE_WRITE_ARRAY_1D_INT")  
+ !CALL WRITE_ARRAY('./output/write_array/ARR1D_I08_n_nS_nT_nL.txt', ARR1_I08(:,1))
+ !CALL WRITE_ARRAY('./output/write_array/ARR1D_I08_n_nS_nT_nL.txt', ARR1_I08(:,1), APPEND=.TRUE.)
+ !CALL WRITE_ARRAY('./output/write_array/ARR1D_I08_w_nS_nT_nL.txt', ARR1_I08(:,1), WIDTH=10)
+ !CALL WRITE_ARRAY('./output/write_array/ARR1D_I08_w_yS_nT_nL.txt', ARR1_I08(:,1), WIDTH= 9, SEP="|")
+ !CALL WRITE_ARRAY('./output/write_array/ARR1D_I08_f_nS_nT_nL.txt', ARR1_I08(:,1), FMT="I6")
+ !CALL WRITE_ARRAY('./output/write_array/ARR1D_I08_f_yS_nT_nL.txt', ARR1_I08(:,1), FMT="I5", SEP="|")
+ !CALL WRITE_ARRAY('./output/write_array/ARR1D_I08_f_yS_nT_yL.txt', ARR1_I08(:,1), FMT="I5", SEP="|",                  SEP_ON_LAST=.TRUE.)
+ !CALL WRITE_ARRAY('./output/write_array/ARR1D_I08_w_nS_yT_nL.txt', ARR1_I08(:,1), WIDTH=10,          TRANSPOSE=.TRUE.)
+ !CALL WRITE_ARRAY('./output/write_array/ARR1D_I08_w_yS_yT_nL.txt', ARR1_I08(:,1), WIDTH= 9, SEP="|", TRANSPOSE=.TRUE.)
+ !CALL WRITE_ARRAY('./output/write_array/ARR1D_I08_f_nS_yT_nL.txt', ARR1_I08(:,1), FMT="I6",          TRANSPOSE=.TRUE.)
+ !CALL WRITE_ARRAY('./output/write_array/ARR1D_I08_f_yS_yT_nL.txt', ARR1_I08(:,1), FMT="I5", SEP="|", TRANSPOSE=.TRUE.)
+ !CALL WRITE_ARRAY('./output/write_array/ARR1D_I08_f_yS_yT_yL.txt', ARR1_I08(:,1), FMT="I5", SEP="|", TRANSPOSE=.TRUE., SEP_ON_LAST=.TRUE.)
+ !!
+ !CALL WRITE_ARRAY('./output/write_array/ARR1D_I16_n_nS_nT_nL.txt', ARR1_I16(:,1))
+ !CALL WRITE_ARRAY('./output/write_array/ARR1D_I16_n_nS_nT_nL.txt', ARR1_I16(:,1), APPEND=.TRUE.)
+ !CALL WRITE_ARRAY('./output/write_array/ARR1D_I16_w_nS_nT_nL.txt', ARR1_I16(:,1), WIDTH=10)
+ !CALL WRITE_ARRAY('./output/write_array/ARR1D_I16_w_yS_nT_nL.txt', ARR1_I16(:,1), WIDTH= 9, SEP="|")
+ !CALL WRITE_ARRAY('./output/write_array/ARR1D_I16_f_nS_nT_nL.txt', ARR1_I16(:,1), FMT="I6")
+ !CALL WRITE_ARRAY('./output/write_array/ARR1D_I16_f_yS_nT_nL.txt', ARR1_I16(:,1), FMT="I5", SEP="|")
+ !CALL WRITE_ARRAY('./output/write_array/ARR1D_I16_f_yS_nT_yL.txt', ARR1_I16(:,1), FMT="I5", SEP="|",                  SEP_ON_LAST=.TRUE.)
+ !CALL WRITE_ARRAY('./output/write_array/ARR1D_I16_w_nS_yT_nL.txt', ARR1_I16(:,1), WIDTH=10,          TRANSPOSE=.TRUE.)
+ !CALL WRITE_ARRAY('./output/write_array/ARR1D_I16_w_yS_yT_nL.txt', ARR1_I16(:,1), WIDTH= 9, SEP="|", TRANSPOSE=.TRUE.)
+ !CALL WRITE_ARRAY('./output/write_array/ARR1D_I16_f_nS_yT_nL.txt', ARR1_I16(:,1), FMT="I6",          TRANSPOSE=.TRUE.)
+ !CALL WRITE_ARRAY('./output/write_array/ARR1D_I16_f_yS_yT_nL.txt', ARR1_I16(:,1), FMT="I5", SEP="|", TRANSPOSE=.TRUE.)
+ !CALL WRITE_ARRAY('./output/write_array/ARR1D_I16_f_yS_yT_yL.txt', ARR1_I16(:,1), FMT="I5", SEP="|", TRANSPOSE=.TRUE., SEP_ON_LAST=.TRUE.)
+  !
+  CALL WRITE_ARRAY('./output/write_array/ARR1D_I32_n_nS_nT_nL.txt', ARR1_I32(:,1))
+  CALL WRITE_ARRAY('./output/write_array/ARR1D_I32_n_nS_nT_nL.txt', ARR1_I32(:,1), APPEND=.TRUE.)
+  CALL WRITE_ARRAY('./output/write_array/ARR1D_I32_w_nS_nT_nL.txt', ARR1_I32(:,1), WIDTH=10)
+  CALL WRITE_ARRAY('./output/write_array/ARR1D_I32_w_yS_nT_nL.txt', ARR1_I32(:,1), WIDTH= 9, SEP="|")
+  CALL WRITE_ARRAY('./output/write_array/ARR1D_I32_f_nS_nT_nL.txt', ARR1_I32(:,1), FMT="I6")
+  CALL WRITE_ARRAY('./output/write_array/ARR1D_I32_f_yS_nT_nL.txt', ARR1_I32(:,1), FMT="I5", SEP="|")
+  CALL WRITE_ARRAY('./output/write_array/ARR1D_I32_f_yS_nT_yL.txt', ARR1_I32(:,1), FMT="I5", SEP="|",                  SEP_ON_LAST=.TRUE.)
+  CALL WRITE_ARRAY('./output/write_array/ARR1D_I32_w_nS_yT_nL.txt', ARR1_I32(:,1), WIDTH=10,          TRANSPOSE=.TRUE.)
+  CALL WRITE_ARRAY('./output/write_array/ARR1D_I32_w_yS_yT_nL.txt', ARR1_I32(:,1), WIDTH= 9, SEP="|", TRANSPOSE=.TRUE.)
+  CALL WRITE_ARRAY('./output/write_array/ARR1D_I32_f_nS_yT_nL.txt', ARR1_I32(:,1), FMT="I6",          TRANSPOSE=.TRUE.)
+  CALL WRITE_ARRAY('./output/write_array/ARR1D_I32_f_yS_yT_nL.txt', ARR1_I32(:,1), FMT="I5", SEP="|", TRANSPOSE=.TRUE.)
+  CALL WRITE_ARRAY('./output/write_array/ARR1D_I32_f_yS_yT_yL.txt', ARR1_I32(:,1), FMT="I5", SEP="|", TRANSPOSE=.TRUE., SEP_ON_LAST=.TRUE.)
+  !
+ !CALL WRITE_ARRAY('./output/write_array/ARR1D_I64_n_nS_nT_nL.txt', ARR1_I64(:,1))
+ !CALL WRITE_ARRAY('./output/write_array/ARR1D_I64_n_nS_nT_nL.txt', ARR1_I64(:,1), APPEND=.TRUE.)
+ !CALL WRITE_ARRAY('./output/write_array/ARR1D_I64_w_nS_nT_nL.txt', ARR1_I64(:,1), WIDTH=10)
+ !CALL WRITE_ARRAY('./output/write_array/ARR1D_I64_w_yS_nT_nL.txt', ARR1_I64(:,1), WIDTH= 9, SEP="|")
+ !CALL WRITE_ARRAY('./output/write_array/ARR1D_I64_f_nS_nT_nL.txt', ARR1_I64(:,1), FMT="I6")
+ !CALL WRITE_ARRAY('./output/write_array/ARR1D_I64_f_yS_nT_nL.txt', ARR1_I64(:,1), FMT="I5", SEP="|")
+ !CALL WRITE_ARRAY('./output/write_array/ARR1D_I64_f_yS_nT_yL.txt', ARR1_I64(:,1), FMT="I5", SEP="|",                  SEP_ON_LAST=.TRUE.)
+ !CALL WRITE_ARRAY('./output/write_array/ARR1D_I64_w_nS_yT_nL.txt', ARR1_I64(:,1), WIDTH=10,          TRANSPOSE=.TRUE.)
+ !CALL WRITE_ARRAY('./output/write_array/ARR1D_I64_w_yS_yT_nL.txt', ARR1_I64(:,1), WIDTH= 9, SEP="|", TRANSPOSE=.TRUE.)
+ !CALL WRITE_ARRAY('./output/write_array/ARR1D_I64_f_nS_yT_nL.txt', ARR1_I64(:,1), FMT="I6",          TRANSPOSE=.TRUE.)
+ !CALL WRITE_ARRAY('./output/write_array/ARR1D_I64_f_yS_yT_nL.txt', ARR1_I64(:,1), FMT="I5", SEP="|", TRANSPOSE=.TRUE.)
+ !CALL WRITE_ARRAY('./output/write_array/ARR1D_I64_f_yS_yT_yL.txt', ARR1_I64(:,1), FMT="I5", SEP="|", TRANSPOSE=.TRUE., SEP_ON_LAST=.TRUE.)
+  !
+  CALL UT%ASSERT(.TRUE.)
+  !
+  CALL UT%NEXT_TEST("FILE_WRITE_ARRAY_1D_REAL") 
+ !CALL WRITE_ARRAY('./output/write_array/ARR1D_R32_n_nS_nT_nL.txt', ARR1_R32(:,1))
+ !CALL WRITE_ARRAY('./output/write_array/ARR1D_R32_n_nS_nT_nL.txt', ARR1_R32(:,1), APPEND=.TRUE.)
+ !CALL WRITE_ARRAY('./output/write_array/ARR1D_R32_w_nS_nT_nL.txt', ARR1_R32(:,1), WIDTH=10)
+ !CALL WRITE_ARRAY('./output/write_array/ARR1D_R32_w_yS_nT_nL.txt', ARR1_R32(:,1), WIDTH= 9,   SEP="|")
+ !CALL WRITE_ARRAY('./output/write_array/ARR1D_R32_f_nS_nT_nL.txt', ARR1_R32(:,1), FMT="F6.2")
+ !CALL WRITE_ARRAY('./output/write_array/ARR1D_R32_f_yS_nT_nL.txt', ARR1_R32(:,1), FMT="F5.2", SEP="|")
+ !CALL WRITE_ARRAY('./output/write_array/ARR1D_R32_f_yS_nT_yL.txt', ARR1_R32(:,1), FMT="F5.2", SEP="|",                  SEP_ON_LAST=.TRUE.)
+ !CALL WRITE_ARRAY('./output/write_array/ARR1D_R32_w_nS_yT_nL.txt', ARR1_R32(:,1), WIDTH=10,            TRANSPOSE=.TRUE.)
+ !CALL WRITE_ARRAY('./output/write_array/ARR1D_R32_w_yS_yT_nL.txt', ARR1_R32(:,1), WIDTH= 9,   SEP="|", TRANSPOSE=.TRUE.)
+ !CALL WRITE_ARRAY('./output/write_array/ARR1D_R32_f_nS_yT_nL.txt', ARR1_R32(:,1), FMT="F6.2",          TRANSPOSE=.TRUE.)
+ !CALL WRITE_ARRAY('./output/write_array/ARR1D_R32_f_yS_yT_nL.txt', ARR1_R32(:,1), FMT="F5.2", SEP="|", TRANSPOSE=.TRUE.)
+ !CALL WRITE_ARRAY('./output/write_array/ARR1D_R32_f_yS_yT_yL.txt', ARR1_R32(:,1), FMT="F5.2", SEP="|", TRANSPOSE=.TRUE., SEP_ON_LAST=.TRUE.)
+  !
+  CALL WRITE_ARRAY('./output/write_array/ARR1D_R64_n_nS_nT_nL.txt', ARR1_R64(:,1))
+  CALL WRITE_ARRAY('./output/write_array/ARR1D_R64_n_nS_nT_nL.txt', ARR1_R64(:,1), APPEND=.TRUE.)
+  CALL WRITE_ARRAY('./output/write_array/ARR1D_R64_w_nS_nT_nL.txt', ARR1_R64(:,1), WIDTH=10)
+  CALL WRITE_ARRAY('./output/write_array/ARR1D_R64_w_yS_nT_nL.txt', ARR1_R64(:,1), WIDTH= 9,   SEP="|")
+  CALL WRITE_ARRAY('./output/write_array/ARR1D_R64_f_nS_nT_nL.txt', ARR1_R64(:,1), FMT="F6.2")
+  CALL WRITE_ARRAY('./output/write_array/ARR1D_R64_f_yS_nT_nL.txt', ARR1_R64(:,1), FMT="F5.2", SEP="|")
+  CALL WRITE_ARRAY('./output/write_array/ARR1D_R64_f_yS_nT_yL.txt', ARR1_R64(:,1), FMT="F5.2", SEP="|",                  SEP_ON_LAST=.TRUE.)
+  CALL WRITE_ARRAY('./output/write_array/ARR1D_R64_w_nS_yT_nL.txt', ARR1_R64(:,1), WIDTH=10,            TRANSPOSE=.TRUE.)
+  CALL WRITE_ARRAY('./output/write_array/ARR1D_R64_w_yS_yT_nL.txt', ARR1_R64(:,1), WIDTH= 9,   SEP="|", TRANSPOSE=.TRUE.)
+  CALL WRITE_ARRAY('./output/write_array/ARR1D_R64_f_nS_yT_nL.txt', ARR1_R64(:,1), FMT="F6.2",          TRANSPOSE=.TRUE.)
+  CALL WRITE_ARRAY('./output/write_array/ARR1D_R64_f_yS_yT_nL.txt', ARR1_R64(:,1), FMT="F5.2", SEP="|", TRANSPOSE=.TRUE.)
+  CALL WRITE_ARRAY('./output/write_array/ARR1D_R64_f_yS_yT_yL.txt', ARR1_R64(:,1), FMT="F5.2", SEP="|", TRANSPOSE=.TRUE., SEP_ON_LAST=.TRUE.)
+  !
+  CALL UT%ASSERT(.TRUE.)
+  !
+  !~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~
+  !
+  CALL UT%NEXT_TEST("FILE_WRITE_ARRAY_2D_INT")  
+ !CALL WRITE_ARRAY('./output/write_array/ARR2D_I08_n_nS_nT_nL.txt', ARR1_I08)
+ !CALL WRITE_ARRAY('./output/write_array/ARR2D_I08_n_nS_nT_nL.txt', ARR1_I08, APPEND=.TRUE.)
+ !CALL WRITE_ARRAY('./output/write_array/ARR2D_I08_w_nS_nT_nL.txt', ARR1_I08, WIDTH=10)
+ !CALL WRITE_ARRAY('./output/write_array/ARR2D_I08_w_yS_nT_nL.txt', ARR1_I08, WIDTH= 9, SEP="|")
+ !CALL WRITE_ARRAY('./output/write_array/ARR2D_I08_f_nS_nT_nL.txt', ARR1_I08, FMT="I6")
+ !CALL WRITE_ARRAY('./output/write_array/ARR2D_I08_f_yS_nT_nL.txt', ARR1_I08, FMT="I5", SEP="|")
+ !CALL WRITE_ARRAY('./output/write_array/ARR2D_I08_f_yS_nT_yL.txt', ARR1_I08, FMT="I5", SEP="|",                  SEP_ON_LAST=.TRUE.)
+ !CALL WRITE_ARRAY('./output/write_array/ARR2D_I08_w_nS_yT_nL.txt', ARR1_I08, WIDTH=10,          TRANSPOSE=.TRUE.)
+ !CALL WRITE_ARRAY('./output/write_array/ARR2D_I08_w_yS_yT_nL.txt', ARR1_I08, WIDTH= 9, SEP="|", TRANSPOSE=.TRUE.)
+ !CALL WRITE_ARRAY('./output/write_array/ARR2D_I08_f_nS_yT_nL.txt', ARR1_I08, FMT="I6",          TRANSPOSE=.TRUE.)
+ !CALL WRITE_ARRAY('./output/write_array/ARR2D_I08_f_yS_yT_nL.txt', ARR1_I08, FMT="I5", SEP="|", TRANSPOSE=.TRUE.)
+ !CALL WRITE_ARRAY('./output/write_array/ARR2D_I08_f_yS_yT_yL.txt', ARR1_I08, FMT="I5", SEP="|", TRANSPOSE=.TRUE., SEP_ON_LAST=.TRUE.)
+ !!
+ !CALL WRITE_ARRAY('./output/write_array/ARR2D_I16_n_nS_nT_nL.txt', ARR1_I16)
+ !CALL WRITE_ARRAY('./output/write_array/ARR2D_I16_n_nS_nT_nL.txt', ARR1_I16, APPEND=.TRUE.)
+ !CALL WRITE_ARRAY('./output/write_array/ARR2D_I16_w_nS_nT_nL.txt', ARR1_I16, WIDTH=10)
+ !CALL WRITE_ARRAY('./output/write_array/ARR2D_I16_w_yS_nT_nL.txt', ARR1_I16, WIDTH= 9, SEP="|")
+ !CALL WRITE_ARRAY('./output/write_array/ARR2D_I16_f_nS_nT_nL.txt', ARR1_I16, FMT="I6")
+ !CALL WRITE_ARRAY('./output/write_array/ARR2D_I16_f_yS_nT_nL.txt', ARR1_I16, FMT="I5", SEP="|")
+ !CALL WRITE_ARRAY('./output/write_array/ARR2D_I16_f_yS_nT_yL.txt', ARR1_I16, FMT="I5", SEP="|",                  SEP_ON_LAST=.TRUE.)
+ !CALL WRITE_ARRAY('./output/write_array/ARR2D_I16_w_nS_yT_nL.txt', ARR1_I16, WIDTH=10,          TRANSPOSE=.TRUE.)
+ !CALL WRITE_ARRAY('./output/write_array/ARR2D_I16_w_yS_yT_nL.txt', ARR1_I16, WIDTH= 9, SEP="|", TRANSPOSE=.TRUE.)
+ !CALL WRITE_ARRAY('./output/write_array/ARR2D_I16_f_nS_yT_nL.txt', ARR1_I16, FMT="I6",          TRANSPOSE=.TRUE.)
+ !CALL WRITE_ARRAY('./output/write_array/ARR2D_I16_f_yS_yT_nL.txt', ARR1_I16, FMT="I5", SEP="|", TRANSPOSE=.TRUE.)
+ !CALL WRITE_ARRAY('./output/write_array/ARR2D_I16_f_yS_yT_yL.txt', ARR1_I16, FMT="I5", SEP="|", TRANSPOSE=.TRUE., SEP_ON_LAST=.TRUE.)
+  !
+ !CALL WRITE_ARRAY('./output/write_array/ARR2D_I32_n_nS_nT_nL.txt', ARR1_I32)
+ !CALL WRITE_ARRAY('./output/write_array/ARR2D_I32_n_nS_nT_nL.txt', ARR1_I32, APPEND=.TRUE.)
+  CALL WRITE_ARRAY('./output/write_array/ARR2D_I32_w_nS_nT_nL.txt', ARR1_I32, WIDTH=10)
+  CALL WRITE_ARRAY('./output/write_array/ARR2D_I32_w_yS_nT_nL.txt', ARR1_I32, WIDTH= 9, SEP="|")
+  CALL WRITE_ARRAY('./output/write_array/ARR2D_I32_f_nS_nT_nL.txt', ARR1_I32, FMT="I6")
+  CALL WRITE_ARRAY('./output/write_array/ARR2D_I32_f_yS_nT_nL.txt', ARR1_I32, FMT="I5", SEP="|")
+  CALL WRITE_ARRAY('./output/write_array/ARR2D_I32_f_yS_nT_yL.txt', ARR1_I32, FMT="I5", SEP="|",                  SEP_ON_LAST=.TRUE.)
+  CALL WRITE_ARRAY('./output/write_array/ARR2D_I32_w_nS_yT_nL.txt', ARR1_I32, WIDTH=10,          TRANSPOSE=.TRUE.)
+  CALL WRITE_ARRAY('./output/write_array/ARR2D_I32_w_yS_yT_nL.txt', ARR1_I32, WIDTH= 9, SEP="|", TRANSPOSE=.TRUE.)
+  CALL WRITE_ARRAY('./output/write_array/ARR2D_I32_f_nS_yT_nL.txt', ARR1_I32, FMT="I6",          TRANSPOSE=.TRUE.)
+  CALL WRITE_ARRAY('./output/write_array/ARR2D_I32_f_yS_yT_nL.txt', ARR1_I32, FMT="I5", SEP="|", TRANSPOSE=.TRUE.)
+  CALL WRITE_ARRAY('./output/write_array/ARR2D_I32_f_yS_yT_yL.txt', ARR1_I32, FMT="I5", SEP="|", TRANSPOSE=.TRUE., SEP_ON_LAST=.TRUE.)
+  !
+ !CALL WRITE_ARRAY('./output/write_array/ARR2D_I64_n_nS_nT_nL.txt', ARR1_I64)
+ !CALL WRITE_ARRAY('./output/write_array/ARR2D_I64_n_nS_nT_nL.txt', ARR1_I64, APPEND=.TRUE.)
+ !CALL WRITE_ARRAY('./output/write_array/ARR2D_I64_w_nS_nT_nL.txt', ARR1_I64, WIDTH=10)
+ !CALL WRITE_ARRAY('./output/write_array/ARR2D_I64_w_yS_nT_nL.txt', ARR1_I64, WIDTH= 9, SEP="|")
+ !CALL WRITE_ARRAY('./output/write_array/ARR2D_I64_f_nS_nT_nL.txt', ARR1_I64, FMT="I6")
+ !CALL WRITE_ARRAY('./output/write_array/ARR2D_I64_f_yS_nT_nL.txt', ARR1_I64, FMT="I5", SEP="|")
+ !CALL WRITE_ARRAY('./output/write_array/ARR2D_I64_f_yS_nT_yL.txt', ARR1_I64, FMT="I5", SEP="|",                  SEP_ON_LAST=.TRUE.)
+ !CALL WRITE_ARRAY('./output/write_array/ARR2D_I64_w_nS_yT_nL.txt', ARR1_I64, WIDTH=10,          TRANSPOSE=.TRUE.)
+ !CALL WRITE_ARRAY('./output/write_array/ARR2D_I64_w_yS_yT_nL.txt', ARR1_I64, WIDTH= 9, SEP="|", TRANSPOSE=.TRUE.)
+ !CALL WRITE_ARRAY('./output/write_array/ARR2D_I64_f_nS_yT_nL.txt', ARR1_I64, FMT="I6",          TRANSPOSE=.TRUE.)
+ !CALL WRITE_ARRAY('./output/write_array/ARR2D_I64_f_yS_yT_nL.txt', ARR1_I64, FMT="I5", SEP="|", TRANSPOSE=.TRUE.)
+ !CALL WRITE_ARRAY('./output/write_array/ARR2D_I64_f_yS_yT_yL.txt', ARR1_I64, FMT="I5", SEP="|", TRANSPOSE=.TRUE., SEP_ON_LAST=.TRUE.)
+  !
+  CALL UT%ASSERT(.TRUE.)
+  !
+  CALL UT%NEXT_TEST("FILE_WRITE_ARRAY_2D_REAL") 
+ !CALL WRITE_ARRAY('./output/write_array/ARR2D_R32_n_nS_nT_nL.txt', ARR1_R32)
+ !CALL WRITE_ARRAY('./output/write_array/ARR2D_R32_n_nS_nT_nL.txt', ARR1_R32, APPEND=.TRUE.)
+ !CALL WRITE_ARRAY('./output/write_array/ARR2D_R32_w_nS_nT_nL.txt', ARR1_R32, WIDTH=10)
+ !CALL WRITE_ARRAY('./output/write_array/ARR2D_R32_w_yS_nT_nL.txt', ARR1_R32, WIDTH= 9,   SEP="|")
+ !CALL WRITE_ARRAY('./output/write_array/ARR2D_R32_f_nS_nT_nL.txt', ARR1_R32, FMT="F6.2")
+ !CALL WRITE_ARRAY('./output/write_array/ARR2D_R32_f_yS_nT_nL.txt', ARR1_R32, FMT="F5.2", SEP="|")
+ !CALL WRITE_ARRAY('./output/write_array/ARR2D_R32_f_yS_nT_yL.txt', ARR1_R32, FMT="F5.2", SEP="|",                  SEP_ON_LAST=.TRUE.)
+ !CALL WRITE_ARRAY('./output/write_array/ARR2D_R32_w_nS_yT_nL.txt', ARR1_R32, WIDTH=10,            TRANSPOSE=.TRUE.)
+ !CALL WRITE_ARRAY('./output/write_array/ARR2D_R32_w_yS_yT_nL.txt', ARR1_R32, WIDTH= 9,   SEP="|", TRANSPOSE=.TRUE.)
+ !CALL WRITE_ARRAY('./output/write_array/ARR2D_R32_f_nS_yT_nL.txt', ARR1_R32, FMT="F6.2",          TRANSPOSE=.TRUE.)
+ !CALL WRITE_ARRAY('./output/write_array/ARR2D_R32_f_yS_yT_nL.txt', ARR1_R32, FMT="F5.2", SEP="|", TRANSPOSE=.TRUE.)
+ !CALL WRITE_ARRAY('./output/write_array/ARR2D_R32_f_yS_yT_yL.txt', ARR1_R32, FMT="F5.2", SEP="|", TRANSPOSE=.TRUE., SEP_ON_LAST=.TRUE.)
+  !
+ !CALL WRITE_ARRAY('./output/write_array/ARR2D_R64_n_nS_nT_nL.txt', ARR1_R64)
+ !CALL WRITE_ARRAY('./output/write_array/ARR2D_R64_n_nS_nT_nL.txt', ARR1_R64, APPEND=.TRUE.)
+  CALL WRITE_ARRAY('./output/write_array/ARR2D_R64_w_nS_nT_nL.txt', ARR1_R64, WIDTH=10)
+  CALL WRITE_ARRAY('./output/write_array/ARR2D_R64_w_yS_nT_nL.txt', ARR1_R64, WIDTH= 9,   SEP="|")
+  CALL WRITE_ARRAY('./output/write_array/ARR2D_R64_f_nS_nT_nL.txt', ARR1_R64, FMT="F6.2")
+  CALL WRITE_ARRAY('./output/write_array/ARR2D_R64_f_yS_nT_nL.txt', ARR1_R64, FMT="F5.2", SEP="|")
+  CALL WRITE_ARRAY('./output/write_array/ARR2D_R64_f_yS_nT_yL.txt', ARR1_R64, FMT="F5.2", SEP="|",                  SEP_ON_LAST=.TRUE.)
+  CALL WRITE_ARRAY('./output/write_array/ARR2D_R64_w_nS_yT_nL.txt', ARR1_R64, WIDTH=10,            TRANSPOSE=.TRUE.)
+  CALL WRITE_ARRAY('./output/write_array/ARR2D_R64_w_yS_yT_nL.txt', ARR1_R64, WIDTH= 9,   SEP="|", TRANSPOSE=.TRUE.)
+  CALL WRITE_ARRAY('./output/write_array/ARR2D_R64_f_nS_yT_nL.txt', ARR1_R64, FMT="F6.2",          TRANSPOSE=.TRUE.)
+  CALL WRITE_ARRAY('./output/write_array/ARR2D_R64_f_yS_yT_nL.txt', ARR1_R64, FMT="F5.2", SEP="|", TRANSPOSE=.TRUE.)
+  CALL WRITE_ARRAY('./output/write_array/ARR2D_R64_f_yS_yT_yL.txt', ARR1_R64, FMT="F5.2", SEP="|", TRANSPOSE=.TRUE., SEP_ON_LAST=.TRUE.)
+  !
+  CALL UT%ASSERT(.TRUE.)
+  !
+  !~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~
+  !
+  CALL UT%NEXT_TEST("FILE_WRITE_ARRAY_2D_INT  Part 2")  
+ !CALL WRITE_ARRAY('./output/write_array/ARR2T_I08_n_nS_nT_nL.txt', ARR2_I08)
+ !CALL WRITE_ARRAY('./output/write_array/ARR2T_I08_n_nS_nT_nL.txt', ARR2_I08, APPEND=.TRUE.)
+ !CALL WRITE_ARRAY('./output/write_array/ARR2T_I08_w_nS_nT_nL.txt', ARR2_I08, WIDTH=10)
+ !CALL WRITE_ARRAY('./output/write_array/ARR2T_I08_w_yS_nT_nL.txt', ARR2_I08, WIDTH= 9, SEP="|")
+ !CALL WRITE_ARRAY('./output/write_array/ARR2T_I08_f_nS_nT_nL.txt', ARR2_I08, FMT="I6")
+ !CALL WRITE_ARRAY('./output/write_array/ARR2T_I08_f_yS_nT_nL.txt', ARR2_I08, FMT="I5", SEP="|")
+ !CALL WRITE_ARRAY('./output/write_array/ARR2T_I08_f_yS_nT_yL.txt', ARR2_I08, FMT="I5", SEP="|",                  SEP_ON_LAST=.TRUE.)
+ !CALL WRITE_ARRAY('./output/write_array/ARR2T_I08_w_nS_yT_nL.txt', ARR2_I08, WIDTH=10,          TRANSPOSE=.TRUE.)
+ !CALL WRITE_ARRAY('./output/write_array/ARR2T_I08_w_yS_yT_nL.txt', ARR2_I08, WIDTH= 9, SEP="|", TRANSPOSE=.TRUE.)
+ !CALL WRITE_ARRAY('./output/write_array/ARR2T_I08_f_nS_yT_nL.txt', ARR2_I08, FMT="I6",          TRANSPOSE=.TRUE.)
+ !CALL WRITE_ARRAY('./output/write_array/ARR2T_I08_f_yS_yT_nL.txt', ARR2_I08, FMT="I5", SEP="|", TRANSPOSE=.TRUE.)
+ !CALL WRITE_ARRAY('./output/write_array/ARR2T_I08_f_yS_yT_yL.txt', ARR2_I08, FMT="I5", SEP="|", TRANSPOSE=.TRUE., SEP_ON_LAST=.TRUE.)
+ !!
+ !CALL WRITE_ARRAY('./output/write_array/ARR2T_I16_n_nS_nT_nL.txt', ARR2_I16)
+ !CALL WRITE_ARRAY('./output/write_array/ARR2T_I16_n_nS_nT_nL.txt', ARR2_I16, APPEND=.TRUE.)
+ !CALL WRITE_ARRAY('./output/write_array/ARR2T_I16_w_nS_nT_nL.txt', ARR2_I16, WIDTH=10)
+ !CALL WRITE_ARRAY('./output/write_array/ARR2T_I16_w_yS_nT_nL.txt', ARR2_I16, WIDTH= 9, SEP="|")
+ !CALL WRITE_ARRAY('./output/write_array/ARR2T_I16_f_nS_nT_nL.txt', ARR2_I16, FMT="I6")
+ !CALL WRITE_ARRAY('./output/write_array/ARR2T_I16_f_yS_nT_nL.txt', ARR2_I16, FMT="I5", SEP="|")
+ !CALL WRITE_ARRAY('./output/write_array/ARR2T_I16_f_yS_nT_yL.txt', ARR2_I16, FMT="I5", SEP="|",                  SEP_ON_LAST=.TRUE.)
+ !CALL WRITE_ARRAY('./output/write_array/ARR2T_I16_w_nS_yT_nL.txt', ARR2_I16, WIDTH=10,          TRANSPOSE=.TRUE.)
+ !CALL WRITE_ARRAY('./output/write_array/ARR2T_I16_w_yS_yT_nL.txt', ARR2_I16, WIDTH= 9, SEP="|", TRANSPOSE=.TRUE.)
+ !CALL WRITE_ARRAY('./output/write_array/ARR2T_I16_f_nS_yT_nL.txt', ARR2_I16, FMT="I6",          TRANSPOSE=.TRUE.)
+ !CALL WRITE_ARRAY('./output/write_array/ARR2T_I16_f_yS_yT_nL.txt', ARR2_I16, FMT="I5", SEP="|", TRANSPOSE=.TRUE.)
+ !CALL WRITE_ARRAY('./output/write_array/ARR2T_I16_f_yS_yT_yL.txt', ARR2_I16, FMT="I5", SEP="|", TRANSPOSE=.TRUE., SEP_ON_LAST=.TRUE.)
+  !
+ !CALL WRITE_ARRAY('./output/write_array/ARR2T_I32_n_nS_nT_nL.txt', ARR2_I32)
+ !CALL WRITE_ARRAY('./output/write_array/ARR2T_I32_n_nS_nT_nL.txt', ARR2_I32, APPEND=.TRUE.)
+  CALL WRITE_ARRAY('./output/write_array/ARR2T_I32_w_nS_nT_nL.txt', ARR2_I32, WIDTH=10)
+  CALL WRITE_ARRAY('./output/write_array/ARR2T_I32_w_yS_nT_nL.txt', ARR2_I32, WIDTH= 9, SEP="|")
+  CALL WRITE_ARRAY('./output/write_array/ARR2T_I32_f_nS_nT_nL.txt', ARR2_I32, FMT="I6")
+  CALL WRITE_ARRAY('./output/write_array/ARR2T_I32_f_yS_nT_nL.txt', ARR2_I32, FMT="I5", SEP="|")
+  CALL WRITE_ARRAY('./output/write_array/ARR2T_I32_f_yS_nT_yL.txt', ARR2_I32, FMT="I5", SEP="|",                  SEP_ON_LAST=.TRUE.)
+  CALL WRITE_ARRAY('./output/write_array/ARR2T_I32_w_nS_yT_nL.txt', ARR2_I32, WIDTH=10,          TRANSPOSE=.TRUE.)
+  CALL WRITE_ARRAY('./output/write_array/ARR2T_I32_w_yS_yT_nL.txt', ARR2_I32, WIDTH= 9, SEP="|", TRANSPOSE=.TRUE.)
+  CALL WRITE_ARRAY('./output/write_array/ARR2T_I32_f_nS_yT_nL.txt', ARR2_I32, FMT="I6",          TRANSPOSE=.TRUE.)
+  CALL WRITE_ARRAY('./output/write_array/ARR2T_I32_f_yS_yT_nL.txt', ARR2_I32, FMT="I5", SEP="|", TRANSPOSE=.TRUE.)
+  CALL WRITE_ARRAY('./output/write_array/ARR2T_I32_f_yS_yT_yL.txt', ARR2_I32, FMT="I5", SEP="|", TRANSPOSE=.TRUE., SEP_ON_LAST=.TRUE.)
+  !
+ !CALL WRITE_ARRAY('./output/write_array/ARR2T_I64_n_nS_nT_nL.txt', ARR2_I64)
+ !CALL WRITE_ARRAY('./output/write_array/ARR2T_I64_n_nS_nT_nL.txt', ARR2_I64, APPEND=.TRUE.)
+ !CALL WRITE_ARRAY('./output/write_array/ARR2T_I64_w_nS_nT_nL.txt', ARR2_I64, WIDTH=10)
+ !CALL WRITE_ARRAY('./output/write_array/ARR2T_I64_w_yS_nT_nL.txt', ARR2_I64, WIDTH= 9, SEP="|")
+ !CALL WRITE_ARRAY('./output/write_array/ARR2T_I64_f_nS_nT_nL.txt', ARR2_I64, FMT="I6")
+ !CALL WRITE_ARRAY('./output/write_array/ARR2T_I64_f_yS_nT_nL.txt', ARR2_I64, FMT="I5", SEP="|")
+ !CALL WRITE_ARRAY('./output/write_array/ARR2T_I64_f_yS_nT_yL.txt', ARR2_I64, FMT="I5", SEP="|",                  SEP_ON_LAST=.TRUE.)
+ !CALL WRITE_ARRAY('./output/write_array/ARR2T_I64_w_nS_yT_nL.txt', ARR2_I64, WIDTH=10,          TRANSPOSE=.TRUE.)
+ !CALL WRITE_ARRAY('./output/write_array/ARR2T_I64_w_yS_yT_nL.txt', ARR2_I64, WIDTH= 9, SEP="|", TRANSPOSE=.TRUE.)
+ !CALL WRITE_ARRAY('./output/write_array/ARR2T_I64_f_nS_yT_nL.txt', ARR2_I64, FMT="I6",          TRANSPOSE=.TRUE.)
+ !CALL WRITE_ARRAY('./output/write_array/ARR2T_I64_f_yS_yT_nL.txt', ARR2_I64, FMT="I5", SEP="|", TRANSPOSE=.TRUE.)
+ !CALL WRITE_ARRAY('./output/write_array/ARR2T_I64_f_yS_yT_yL.txt', ARR2_I64, FMT="I5", SEP="|", TRANSPOSE=.TRUE., SEP_ON_LAST=.TRUE.)
+  !
+  CALL UT%ASSERT(.TRUE.)
+  !
+  CALL UT%NEXT_TEST("FILE_WRITE_ARRAY_2D_REAL Part 2") 
+ !CALL WRITE_ARRAY('./output/write_array/ARR2T_R32_n_nS_nT_nL.txt', ARR2_R32)
+ !CALL WRITE_ARRAY('./output/write_array/ARR2T_R32_n_nS_nT_nL.txt', ARR2_R32, APPEND=.TRUE.)
+ !CALL WRITE_ARRAY('./output/write_array/ARR2T_R32_w_nS_nT_nL.txt', ARR2_R32, WIDTH=10)
+ !CALL WRITE_ARRAY('./output/write_array/ARR2T_R32_w_yS_nT_nL.txt', ARR2_R32, WIDTH= 9,   SEP="|")
+ !CALL WRITE_ARRAY('./output/write_array/ARR2T_R32_f_nS_nT_nL.txt', ARR2_R32, FMT="F6.2")
+ !CALL WRITE_ARRAY('./output/write_array/ARR2T_R32_f_yS_nT_nL.txt', ARR2_R32, FMT="F5.2", SEP="|")
+ !CALL WRITE_ARRAY('./output/write_array/ARR2T_R32_f_yS_nT_yL.txt', ARR2_R32, FMT="F5.2", SEP="|",                  SEP_ON_LAST=.TRUE.)
+ !CALL WRITE_ARRAY('./output/write_array/ARR2T_R32_w_nS_yT_nL.txt', ARR2_R32, WIDTH=10,            TRANSPOSE=.TRUE.)
+ !CALL WRITE_ARRAY('./output/write_array/ARR2T_R32_w_yS_yT_nL.txt', ARR2_R32, WIDTH= 9,   SEP="|", TRANSPOSE=.TRUE.)
+ !CALL WRITE_ARRAY('./output/write_array/ARR2T_R32_f_nS_yT_nL.txt', ARR2_R32, FMT="F6.2",          TRANSPOSE=.TRUE.)
+ !CALL WRITE_ARRAY('./output/write_array/ARR2T_R32_f_yS_yT_nL.txt', ARR2_R32, FMT="F5.2", SEP="|", TRANSPOSE=.TRUE.)
+ !CALL WRITE_ARRAY('./output/write_array/ARR2T_R32_f_yS_yT_yL.txt', ARR2_R32, FMT="F5.2", SEP="|", TRANSPOSE=.TRUE., SEP_ON_LAST=.TRUE.)
+  !
+ !CALL WRITE_ARRAY('./output/write_array/ARR2T_R64_n_nS_nT_nL.txt', ARR2_R64)
+ !CALL WRITE_ARRAY('./output/write_array/ARR2T_R64_n_nS_nT_nL.txt', ARR2_R64, APPEND=.TRUE.)
+  CALL WRITE_ARRAY('./output/write_array/ARR2T_R64_w_nS_nT_nL.txt', ARR2_R64, WIDTH=10)
+  CALL WRITE_ARRAY('./output/write_array/ARR2T_R64_w_yS_nT_nL.txt', ARR2_R64, WIDTH= 9,   SEP="|")
+  CALL WRITE_ARRAY('./output/write_array/ARR2T_R64_f_nS_nT_nL.txt', ARR2_R64, FMT="F6.2")
+  CALL WRITE_ARRAY('./output/write_array/ARR2T_R64_f_yS_nT_nL.txt', ARR2_R64, FMT="F5.2", SEP="|")
+  CALL WRITE_ARRAY('./output/write_array/ARR2T_R64_f_yS_nT_yL.txt', ARR2_R64, FMT="F5.2", SEP="|",                  SEP_ON_LAST=.TRUE.)
+  CALL WRITE_ARRAY('./output/write_array/ARR2T_R64_w_nS_yT_nL.txt', ARR2_R64, WIDTH=10,            TRANSPOSE=.TRUE.)
+  CALL WRITE_ARRAY('./output/write_array/ARR2T_R64_w_yS_yT_nL.txt', ARR2_R64, WIDTH= 9,   SEP="|", TRANSPOSE=.TRUE.)
+  CALL WRITE_ARRAY('./output/write_array/ARR2T_R64_f_nS_yT_nL.txt', ARR2_R64, FMT="F6.2",          TRANSPOSE=.TRUE.)
+  CALL WRITE_ARRAY('./output/write_array/ARR2T_R64_f_yS_yT_nL.txt', ARR2_R64, FMT="F5.2", SEP="|", TRANSPOSE=.TRUE.)
+  CALL WRITE_ARRAY('./output/write_array/ARR2T_R64_f_yS_yT_yL.txt', ARR2_R64, FMT="F5.2", SEP="|", TRANSPOSE=.TRUE., SEP_ON_LAST=.TRUE.)
+  !
+  CALL UT%ASSERT(.TRUE.)
+  !
+END SUBROUTINE
+!
 SUBROUTINE test_XY_GRID_COORDINATE_INTERFACE(UT)
   USE UNIT_TESTING_INSTRUCTION, ONLY: UNIT_TESTS
   USE XY_GRID_COORDINATE_INTERFACE, ONLY: XY_GRID_COODINATES
