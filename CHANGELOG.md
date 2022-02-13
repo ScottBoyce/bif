@@ -151,9 +151,7 @@ This also includes a substantial improvement to the `NUM2STR_INTERFACE` module.
 - `src/strings/num2str_interface.f90`  added a decimal place for real literals.
   - For example `1e5`, is treated by the compiler as the integer `100000` rather than real.
   - To fix this, the number must be written as `1.e5` 
-
 - `src/math_numbers/random_routines_interface.f90` fixed spelling errors.
-- 
 
 
 ## 1.0.2
