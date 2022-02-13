@@ -34,7 +34,7 @@ Fortran library source files that assist in file I/O, common operations that are
 
 ## Code Citation
 
-Boyce, S.E., 2022, Batteries Included Fortran Library (BiF-lib), version 1.0: U.S. Geological Survey Software Release, https://doi.org/10.5066/P9K2IQ6Y
+Boyce, S.E., 2022, Batteries Included Fortran Library (BiF-lib), version 1.1: U.S. Geological Survey Software Release, https://doi.org/10.5066/P9K2IQ6Y
 
 
 
@@ -52,7 +52,7 @@ Part of these utilities were developed for the following project:
 
 When appropriate, the source files include references to the algorithms used in the code. 
 
-This section highlights important publications that used in this library.
+This section highlights important publications that are used in this library.
 
 
 
@@ -140,7 +140,7 @@ For more information on markdown viewers, please read the [readme.txt](./readme.
 
 Standard Fortran provides limited data type, function, and subroutine support leaving the developer to write custom code for every project. This has lead to every developer having their own internal, homemade, Fortran library for doing common operations. In recognition of this, most newer programming languages incorporate a large set of standard data types and functions that the developer can use and reference. For example, the Python language developers called it a "Batteries Included" language because the python standard library includes advanced data types, including sets, lists, and dictionaries (hash tables) and common functions, such as random number generation and fast sorting of data. This Fortran library seeks to emulate many of the advanced features that are a standard part of newer programming languages--hence its name Batteries Included Fortran (BiF). As of now, it is not a complete standard library, but includes many valuable routines for assisting in developing code for numerical models.
 
-The BiF source code is broken into a series of files, each containing a module with a specific theme. That theme is either to provide a generic function interface to a series of routines or data type design (fortran object). An example of an interface is the `NUM2STR` function that converts a base type into as string and is interafaced to the functions hidden functions `INT2STR`, `INTVEC2STR`, `DBLE2STR`, `DBLVEC2STR`, `DBLE2STRDIG`, `DBLEPAD2STR`, , `REAL2STR` , and `TF2STR`. An example of a data type design is the `DATE_OPERATOR` type, which can store time and date information and has a set of functions (methods) attached to the type that allow for common date, time, and calendar operations.
+The BiF source code is broken into a series of files, each containing a module with a specific theme. That theme is either to provide a generic function interface to a series of routines or data type design (fortran object). An example of an interface is the `NUM2STR` function that converts a Fortran base type into as string and is interfaced to the a set of hidden functions, that includes `INT32_2STR`, `INT32_VEC2STR`, `INT64_2STR`, `INT64_VEC2STR`, `REL64_2STR`, `INT64_VEC2STR`, `TF_2STR_FMT`, and others.  An example of a data type design is the `DATE_OPERATOR` type, which can store time and date information and has a set of functions (methods) attached to the type that allow for common date, time, and calendar operations.
 
 To make the source code, and the modules they contain, easier to understand the majority of the names are appended with::
 
@@ -191,6 +191,7 @@ The dependency **order** is set up such that a file with a higher dependency req
 | io                   | generic_open_interface.fpp                       | Specifies options to open a file. Requires Fortran Pre-Processing. |   3   |
 | io                   | generic_output_file_instruction.f90              | Open a WRITE-only file based on keywords.                    |   6   |
 | io                   | post_key_sub.f90                                 | Parse string to get specified post-keywords for file-io <br />Used by GenericInput and GenericOut |   2   |
+| io                   | write_array_interface.f90                        | Write a 1D or 2D array to a file.                            |   2   |
 | math_numbers         | descriptive_statistics.f90                       | Provides an routines for calculating basic descriptive statistics (eg mean, variance, etc).<br />Includes a data type for online estimation of the descriptive statistics |   1   |
 | math_numbers         | EquationParser.f90                               | Parse string to solve an equation for a given variable set.  |   3   |
 | math_numbers         | hexadecimal_instruction.f90                      | Provides hexadecimal structure with basic operations, such as addition   and conversion to Unicode point. |   1   |
@@ -1295,6 +1296,16 @@ Not really dependencies, but rather it contains interfaces that describe module 
 ------
 
 
+
+### write_array_interface.f90
+
+| Dep  | write_array_interface.f90 |
+| :--: | ------------------------- |
+|  1   | num2str_interface.f90     |
+
+
+
+------
 
 
 ### xy_grid_coordinate_interface.f90
