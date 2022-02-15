@@ -616,8 +616,8 @@ MODULE DESCRIPTIVE_STATISTICS
   !~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~
   !
   PURE SUBROUTINE MERGE_OUT_SG_qp(st, st1, st2)
-    CLASS(ONLINE_STATS), intent(out):: st
-    CLASS(ONLINE_STATS), intent(in ):: st1, st2
+    CLASS(ONLINE_STATS), intent(inout):: st
+    CLASS(ONLINE_STATS), intent(in   ):: st1, st2
     REAL(qp), dimension(4):: M
     REAL(qp):: N, N1, N2, dif
     !
