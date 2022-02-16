@@ -1,13 +1,13 @@
 [
   {
-    "version": "1.1.0",
-    "status": "Production",
+    "version": "1.2.0a",
+    "status": "Preliminary",
 
     "date": {
-      "metadataLastUpdated": "2022-02-13"
+      "metadataLastUpdated": "2022-02-15"
     },
 
-    "downloadURL":   "https://code.usgs.gov/fortran/bif/-/archive/main/bif-1.1.0.zip",
+    "downloadURL":   "https://code.usgs.gov/fortran/bif/-/archive/main/bif-main.zip",
     "disclaimerURL": "https://code.usgs.gov/fortran/bif/-/raw/main/DISCLAIMER.md",
 
     "contact": {

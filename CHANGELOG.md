@@ -32,6 +32,48 @@ Boyce, S.E., Hanson, R.T., Ferguson, I., Schmid, W., Henson, W., Reimann, T., Me
 
 ------
 
+&nbsp; 
+
+## 1.2.0
+
+TBA
+
+Header TBA  
+Header TBA  
+
+#### Features
+
+- TBA
+
+&nbsp; 
+
+#### Bug Fixes
+
+- `src/math_numbers/descriptive_statistics.f90`
+
+- `src/math_numbers/descriptive_statistics.f90`   
+  changed the intent for the `online_stats%merge` routine from `intent(in)` to `intent(inout)`
+
+  - This routine was generic for `MERGE_OUT_SG_qp(st, st1, st2)` and changed:   
+    ``` fortran
+    SUBROUTINE MERGE_OUT_SG_qp(st, st1, st2)
+      CLASS(ONLINE_STATS), intent(in):: st
+    ```
+    to   
+    ``` fortran
+    SUBROUTINE MERGE_OUT_SG_qp(st, st1, st2)
+      CLASS(ONLINE_STATS), intent(inout):: st
+    ```
+
+&nbsp; 
+
+#### Refactoring
+
+- TBA
+
+&nbsp; 
+
+------
 
 ## 1.1.0
 
@@ -124,7 +166,6 @@ This also includes a substantial improvement to the `NUM2STR_INTERFACE` module.
       If present, and true, then the file that is opened is not closed when the routine exits. The unit number 
 
 
-
 * `src/system/path_interface.f90` function `IS_WINDOWS()` is optimized to store the if the OS is Windows or not with the SAVE attribute. This makes it so that the `OS` environmental variable is checked once. Previously, each time the function was called would query the operating system environmental variable. A new option, `always_check` is added to force the query the operating system environmental variable even if it has already been set.
 
 - `src/types_and_containers/array_data_types_instruction.f90` subroutine `SET_ID_VAL_TYPE_POS(TYP, POS, ID, VAL, INUL, NUL)` added the optional parameters `INUL` and `NUL`.
@@ -143,8 +184,8 @@ This also includes a substantial improvement to the `NUM2STR_INTERFACE` module.
     and given a `lloc=6` (before the `./`) would set `line(istart:istop)` to:  
     `./output/results.txt  BUF 64  SPLIT 1024`  
     and set `lloc=47`, which is just before the `6 8`
-  
-  
+
+&nbsp; 
 
 #### Bug Fixes
 
@@ -153,6 +194,9 @@ This also includes a substantial improvement to the `NUM2STR_INTERFACE` module.
   - To fix this, the number must be written as `1.e5` 
 - `src/math_numbers/random_routines_interface.f90` fixed spelling errors.
 
+&nbsp; 
+
+------
 
 ## 1.0.2
 
@@ -183,12 +227,15 @@ Minor release
     `./output/results.txt  BUF 64  SPLIT 1024`  
     and set `lloc=47`, which is just before the `6 8`
 
-  
+&nbsp; 
 
 #### Bug Fixes
 
 - `src/error/error_interface.f90` minor spelling corrections.
 
+&nbsp; 
+
+------
 
 ## 1.0.1
 
@@ -201,7 +248,7 @@ Minor release
 - `src/io/post_key_sub.f90`  routine `check_for_post_key` added the optional logical input `only_check`  
   If present and true, then only moves LLOC past the post-keywords and does not process them.
 
-  
+&nbsp; 
 
 #### Bug Fixes
 
@@ -218,7 +265,7 @@ Minor release
   
 - `src/datetime/date_operator_instruction.f90` fixed format error for `date_operator%str_dyear()`
 
-  
+&nbsp; 
 
 #### Refactoring
 
@@ -229,6 +276,9 @@ Minor refactoring that converted `.NE.` to `/=` and indentation for:
 - `src/math_numbers/EquationParser.f90` 
 * `src/strings/parse_word_interface.f90`
 
+&nbsp; 
+
+------
 
 ## 1.0.0
 
