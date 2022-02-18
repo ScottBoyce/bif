@@ -43,7 +43,9 @@ Header TBA
 
 #### Features
 
-- TBA
+- `src/io/file_io_interface.f90` data type `UNIT_ARRAY_BUILDER` added the `PRINT_STR()` type bound routine.
+  - This routine is identical to `UNIT_ARRAY_BUILDER%PRINT(IOUT)`, except that it returns a `character(*)` rather than writing to a file.
+
 
 &nbsp; 
 
@@ -69,7 +71,7 @@ Header TBA
 
 #### Refactoring
 
-- TBA
+- `src/strings/parse_word_interface.f90` replaced `" "` with the `CONSTANT` module parameter `BLNK`
 
 &nbsp; 
 

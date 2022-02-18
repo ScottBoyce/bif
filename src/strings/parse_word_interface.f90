@@ -20,15 +20,22 @@
 !                                    RET_WORD(LN,[LOC,COM_STOP,NO_UPCASE]) RESULT(WORD)
 !                                    RET_WORD(N,LN,[COM_STOP,NO_UPCASE])   RESULT(WORD)
 !
+!--------------------------------------------------------------------------------------------------------
+!
+! Warning GET_WORD is also defined in MODULE STRINGS.
+!    Make sure not to double import the same routine.
+!
+!--------------------------------------------------------------------------------------------------------
 !
 MODULE PARSE_WORD_INTERFACE!, ONLY: PARSE_WORD, PARSE_WORD_UP, FIND_NONBLANK
   IMPLICIT NONE
   PRIVATE
   PUBLIC:: PARSE_WORD, PARSE_WORD_UP, FIND_NONBLANK
   PUBLIC:: GET_WORD, RET_WORD
-  ! -------
-  ! Caution with using GET_WORD as it is also defined in UTIL_INTERFACE - Just dont double import the subroutine through USE statments
-  ! -------
+  !
+  !---------------------------------------------------------------------------------------------------------------------
+  ! Caution with using GET_WORD as it is also defined in STRINGS - Just dont double import the subroutine through USE statments
+  !
   INTERFACE GET_WORD
     MODULE PROCEDURE GET_WORD_ASSUM        !GET_WORD(WORD,LN,LOC,         [OLD_LOC],[COM_STOP],[NO_UPCASE])
     MODULE PROCEDURE GET_WORD_ALLOC        !GET_WORD(WORD,LN,LOC,IS_ALLOC,[OLD_LOC],[COM_STOP],[NO_UPCASE])
@@ -43,6 +50,7 @@ MODULE PARSE_WORD_INTERFACE!, ONLY: PARSE_WORD, PARSE_WORD_UP, FIND_NONBLANK
   !
   ! Constants used internally to module ----------------------------------------------------
   !
+  CHARACTER,    PARAMETER:: BLNK = " "
   CHARACTER,    PARAMETER:: TAB = ACHAR(9)
   CHARACTER(*), PARAMETER:: lowerCHAR="abcdefghijklmnopqrstuvwxyz"
   CHARACTER(*), PARAMETER:: upperCHAR="ABCDEFGHIJKLMNOPQRSTUVWXYZ"
@@ -79,7 +87,7 @@ MODULE PARSE_WORD_INTERFACE!, ONLY: PARSE_WORD, PARSE_WORD_UP, FIND_NONBLANK
   !
   !#########################################################################################################################
   !
-  PURE SUBROUTINE PARSE_WORD(LN, LOC, ISTART, ISTOP, COM_STOP, FIND_NEXT, OLD_LOC, EOL)!SIMPLE_WORD_PARSE
+  PURE SUBROUTINE PARSE_WORD(LN, LOC, ISTART, ISTOP, COM_STOP, FIND_NEXT, OLD_LOC, EOL)
     ! ASSUMES COMPILER CAN HANDEL LN(I:I-1) AND SETS IT TO BLANK STRING
     CHARACTER(*),      INTENT(IN   ):: LN
     INTEGER,           INTENT(INOUT):: LOC,ISTART,ISTOP
@@ -277,7 +285,7 @@ MODULE PARSE_WORD_INTERFACE!, ONLY: PARSE_WORD, PARSE_WORD_UP, FIND_NONBLANK
                                 CALL UPPER(WORD)
         END IF
     ELSE
-        WORD = ' '
+        WORD = BLNK
     END IF
     !
     IF(PRESENT(OLD_LOC)) OLD_LOC = LOC0  !HAS TO BE AT END BECAUSE LOC COULD BE ALSO PASSED IN AS OLD_LOC
@@ -318,7 +326,7 @@ MODULE PARSE_WORD_INTERFACE!, ONLY: PARSE_WORD, PARSE_WORD_UP, FIND_NONBLANK
            IF(ALLOCATED(WORD)) DEALLOCATE(WORD)
            ALLOCATE(WORD, SOURCE=' ')
         ELSE
-            WORD=' '
+            WORD = BLNK
         END IF
     END IF
     !
@@ -351,7 +359,7 @@ MODULE PARSE_WORD_INTERFACE!, ONLY: PARSE_WORD, PARSE_WORD_UP, FIND_NONBLANK
                                 CALL UPPER(WORD)
         END IF
     ELSE
-        WORD = ' '
+        WORD = BLNK
     END IF
     !
     IF(PRESENT(OLD_LOC)) OLD_LOC = LOC0  !HAS TO BE AT END BECAUSE LOC COULD BE ALSO PASSED IN AS OLD_LOC
@@ -393,7 +401,7 @@ MODULE PARSE_WORD_INTERFACE!, ONLY: PARSE_WORD, PARSE_WORD_UP, FIND_NONBLANK
            IF(ALLOCATED(WORD)) DEALLOCATE(WORD)
            ALLOCATE(WORD, SOURCE=' ')
         ELSE
-            WORD=' '
+            WORD = BLNK
         END IF
     END IF
     !
