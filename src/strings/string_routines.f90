@@ -9,7 +9,7 @@
 !                                    GET                   -> Wrapper for all other GET routines
 !                                    GET_NUMBER
 !                                    GET_INTEGER
-!                                    GET_WORD or RET_WORD
+!                                    GET_WORD
 !                                    GET_DATE
 !                                    GET_DOUBLE_DATE
 !                                    GET_REAL_DATE
@@ -28,14 +28,16 @@
 !                                    FPOST_CHECK_WORD   (WORD,POST)
 !                                    FPRE_CHECK_WORD    (WORD,PRE)
 !
+!--------------------------------------------------------------------------------------------------------
 !
+! Warning GET_WORD is also defined in MODULE PARSE_WORD_INTERFACE.
+!    Make sure not to double import the same routine.
 !
-!
+!--------------------------------------------------------------------------------------------------------
 !
 MODULE STRINGS
   !
   USE CONSTANTS,                 ONLY: Z, ONE, TWO, inf_I, inf_R, ninf_R, DNEG, DZ, UNO, INF, NINF, BLNK, NL, BLN, TAB, LF, CR, lowerCHAR, upperCHAR, TRUE, FALSE
-  USE PARSE_WORD_INTERFACE,      ONLY: PARSE_WORD
   USE DATE_OPERATOR_INSTRUCTION, ONLY: DATE_OPERATOR
   USE NUM2STR_INTERFACE,         ONLY: NUM2STR
   USE ERROR_INTERFACE,           ONLY: STOP_ERROR, WARNING_MESSAGE
@@ -1370,9 +1372,91 @@ MODULE STRINGS
   !@@@@@@@@@@@@@@@@@@@@@@@@@@@@@@@@@@@@@@@@@@@@@@@@@@@@@@@@@@@@@@@@@@@@@@@@@@@@@@@@@@@@@@@@@@@@@@@@@@@@@@@@@@@@@@@@@@@@@@@@@
   !@@@@@@@@@@@@@@@@@@@@@@@@@@@@@@@@@@@@@@@@@@@@@@@@@@@@@@@@@@@@@@@@@@@@@@@@@@@@@@@@@@@@@@@@@@@@@@@@@@@@@@@@@@@@@@@@@@@@@@@@@
   !
-  !  Get Word Routines - Note these are cloned from PARSE_WORD_INTERFACE to coerse function inlining within this module
+  !  Parse and Get Word Routines - Note these are cloned from PARSE_WORD_INTERFACE to coerse function inlining within this module
   !
-  SUBROUTINE GET_WORD_ASSUM(WORD,LN,LOC,OLD_LOC,COM_STOP,NO_UPCASE)  ! SETS WORD TO PARSED WORD, SETS IT TO "" IF END OF LINE OR NO WORD PARSED
+  PURE SUBROUTINE PARSE_WORD(LN, LOC, ISTART, ISTOP, COM_STOP, FIND_NEXT, OLD_LOC, EOL)
+    ! ASSUMES COMPILER CAN HANDEL LN(I:I-1) AND SETS IT TO BLANK STRING
+    CHARACTER(*),      INTENT(IN   ):: LN
+    INTEGER,           INTENT(INOUT):: LOC,ISTART,ISTOP
+    LOGICAL, OPTIONAL, INTENT(IN   ):: COM_STOP, FIND_NEXT
+    INTEGER, OPTIONAL, INTENT(INOUT):: OLD_LOC           !RETURN ORIGINAL LOC LOCATION
+    LOGICAL, OPTIONAL, INTENT(  OUT):: EOL
+    INTEGER:: LINE_LEN, LINE_TRIM, LOC0
+    !
+    LOC0 = LEN_TRIM(LN)        !Temp use in case of COM_STOP
+    !
+    LINE_TRIM= LOC0 + 1
+    !
+    IF(PRESENT(COM_STOP)) THEN
+            IF(COM_STOP .AND. LOC0 > 0) THEN
+                     !
+                     LINE_LEN=INDEX(LN(:LOC0),'#')     !TMP VAR TO HOLD # POSITION
+                  IF(LINE_LEN > 0) LINE_TRIM=LINE_LEN  !FOUND  # UPDATE LINE_TRIM TO BE ITS LENGTH
+            END IF
+    END IF
+    !
+    LOC0 = LOC  !Make backup of Loc
+    !
+    DO WHILE( LOC < LINE_TRIM )
+                              IF(LN(LOC:LOC).NE.TAB .AND. LN(LOC:LOC).NE.' ' .AND. LN(LOC:LOC).NE.',') EXIT
+                              LOC = LOC+1
+    END DO
+    !
+    IF( LOC >= LINE_TRIM ) THEN
+               LINE_LEN = LEN(LN)
+        LOC   =LINE_LEN+1
+        ISTART=LINE_LEN
+        ISTOP =LINE_LEN-1
+        IF(PRESENT(EOL)) EOL = .TRUE.
+    ELSE
+        IF(LN(LOC:LOC)=='"') THEN
+                                LOC = LOC+1
+                                ISTART = LOC
+                                DO WHILE( LOC < LINE_TRIM )
+                                    IF( LN(LOC:LOC) == '"' ) EXIT
+                                    LOC = LOC+1
+                                END DO
+                                ISTOP = LOC-1
+                                LOC = LOC+1
+        ELSEIF(LN(LOC:LOC)=="'") THEN
+                                LOC = LOC+1
+                                ISTART = LOC
+                                DO WHILE( LOC < LINE_TRIM )
+                                    IF( LN(LOC:LOC) == "'" ) EXIT
+                                    LOC = LOC+1
+                                END DO
+                                ISTOP = LOC-1
+                                LOC = LOC+1
+        ELSE
+                                ISTART = LOC
+                                LOC = LOC+1
+                                DO WHILE( LOC < LINE_TRIM )
+                                    IF( LN(LOC:LOC)==TAB .OR. LN(LOC:LOC)==' ' .OR. LN(LOC:LOC)==',') EXIT
+                                    LOC = LOC+1
+                                END DO
+                                ISTOP = LOC-1
+                                IF(ISTOP<ISTART) ISTOP=ISTART
+        END IF
+        !
+        IF(PRESENT(FIND_NEXT)) THEN  !LOC MOVE TO NEXT WORD
+        IF        (FIND_NEXT)  THEN
+                                   DO WHILE( LOC < LINE_TRIM )
+                                                             IF(LN(LOC:LOC).NE.TAB .AND. LN(LOC:LOC).NE.' ' .AND. LN(LOC:LOC).NE.',') EXIT
+                                                             LOC = LOC+1
+                                   END DO
+        END IF
+        END IF
+        !
+        IF(PRESENT(EOL)) EOL = .FALSE.
+    END IF
+    !
+    IF(PRESENT(OLD_LOC)) OLD_LOC = LOC0
+    !
+  END SUBROUTINE
+  !
+  !#############################################################################################################################################################
+  !
+  PURE SUBROUTINE GET_WORD_ASSUM(WORD,LN,LOC,OLD_LOC,COM_STOP,NO_UPCASE)  ! SETS WORD TO PARSED WORD, SETS IT TO "" IF END OF LINE OR NO WORD PARSED
     CHARACTER(*),           INTENT(IN   ):: LN                ! LINE TO PARSE WORD FROM
     INTEGER,                INTENT(INOUT):: LOC               ! LOC => STARTING LOCATION TO FIND WORD
     CHARACTER(*),           INTENT(  OUT):: WORD              ! RETURN WORD
@@ -1384,7 +1468,7 @@ MODULE STRINGS
     LOC0=LOC
     CALL PARSE_WORD(LN,LOC,ISTART,ISTOP,COM_STOP)
     !
-    IF(ISTART.LE.ISTOP) THEN
+    IF(ISTART <= ISTOP) THEN
         !
         WORD = LN(ISTART:ISTOP)
         !
@@ -1403,7 +1487,7 @@ MODULE STRINGS
   !
   !#############################################################################################################################################################
   !
-  SUBROUTINE GET_WORD_ALLOC(WORD,LN,LOC,IS_ALLOC,OLD_LOC,COM_STOP,NO_UPCASE)  ! SETS WORD TO PARSED WORD, SETS IT TO "" IF END OF LINE OR NO WORD PARSED
+  PURE SUBROUTINE GET_WORD_ALLOC(WORD,LN,LOC,IS_ALLOC,OLD_LOC,COM_STOP,NO_UPCASE)  ! SETS WORD TO PARSED WORD, SETS IT TO "" IF END OF LINE OR NO WORD PARSED
     CHARACTER(*),             INTENT(IN   ):: LN                ! LINE TO PARSE WORD FROM
     INTEGER,                  INTENT(INOUT):: LOC               ! LOC => STARTING LOCATION TO FIND WORD
     CHARACTER(:),ALLOCATABLE, INTENT(INOUT):: WORD              ! RETURN WORD
@@ -1416,7 +1500,7 @@ MODULE STRINGS
     LOC0=LOC
     CALL PARSE_WORD(LN,LOC,ISTART,ISTOP,COM_STOP)
     !
-    IF(ISTART.LE.ISTOP) THEN
+    IF(ISTART <= ISTOP) THEN
         !
         IF(IS_ALLOC) THEN
            IF(ALLOCATED(WORD)) DEALLOCATE(WORD)
@@ -1435,7 +1519,7 @@ MODULE STRINGS
            IF(ALLOCATED(WORD)) DEALLOCATE(WORD)
            ALLOCATE(WORD, SOURCE=BLNK)
         ELSE
-            WORD=BLNK
+            WORD = BLNK
         END IF
     END IF
     !
@@ -1445,7 +1529,7 @@ MODULE STRINGS
   !
   !#############################################################################################################################################################
   !
-  SUBROUTINE GET_WORD_ASSUM_ISTART(LN,LOC,ISTART,ISTOP,WORD,OLD_LOC,COM_STOP,NO_UPCASE)  ! SETS WORD TO PARSED WORD, SETS IT TO "" IF END OF LINE OR NO WORD PARSED
+  PURE SUBROUTINE GET_WORD_ASSUM_ISTART(LN,LOC,ISTART,ISTOP,WORD,OLD_LOC,COM_STOP,NO_UPCASE)  ! SETS WORD TO PARSED WORD, SETS IT TO "" IF END OF LINE OR NO WORD PARSED
     CHARACTER(*),           INTENT(IN   ):: LN                ! LINE TO PARSE WORD FROM
     INTEGER,                INTENT(INOUT):: LOC               ! LOC => STARTING LOCATION TO FIND WORD
     INTEGER,                INTENT(INOUT):: ISTART,ISTOP
@@ -1458,7 +1542,7 @@ MODULE STRINGS
     LOC0=LOC
     CALL PARSE_WORD(LN,LOC,ISTART,ISTOP,COM_STOP)
     !
-    IF(ISTART.LE.ISTOP) THEN
+    IF(ISTART <= ISTOP) THEN
         !
         WORD = LN(ISTART:ISTOP)
         !
@@ -1477,7 +1561,7 @@ MODULE STRINGS
   !
   !#############################################################################################################################################################
   !
-  SUBROUTINE GET_WORD_ALLOC_ISTART(LN,LOC,ISTART,ISTOP,WORD,IS_ALLOC,OLD_LOC,COM_STOP,NO_UPCASE)  ! SETS WORD TO PARSED WORD, SETS IT TO "" IF END OF LINE OR NO WORD PARSED
+  PURE SUBROUTINE GET_WORD_ALLOC_ISTART(LN,LOC,ISTART,ISTOP,WORD,IS_ALLOC,OLD_LOC,COM_STOP,NO_UPCASE)  ! SETS WORD TO PARSED WORD, SETS IT TO "" IF END OF LINE OR NO WORD PARSED
     CHARACTER(*),             INTENT(IN   ):: LN                ! LINE TO PARSE WORD FROM
     INTEGER,                  INTENT(INOUT):: LOC               ! LOC => STARTING LOCATION TO FIND WORD
     INTEGER,                  INTENT(INOUT):: ISTART,ISTOP
@@ -1491,7 +1575,7 @@ MODULE STRINGS
     LOC0=LOC
     CALL PARSE_WORD(LN,LOC,ISTART,ISTOP,COM_STOP)
     !
-    IF(ISTART.LE.ISTOP) THEN
+    IF(ISTART <= ISTOP) THEN
         !
         IF(IS_ALLOC) THEN
            IF(ALLOCATED(WORD)) DEALLOCATE(WORD)
@@ -1510,7 +1594,7 @@ MODULE STRINGS
            IF(ALLOCATED(WORD)) DEALLOCATE(WORD)
            ALLOCATE(WORD, SOURCE=BLNK)
         ELSE
-            WORD=BLNK
+            WORD = BLNK
         END IF
     END IF
     !
