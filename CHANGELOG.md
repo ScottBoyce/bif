@@ -43,6 +43,18 @@ Header TBA
 
 #### Features
 
+- `src/system/path_interface.f90` added `FUNCTION GET_CWD()` and `SUBROUTINE SET_TO_CWD(CWD, LENGTH)`
+  - `GET_CWD` returns the current working directory.
+  - `SET_TO_CWD` sets the variable `CHARACTER(*):: CWD` to the current working directory and optional integer variable, `LENGTH`, as the size of the character array. 
+    - Pretty much this routine just does `CWD = GET_CWD()` and `LENGTH = LEN(GET_CWD())`
+    - Note it is possible to have, `LENGTH > LEN(CWD)`, that case `CWD` does not hold the entire path.
+- `src/io/generic_open_interface.fpp` subroutine `GENERIC_OPEN() ` added the optional argument `POSITION`
+  - All Fortran `OPEN(POSITION=)` strings are accepted.  
+    However it is recommended to only use:
+    - `POSITION="APPEND"`
+    - `POSITION="ASIS"`
+    - `POSITION="REWIND"`
+  - If not specified, then it is set to `POSITION="REWIND"`.
 - `src/io/file_io_interface.f90` data type `UNIT_ARRAY_BUILDER` added the `PRINT_STR()` type bound routine.
   - This routine is identical to `UNIT_ARRAY_BUILDER%PRINT(IOUT)`, except that it returns a `character(*)` rather than writing to a file.
 
@@ -72,6 +84,8 @@ Header TBA
 #### Refactoring
 
 - `src/strings/parse_word_interface.f90` replaced `" "` with the `CONSTANT` module parameter `BLNK`
+
+- ``src/strings/string_routines.f90` embedded the `PARSE_WORD` subroutine to increase the likelihood that the compiler will inline it for faster execution. This also removes the dependency on the `PARSE_WORD_INTERFACE` module.
 
 &nbsp; 
 

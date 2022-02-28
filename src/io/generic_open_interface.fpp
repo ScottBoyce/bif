@@ -72,8 +72,8 @@
       END SUBROUTINE
       !
       RECURSIVE SUBROUTINE GENERIC_OPEN(FNAME, IU, IOUT, ACTION, FORM,
-     +                        ACCESS, STATUS, RECORDTYPE, ASYNC, 
-     +                        BUFFER_BLOCKSIZE, BUFFER_COUNT, 
+     +                        ACCESS, STATUS, POSITION, RECORDTYPE,
+     +                        ASYNC, BUFFER_BLOCKSIZE, BUFFER_COUNT, 
      +                        LINE, INFILE, ERROR, IS_BOM, WARN, 
      +                        NO_FIX_DIR)
         CHARACTER(*),           INTENT(IN   ):: FNAME
@@ -83,6 +83,7 @@
         CHARACTER(*), OPTIONAL, INTENT(IN   ):: FORM             ! Set to 'FORMATTED' or 'UNFORMATTED'
         CHARACTER(*), OPTIONAL, INTENT(IN   ):: ACCESS           ! Set to 'SEQUENTIAL' or 'STREAM'
         CHARACTER(*), OPTIONAL, INTENT(IN   ):: STATUS           ! Set to 'OLD', 'NEW', 'REPLACE', 'SCRATCH'
+        CHARACTER(*), OPTIONAL, INTENT(IN   ):: POSITION         ! Set to 'ASIS', 'REWIND', 'APPEND'
         CHARACTER(*), OPTIONAL, INTENT(IN   ):: RECORDTYPE       ! Set to 'STREAM', 'STREAM_LF', 'STREAM_CRLF'
         INTEGER,      OPTIONAL, INTENT(IN   ):: BUFFER_BLOCKSIZE ! Set to 1048576 for file buffering  (size in bytes of buffer)
         INTEGER,      OPTIONAL, INTENT(IN   ):: BUFFER_COUNT     ! Set to 2 for file buffering (threads of buffer)
@@ -94,7 +95,8 @@
         INTEGER,      OPTIONAL, INTENT(IN   ):: WARN             ! Warning File to write errors too, set to 0 to not use. If not present and global variable WARN_IU is set than writes errors/warnings to that
         LOGICAL,      OPTIONAL, INTENT(IN   ):: NO_FIX_DIR       ! If present, disables a recursive call to GENERIC_OPEN in an attempt to fix missing directories in the path
         !
-        CHARACTER(:),ALLOCATABLE:: FMTARG, ACCARG, FILSTAT, FILACT, ASYN
+        CHARACTER(:),ALLOCATABLE:: FMTARG, ACCARG, POSARG
+        CHARACTER(:),ALLOCATABLE:: FILSTAT, FILACT, ASYN
         CHARACTER(:),ALLOCATABLE:: ERRMSG, IN_FILE_NAM, RECTYP
         CHARACTER:: NL
         CHARACTER(3 ):: BUF 
@@ -124,6 +126,12 @@
             ACCARG=ACCESS
         ELSE
             ACCARG='SEQUENTIAL'
+        END IF
+        !
+        IF(PRESENT(POSITION)) THEN
+            POSARG=POSITION
+        ELSE
+            POSARG='REWIND'
         END IF
         !
         IF(PRESENT(STATUS)) THEN
@@ -178,20 +186,20 @@
           IF (FILACT == 'WRITE' .OR. PRESENT(RECORDTYPE)) THEN
               !
               OPEN(NEWUNIT=IU, FILE=FNAME, ACTION=FILACT, FORM=FMTARG, 
-     +             ACCESS=ACCARG, STATUS=FILSTAT, POSITION='REWIND', 
+     +             ACCESS=ACCARG, STATUS=FILSTAT, POSITION=POSARG, 
      +             IOSTAT=IERR, ASYNCHRONOUS=ASYN,
      +             BUFFERED=BUF, BLOCKSIZE=BUFFER, BUFFERCOUNT=BC,
      +             RECORDTYPE=RECTYP)
           ELSE
               OPEN(NEWUNIT=IU, FILE=FNAME, ACTION=FILACT, FORM=FMTARG, 
-     +             ACCESS=ACCARG, STATUS=FILSTAT, POSITION='REWIND', 
+     +             ACCESS=ACCARG, STATUS=FILSTAT, POSITION=POSARG, 
      +             IOSTAT=IERR, ASYNCHRONOUS=ASYN,
      +             BUFFERED=BUF, BLOCKSIZE=BUFFER, BUFFERCOUNT=BC)
           END IF
           !----------------------------------------------------------------------------
 #else       
              OPEN(NEWUNIT=IU, FILE=FNAME, ACTION=FILACT, FORM=FMTARG, 
-     +            ACCESS=ACCARG, STATUS=FILSTAT, POSITION='REWIND', 
+     +            ACCESS=ACCARG, STATUS=FILSTAT, POSITION=POSARG, 
      +            IOSTAT=IERR, ASYNCHRONOUS=ASYN)
 #endif 
              !---------------------------------------------------------------------------------------------------------
@@ -201,20 +209,20 @@
           IF (FILACT == 'WRITE' .OR. PRESENT(RECORDTYPE)) THEN
               !
               OPEN(   UNIT=IU, FILE=FNAME, ACTION=FILACT, FORM=FMTARG, 
-     +             ACCESS=ACCARG, STATUS=FILSTAT, POSITION='REWIND', 
+     +             ACCESS=ACCARG, STATUS=FILSTAT, POSITION=POSARG, 
      +             IOSTAT=IERR, ASYNCHRONOUS=ASYN,
      +             BUFFERED=BUF, BLOCKSIZE=BUFFER, BUFFERCOUNT=BC,
      +             RECORDTYPE=RECTYP)
           ELSE
               OPEN(   UNIT=IU, FILE=FNAME, ACTION=FILACT, FORM=FMTARG, 
-     +             ACCESS=ACCARG, STATUS=FILSTAT, POSITION='REWIND', 
+     +             ACCESS=ACCARG, STATUS=FILSTAT, POSITION=POSARG, 
      +             IOSTAT=IERR, ASYNCHRONOUS=ASYN,
      +             BUFFERED=BUF, BLOCKSIZE=BUFFER, BUFFERCOUNT=BC)
           END IF
           !----------------------------------------------------------------------------
 #else       
              OPEN(   UNIT=IU, FILE=FNAME, ACTION=FILACT, FORM=FMTARG, 
-     +            ACCESS=ACCARG, STATUS=FILSTAT, POSITION='REWIND', 
+     +            ACCESS=ACCARG, STATUS=FILSTAT, POSITION=POSARG, 
      +            IOSTAT=IERR, ASYNCHRONOUS=ASYN)
 #endif 
           !----------------------------------------------------------------------------
@@ -240,8 +248,8 @@
             CALL MAKE_DIRECTORY(FNAME, HAS_FILE=TRUE, FIXED=IN_FILE_NAM)
                !
                CALL GENERIC_OPEN(IN_FILE_NAM, IU, IOUT, ACTION, FORM,
-     +                          ACCESS, STATUS, RECORDTYPE, ASYNC, 
-     +                          BUFFER_BLOCKSIZE, BUFFER_COUNT, 
+     +                          ACCESS, STATUS, POSITION, RECORDTYPE,
+     +                          ASYNC, BUFFER_BLOCKSIZE, BUFFER_COUNT, 
      +                          ERROR=CHECK, NO_FIX_DIR=TRUE)
                !
                IF(.NOT. CHECK) IERR = 0 ! File sucessfully opened with directory fix
@@ -291,12 +299,12 @@
            !
            IF(PRESENT(WARN)) THEN
                  IF(WARN /= 0) WRITE(WARN,'(// 27x,A,//A)') 
-     +                                         'ONE-WATER ERROR',ERRMSG
+     +                                         'FATAL ERROR',ERRMSG
            ELSEIF(WARN_IU /= 0) THEN
                  IF(WARN_IU /= 0) WRITE(WARN_IU,'(// 27x,A,//A)') 
-     +                                         'ONE-WATER ERROR',ERRMSG
+     +                                         'FATAL ERROR',ERRMSG
            END IF
-           ERRMSG=NL//NL//'  ONE-WATER ERROR'//ERRMSG
+           ERRMSG=NL//NL//'  FATAL ERROR'//ERRMSG
            IF(IO /= 0) WRITE(IO,'(A)')ERRMSG
            WRITE(*,'(A)')ERRMSG
            ERROR STOP
