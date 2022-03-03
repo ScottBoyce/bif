@@ -11,7 +11,7 @@
 ! The only public routines are NEXT_UTF8, getUTF8, and UTF8_TO_INT
 !
 !   Unicode points are characters that are beyond the ASCII 0-127 code points
-!   For this to happen, a unicode point can occupy 1 to 4 bytes. (CHARACTER(1:4)
+!   For this to happen, a unicode point can occupy 1 to 4 bytes.
 !   One byte is represented by CHARACTER(1)
 !
 !   So a single Unicode point can be:

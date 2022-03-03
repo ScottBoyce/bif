@@ -32,7 +32,7 @@ MODULE CONSTANTS !, ONLY:BLNK,NL,TAB,COM,Z,ONE,TWO,THREE,FOUR,FIVE,TEN,DZ,UNO,DO
   LOGICAL, PARAMETER:: TRUE       = .TRUE.
   LOGICAL, PARAMETER:: FALSE      = .FALSE.
   !        
-  LOGICAL, PARAMETER::    Big_Endian = IACHAR( TRANSFER( 1_i16, ' ' ) ) == 0 ! Transfer b' 00000000 00000001' to CHAR(1), which will drop either then 1st or 2nd byte. If 1st byte is kept, then CPU is Big-Endian
+  LOGICAL, PARAMETER::    Big_Endian = IACHAR( TRANSFER( 1_i16, ' ' ) ) == 0 ! Transfer b'00000000 00000001' to CHAR(1), which will drop either then 1st or 2nd byte. If 1st byte is kept, then CPU is Big-Endian
   LOGICAL, PARAMETER:: Little_Endian = .NOT. Big_Endian                      !   Note Itel/AMD x86 CPUs are Little-Endian
   !
   !---------------------------------------------------------------------------------------------------
