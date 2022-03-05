@@ -239,9 +239,9 @@ MODULE CALENDAR_FUNCTIONS
     !
     ZERO_YEAR = YEAR == Z
     !
-    LEAPYEAR = LEAP_CHECK(YEAR, LEAP)
-    !
     DO
+       LEAPYEAR = LEAP_CHECK(YEAR, LEAP) ! TODO check what happens if JDN_IN >> 366
+       !
        IF     ( DOY > 366 .AND.      LEAPYEAR ) THEN
                                                             DOY  = DOY - 366
                                                             YEAR = YEAR + 1
