@@ -260,13 +260,13 @@ MODULE ULOAD_AND_SFAC_INTERFACE
     IF(.NOT. SF1%HAS_EX3     ) SFAC%HAS_EX3 = SF2%HAS_EX3
     !
     IF(ALLOCATED(SFAC%ALL   ) .AND. SF2%HAS_ALL) THEN
-                                                     IF(SF2%ALL.NE.DZ) THEN
+                                                     IF(SF2%ALL /= DZ) THEN
                                                               SFAC%ALL = SFAC%ALL / SF2%ALL
                                                      ELSE
                                                               SFAC%ALL = DZ
                                                      END IF
     ELSEIF(SF2%HAS_ALL) THEN
-                                                     IF(SF2%ALL.NE.DZ) THEN
+                                                     IF(SF2%ALL /= DZ) THEN
                                                               ALLOCATE(SFAC%ALL   , SOURCE = UNO / SF2%ALL   )
                                                      ELSE
                                                               ALLOCATE(SFAC%ALL   , SOURCE = DZ   )
@@ -274,14 +274,14 @@ MODULE ULOAD_AND_SFAC_INTERFACE
     END IF
     !
     IF(ALLOCATED(SFAC%ROW   ) .AND. SF2%HAS_ROW) THEN
-                                                     WHERE(SF2%ROW.NE.DZ)
+                                                     WHERE(SF2%ROW /= DZ)
                                                               SFAC%ROW = SFAC%ROW / SF2%ROW
                                                      ELSEWHERE
                                                               SFAC%ROW = DZ
                                                      END WHERE
     ELSEIF(SF2%HAS_ROW) THEN
                                                      ALLOCATE(SFAC%ROW,  MOLD = SF2%ROW   )
-                                                     WHERE(SF2%ROW.NE.DZ)
+                                                     WHERE(SF2%ROW /= DZ)
                                                               SFAC%ROW = UNO / SF2%ROW
                                                      ELSEWHERE
                                                               SFAC%ROW = DZ
@@ -289,14 +289,14 @@ MODULE ULOAD_AND_SFAC_INTERFACE
     END IF
     !
     IF(ALLOCATED(SFAC%COL   ) .AND. SF2%HAS_COL) THEN
-                                                     WHERE(SF2%COL.NE.DZ)
+                                                     WHERE(SF2%COL /= DZ)
                                                               SFAC%COL = SFAC%COL / SF2%COL
                                                      ELSEWHERE
                                                               SFAC%COL = DZ
                                                      END WHERE
     ELSEIF(SF2%HAS_COL) THEN
                                                      ALLOCATE(SFAC%COL,  MOLD = SF2%COL   )
-                                                     WHERE(SF2%COL.NE.DZ)
+                                                     WHERE(SF2%COL /= DZ)
                                                               SFAC%COL = UNO / SF2%COL
                                                      ELSEWHERE
                                                               SFAC%COL = DZ
@@ -304,14 +304,14 @@ MODULE ULOAD_AND_SFAC_INTERFACE
     END IF
     !
     IF(ALLOCATED(SFAC%EX1   ) .AND. SF2%HAS_EX1) THEN
-                                                     WHERE(SF2%EX1.NE.DZ)
+                                                     WHERE(SF2%EX1 /= DZ)
                                                               SFAC%EX1 = SFAC%EX1 / SF2%EX1
                                                      ELSEWHERE
                                                               SFAC%EX1 = DZ
                                                      END WHERE
     ELSEIF(SF2%HAS_EX1) THEN
                                                      ALLOCATE(SFAC%EX1,  MOLD = SF2%EX1   )
-                                                     WHERE(SF2%EX1.NE.DZ)
+                                                     WHERE(SF2%EX1 /= DZ)
                                                               SFAC%EX1 = UNO / SF2%EX1
                                                      ELSEWHERE
                                                               SFAC%EX1 = DZ
@@ -319,14 +319,14 @@ MODULE ULOAD_AND_SFAC_INTERFACE
     END IF
     !
     IF(ALLOCATED(SFAC%EX2   ) .AND. SF2%HAS_EX2) THEN
-                                                     WHERE(SF2%EX2.NE.DZ)
+                                                     WHERE(SF2%EX2 /= DZ)
                                                               SFAC%EX2 = SFAC%EX2 / SF2%EX2
                                                      ELSEWHERE
                                                               SFAC%EX2 = DZ
                                                      END WHERE
     ELSEIF(SF2%HAS_EX2) THEN
                                                      ALLOCATE(SFAC%EX2,  MOLD = SF2%EX2   )
-                                                     WHERE(SF2%EX2.NE.DZ)
+                                                     WHERE(SF2%EX2 /= DZ)
                                                               SFAC%EX2 = UNO / SF2%EX2
                                                      ELSEWHERE
                                                               SFAC%EX2 = DZ
@@ -334,14 +334,14 @@ MODULE ULOAD_AND_SFAC_INTERFACE
     END IF
     !
     IF(ALLOCATED(SFAC%EX3   ) .AND. SF2%HAS_EX3) THEN
-                                                     WHERE(SF2%EX3.NE.DZ)
+                                                     WHERE(SF2%EX3 /= DZ)
                                                               SFAC%EX3 = SFAC%EX3 / SF2%EX3
                                                      ELSEWHERE
                                                               SFAC%EX3 = DZ
                                                      END WHERE
     ELSEIF(SF2%HAS_EX3) THEN
                                                      ALLOCATE(SFAC%EX3,  MOLD = SF2%EX3   )
-                                                     WHERE(SF2%EX3.NE.DZ)
+                                                     WHERE(SF2%EX3 /= DZ)
                                                               SFAC%EX3 = UNO / SF2%EX3
                                                      ELSEWHERE
                                                               SFAC%EX3 = DZ
@@ -422,7 +422,7 @@ MODULE ULOAD_AND_SFAC_INTERFACE
     HAS_EX3      = FALSE
     !
     IF(PRESENT(SCRATCH)) THEN
-        IF(SCRATCH.NE. Z) THEN
+        IF(SCRATCH /= Z) THEN
                               INFILE = SCRATCH
         ELSE
                               INFILE = IN
@@ -516,7 +516,7 @@ MODULE ULOAD_AND_SFAC_INTERFACE
                          END IF
                          !
                          !!!WHERE(SFAC%ROW == DZ) SFAC%ROW = UNO
-                         !IF(IU.NE.Z) ALLOCATE(SFAC%IU_ROW, SOURCE=IU)
+                         !IF(IU /= Z) ALLOCATE(SFAC%IU_ROW, SOURCE=IU)
                          !SFAC%NEW_ROW = TRUE
                          !
     ELSEIF (HAS_COL) THEN
@@ -530,7 +530,7 @@ MODULE ULOAD_AND_SFAC_INTERFACE
                          END IF
                          !
                          !!!WHERE(SFAC%COL == DZ) SFAC%COL = UNO
-                         !IF(IU.NE.Z) ALLOCATE(SFAC%IU_COL, SOURCE=IU)
+                         !IF(IU /= Z) ALLOCATE(SFAC%IU_COL, SOURCE=IU)
                          !SFAC%NEW_COL = TRUE
                          !
     ELSEIF (HAS_ALL) THEN
@@ -543,7 +543,7 @@ MODULE ULOAD_AND_SFAC_INTERFACE
                          END IF
                          !
                          !!!IF(SFAC%ALL == DZ) SFAC%ALL = UNO
-                         !IF(IU.NE.Z) ALLOCATE(SFAC%IU_ALL, SOURCE=IU)
+                         !IF(IU /= Z) ALLOCATE(SFAC%IU_ALL, SOURCE=IU)
                          !SFAC%NEW_ALL = TRUE
     ELSEIF (HAS_EX1) THEN
                          ALLOCATE( TMP(EX1_DIM) )
@@ -556,7 +556,7 @@ MODULE ULOAD_AND_SFAC_INTERFACE
                          END IF
                          !
                          !!!WHERE(SFAC%EX1 == DZ) SFAC%EX1 = UNO
-                         !IF(IU.NE.Z) ALLOCATE(SFAC%IU_EX1, SOURCE=IU)
+                         !IF(IU /= Z) ALLOCATE(SFAC%IU_EX1, SOURCE=IU)
                          !SFAC%NEW_EX1 = TRUE
                          !
     ELSEIF (HAS_EX2) THEN
@@ -570,7 +570,7 @@ MODULE ULOAD_AND_SFAC_INTERFACE
                          END IF
                          !
                          !!!WHERE(SFAC%EX2 == DZ) SFAC%EX2 = UNO
-                         !IF(IU.NE.Z) ALLOCATE(SFAC%IU_EX2, SOURCE=IU)
+                         !IF(IU /= Z) ALLOCATE(SFAC%IU_EX2, SOURCE=IU)
                          !SFAC%NEW_EX2 = TRUE
                          !
     ELSEIF (HAS_EX3) THEN
@@ -584,12 +584,12 @@ MODULE ULOAD_AND_SFAC_INTERFACE
                          END IF
                          !
                          !!!WHERE(SFAC%EX3 == DZ) SFAC%EX3 = UNO
-                         !IF(IU.NE.Z) ALLOCATE(SFAC%IU_EX3, SOURCE=IU)
+                         !IF(IU /= Z) ALLOCATE(SFAC%IU_EX3, SOURCE=IU)
                          !SFAC%NEW_EX3 = TRUE
                          !
     END IF
     !
-    !IF(IU.NE.Z) SFAC%HAS_EXTERNAL = TRUE
+    !IF(IU /= Z) SFAC%HAS_EXTERNAL = TRUE
     IF(ALLOCATED(TMP)) DEALLOCATE(TMP)
     !
     END SUBROUTINE
@@ -620,11 +620,11 @@ MODULE ULOAD_AND_SFAC_INTERFACE
 !                                         LLOC = 1
 !                                         CALL ULOAD_VECTOR(SFAC%ROW, LLOC, LN, IOUT, SFAC%IU_ROW, SFAC%IU_ROW, NOSTOP=NOSTOP)
 !                                         !
-!                                         IF(SFAC%IU_ROW.NE.Z) SFAC%NEW_ROW = .TRUE.
+!                                         IF(SFAC%IU_ROW /= Z) SFAC%NEW_ROW = .TRUE.
 !                                         IF(SFAC%IU_ROW == Z) THEN  !FAILED TO LOAD NEXT EXTERNAL, KEEP OLD SFAC
 !                                                      SFAC%ROW =  DIV
 !                                         ELSEIF(REMOVE_OLD) THEN
-!                                                      WHERE ( DIV .NE. DZ) SFAC%ROW = SFAC%ROW / DIV
+!                                                      WHERE ( DIV /= DZ) SFAC%ROW = SFAC%ROW / DIV
 !                                                      DEALLOCATE(DIV)
 !                                         END IF
 !          END IF
@@ -634,11 +634,11 @@ MODULE ULOAD_AND_SFAC_INTERFACE
 !                                         LLOC = 1
 !                                         CALL ULOAD_VECTOR(SFAC%COL, LLOC, LN, IOUT, SFAC%IU_COL, SFAC%IU_COL, NOSTOP=NOSTOP)
 !                                         !
-!                                         IF(SFAC%IU_COL.NE.Z) SFAC%NEW_COL = .TRUE.
+!                                         IF(SFAC%IU_COL /= Z) SFAC%NEW_COL = .TRUE.
 !                                         IF(SFAC%IU_COL == Z) THEN  !FAILED TO LOAD NEXT EXTERNAL, KEEP OLD SFAC
 !                                                      SFAC%COL =  DIV
 !                                         ELSEIF(REMOVE_OLD) THEN
-!                                                      WHERE ( DIV .NE. DZ) SFAC%COL = SFAC%COL / DIV
+!                                                      WHERE ( DIV /= DZ) SFAC%COL = SFAC%COL / DIV
 !                                                      DEALLOCATE(DIV)
 !                                         END IF
 !          END IF
@@ -648,10 +648,10 @@ MODULE ULOAD_AND_SFAC_INTERFACE
 !                                         LLOC = 1
 !                                         CALL ULOAD_SCALAR(SFAC%ALL, LLOC, LN, IOUT, SFAC%IU_ALL, SFAC%IU_ALL, NOSTOP=NOSTOP)
 !                                         !
-!                                         IF(SFAC%IU_ALL.NE.Z) SFAC%NEW_ALL = .TRUE.
+!                                         IF(SFAC%IU_ALL /= Z) SFAC%NEW_ALL = .TRUE.
 !                                         IF(SFAC%IU_ALL == Z ) THEN
 !                                             SFAC%ALL = DIV_ALL
-!                                         ELSEIF(REMOVE_OLD .AND. DIV_ALL .NE. DZ) THEN
+!                                         ELSEIF(REMOVE_OLD .AND. DIV_ALL /= DZ) THEN
 !                                             SFAC%ALL = SFAC%ALL / DIV_ALL
 !                                         END IF
 !          END IF
@@ -661,11 +661,11 @@ MODULE ULOAD_AND_SFAC_INTERFACE
 !                                         LLOC = 1
 !                                         CALL ULOAD_VECTOR(SFAC%EX1, LLOC, LN, IOUT, SFAC%IU_EX1, SFAC%IU_EX1, NOSTOP=NOSTOP)
 !                                         !
-!                                         IF(SFAC%IU_EX1.NE.Z) SFAC%NEW_EX1 = .TRUE.
+!                                         IF(SFAC%IU_EX1 /= Z) SFAC%NEW_EX1 = .TRUE.
 !                                         IF(SFAC%IU_EX1 == Z) THEN  !FAILED TO LOAD NEXT EXTERNAL, KEEP OLD SFAC
 !                                                      SFAC%EX1 =  DIV
 !                                         ELSEIF(REMOVE_OLD) THEN
-!                                                      WHERE ( DIV .NE. DZ) SFAC%EX1 = SFAC%EX1 / DIV
+!                                                      WHERE ( DIV /= DZ) SFAC%EX1 = SFAC%EX1 / DIV
 !                                                      DEALLOCATE(DIV)
 !                                         END IF
 !          END IF
@@ -675,11 +675,11 @@ MODULE ULOAD_AND_SFAC_INTERFACE
 !                                         LLOC = 1
 !                                         CALL ULOAD_VECTOR(SFAC%EX2, LLOC, LN, IOUT, SFAC%IU_EX2, SFAC%IU_EX2, NOSTOP=NOSTOP)
 !                                         !
-!                                         IF(SFAC%IU_EX2.NE.Z) SFAC%NEW_EX2 = .TRUE.
+!                                         IF(SFAC%IU_EX2 /= Z) SFAC%NEW_EX2 = .TRUE.
 !                                         IF(SFAC%IU_EX2 == Z) THEN  !FAILED TO LOAD NEXT EXTERNAL, KEEP OLD SFAC
 !                                                      SFAC%EX2 =  DIV
 !                                         ELSEIF(REMOVE_OLD) THEN
-!                                                      WHERE ( DIV .NE. DZ) SFAC%EX2 = SFAC%EX2 / DIV
+!                                                      WHERE ( DIV /= DZ) SFAC%EX2 = SFAC%EX2 / DIV
 !                                                      DEALLOCATE(DIV)
 !                                         END IF
 !          END IF
@@ -692,7 +692,7 @@ MODULE ULOAD_AND_SFAC_INTERFACE
     CLASS(SFAC_DATA), INTENT(INOUT):: SFAC
     REAL(REAL64),     INTENT(IN   ):: SCALE
     !
-    IF(SCALE.NE.UNO) THEN
+    IF(SCALE /= UNO) THEN
                       IF(SFAC%HAS_ALL) THEN
                           SFAC%ALL = SFAC%ALL * SCALE
                       ELSE
@@ -707,7 +707,7 @@ MODULE ULOAD_AND_SFAC_INTERFACE
   !  CLASS(SFAC_DATA), INTENT(INOUT):: SFAC
   !  REAL(REAL64),     INTENT(IN   ):: SCALE
   !  !
-  !  IF(SFAC%HAS_ALL .AND. SCALE.NE.UNO) THEN
+  !  IF(SFAC%HAS_ALL .AND. SCALE /= UNO) THEN
   !      SFAC%ALL = SFAC%ALL * SCALE
   !  ELSE
   !      ALLOCATE(SFAC%ALL, SOURCE=SCALE)
@@ -1002,7 +1002,7 @@ MODULE ULOAD_AND_SFAC_INTERFACE
     INTEGER,                   INTENT(INOUT):: LLOC      !SET TO -1 IF CHARACTER::VAR IS NOT LONG ENOUGH TO HOLD INPUT
     CHARACTER(*),              INTENT(INOUT):: LN        !Temp line to holds read input that is processed
     INTEGER,                   INTENT(IN   ):: IN, IOUT  !File that input originated from; error output location
-    INTEGER,                   INTENT(INOUT):: IU        ! If IU=0 input is dermined from directives in IN or SCRATCH, IU.NE.0 indicates input is on that file unit. Same as IN having a LN = "EXTERNAL IU"
+    INTEGER,                   INTENT(INOUT):: IU        ! If IU=0 input is dermined from directives in IN or SCRATCH, IU /= 0 indicates input is on that file unit. Same as IN having a LN = "EXTERNAL IU"
     !
     LOGICAL,         OPTIONAL, INTENT(IN   ):: NOID, BINARY, NOSTOP
     INTEGER,         OPTIONAL, INTENT(INOUT):: ID
@@ -1021,7 +1021,7 @@ MODULE ULOAD_AND_SFAC_INTERFACE
     INTEGER:: IERR, ISTART, ISTOP, I, N, INFILE, ERROR_IU, LINELEN
     TYPE(GENERIC_INPUT_FILE), ALLOCATABLE:: FL
     LOGICAL:: KEEP_IU, READ_ID, BIN, ALLOW_ERROR, CLEAR_IU, READ_FULL_LINE, NO_INTERN, NEG_LLOC, NO_MAIN_KEY
-    REAL(REAL64):: SFAC_FILE, CONST !ENSURE ITS ALWAYS DOUBLE PRECISION
+    REAL(REAL64):: SFAC_FILE, CONST ! ENSURE ITS ALWAYS DOUBLE PRECISION
     CHARACTER(12):: EXT, FORM_CHK   ! Note 12 is passed in at CALL UPPER(12, EXT)
     !
     IERR = Z
@@ -1031,7 +1031,7 @@ MODULE ULOAD_AND_SFAC_INTERFACE
     NO_MAIN_KEY=FALSE
     !
     IF(PRESENT(SCRATCH)) THEN
-        IF(SCRATCH.NE. Z) THEN
+        IF(SCRATCH /= Z) THEN
                               INFILE = SCRATCH
         ELSE
                               INFILE = IN
@@ -1078,10 +1078,10 @@ MODULE ULOAD_AND_SFAC_INTERFACE
     END SELECT
     !
     CLEAR_IU = FALSE
-    IF(IU.NE.Z) THEN
+    IF(IU /= Z) THEN
                     INQUIRE(IU,FORM=FORM_CHK, OPENED=KEEP_IU)
                     IF(.NOT. KEEP_IU) CALL STOP_ERROR( LINE=LN, INFILE=IN, OUTPUT=IOUT, MSG= 'ULOAD ERROR: RECIEVED UNIT NUMBER "'//NUM2STR(IU)//'" WHICH IS NOT ASSOCIATED WITH A FILE. THIS COULD BE THE RESULT OF USING "EXTERNAL" OR "DATAUNIT" WITH A UNIT THAT IS NOT OPENED BY THE NAME FILE.', MSG2=MSG)
-                    BIN = FORM_CHK .NE. 'FORMATTED'
+                    BIN = FORM_CHK /= 'FORMATTED'
                     !
                     ERROR_IU = IU
                     KEEP_IU  = TRUE
@@ -1114,10 +1114,10 @@ MODULE ULOAD_AND_SFAC_INTERFACE
                            ELSEIF(EXT==BLNK .OR. EXT==COM) THEN  !READ NEXT LINE IF BLANK
                                IF(IU==Z) THEN
                                              CALL READ_TO_DATA(LN,INFILE,IOUT)
-                                             IF(LN==BLNK) CALL STOP_ERROR(INFILE=IN,OUTPUT=IOUT,MSG = 'ULOAD FAILED TO LOAD INPUT LINE.'//NL//'THIS MOST LIKELY OCCURED BECAUSE THE END OF FILE WAS REACHED WHILE LOADING INPUT.'//BLN//'POSSIBLE CAUSES ARE NOT ENOUGH STRESS PERIOD INPUT, AN EMPTY FILE,'//NL//'THE INPUT LINE IS EMPTY WHEN A NUMBER WAS EXPECTED,'//NL//'OR YOU SPECIFIED TRANSIENT WHEN YOU MEANT STATIC FOR A LIST-ARRAY INPUT.', MSG2=MSG)
+                                             IF(LN==BLNK) CALL STOP_ERROR(INFILE=IN,OUTPUT=IOUT,MSG = 'ULOAD FAILED TO LOAD INPUT LINE.'//NL//'THIS MOST LIKELY OCCURED BECAUSE THE END OF FILE WAS REACHED WHILE LOADING INPUT.'//BLN//'POSSIBLE CAUSES ARE NOT ENOUGH INPUT LINES, AN EMPTY FILE,'//NL//'THE INPUT LINE IS EMPTY WHEN A NUMBER WAS EXPECTED,'//NL//'OR YOU SPECIFIED TRANSIENT WHEN YOU MEANT STATIC FOR A LIST-ARRAY INPUT.', MSG2=MSG)
                               ELSE
                                              CALL READ_TO_DATA(LN,IU,IOUT)
-                                             IF(LN==BLNK) CALL STOP_ERROR(INFILE=IU,OUTPUT=IOUT,MSG = 'ULOAD FAILED TO LOAD INPUT LINE.'//NL//'THIS MOST LIKELY OCCURED BECAUSE THE END OF FILE WAS REACHED WHILE LOADING INPUT.'//BLN//'POSSIBLE CAUSES ARE NOT ENOUGH STRESS PERIOD INPUT, AN EMPTY FILE,'//NL//'THE INPUT LINE IS EMPTY WHEN A NUMBER WAS EXPECTED,'//NL//'OR YOU SPECIFIED TRANSIENT WHEN YOU MEANT STATIC FOR A LIST-ARRAY INPUT.', MSG2=MSG)
+                                             IF(LN==BLNK) CALL STOP_ERROR(INFILE=IU,OUTPUT=IOUT,MSG = 'ULOAD FAILED TO LOAD INPUT LINE.'//NL//'THIS MOST LIKELY OCCURED BECAUSE THE END OF FILE WAS REACHED WHILE LOADING INPUT.'//BLN//'POSSIBLE CAUSES ARE NOT ENOUGH INPUT LINES, AN EMPTY FILE,'//NL//'THE INPUT LINE IS EMPTY WHEN A NUMBER WAS EXPECTED,'//NL//'OR YOU SPECIFIED TRANSIENT WHEN YOU MEANT STATIC FOR A LIST-ARRAY INPUT.', MSG2=MSG)
                                END IF
                                LLOC = ONE
                                NO_MAIN_KEY=TRUE
@@ -1157,9 +1157,8 @@ MODULE ULOAD_AND_SFAC_INTERFACE
                        !
                        SELECT TYPE (VAR)
                        TYPE IS (DATE_OPERATOR)
-                                                   !VAR = DATE_OPERATOR(LN(ISTART:ISTOP))  --CAUSES COMILER ERROR
                                                    CALL GET_DATE(LN,LLOC,ISTART,ISTOP,IOUT,IN,VAR,NO_PARSE_WORD=TRUE,HAS_ERROR=NEG_LLOC,NO_DATE=TRUE)
-                                                   !CALL VAR%INIT(LN(ISTART:ISTOP))
+                                                   !
                                                    IF(NEG_LLOC) THEN
                                                        IERR = 123
                                                        NEG_LLOC = TRUE
@@ -1168,9 +1167,9 @@ MODULE ULOAD_AND_SFAC_INTERFACE
                                                    END IF
                        TYPE IS (GENERIC_INPUT_FILE)
                                                    CALL VAR%OPEN(LN,N, IOUT, IN, REQKEY=TRUE, KEY = EXT)
-                                                   VAR%IU = Z !CALL STOP_ERROR( LINE=LN, INFILE=ERROR_IU, OUTPUT=IOUT, MSG= 'ULOAD ERROR: THIS INPUT READ UTILITY DOES NOT ALLOW FOR THE KEYWORD "CONSTANT". PLEASE USE A KEYWORD TO INDICATE WHERE DATA IS LOCATED (e.g INTERNAL|EXTERNAL|OPEN/CLOSE)', MSG2=MSG)
+                                                   !
                                                    LLOC = ONE
-                                                   LN = LN(N:)  !RETURN THE LINE FROM "CONSTANT" ONWARD
+                                                   LN = LN(N:)  ! RETURN THE LINE FROM "CONSTANT" ONWARD
                                                    RETURN
                        !TYPE IS (IXJ_STRUCTURE);
                        !                             CALL VAR%LOAD(Z)
@@ -1180,8 +1179,8 @@ MODULE ULOAD_AND_SFAC_INTERFACE
                                                    READ(LN(ISTART:ISTOP), *, IOSTAT=IERR) CONST
                        END SELECT
                        !
-                       IF(IERR.NE.Z .AND. ALLOW_ERROR)   CALL FILE_IO_ERROR( IERR, UNIT=ERROR_IU, LINE=LN, INFILE=IN, OUTPUT=IOUT, MSG= 'ULOAD FOUND KEYWORD CONSTANT, BUT FAILED TO READ THE CONSTANT VALUE AFTER THE KEYWORD.', MSG2=MSG)
-                       IF(IERR.NE.Z .AND. CLEAR_IU)  IU = Z
+                       IF(IERR /= Z .AND. ALLOW_ERROR)   CALL FILE_IO_ERROR( IERR, UNIT=ERROR_IU, LINE=LN, INFILE=IN, OUTPUT=IOUT, MSG= 'ULOAD FOUND KEYWORD CONSTANT, BUT FAILED TO READ THE CONSTANT VALUE AFTER THE KEYWORD.', MSG2=MSG)
+                       IF(IERR /= Z .AND. CLEAR_IU)  IU = Z
                        !
                        SELECT TYPE (VAR)
                        TYPE IS (REAL(REAL64));     VAR = CONST                ! DOUBLE PRECISION
@@ -1210,7 +1209,7 @@ MODULE ULOAD_AND_SFAC_INTERFACE
                        !
                        CALL CHECK_FOR_POST_KEY(LLOC,LN,IN,IOUT,ISTART,ISTOP,SFAC_FILE) !ISTART, ISTOP ARE PLACE HOLDERS FOR BUF AND ISPLIT
                        !
-                       IF(SFAC_FILE.NE.UNO) CALL SF%SET_ALL(SFAC_FILE)
+                       IF(SFAC_FILE /= UNO) CALL SF%SET_ALL(SFAC_FILE)
                        !
                        IF(PRESENT(SFAC)) THEN
                                              SFAC = SF
@@ -1239,11 +1238,7 @@ MODULE ULOAD_AND_SFAC_INTERFACE
                        CALL PARSE_WORD(LN,LLOC,ISTART,ISTOP)
                        CALL CHECK_FOR_POST_KEY(LLOC,LN,IN,IOUT,ISTART,ISTOP,SFAC_FILE) !ISTART, ISTOP ARE PLACE HOLDERS FOR BUF AND ISPLIT
                        !
-                       !SELECT TYPE (VAR)
-                       !TYPE IS (GENERIC_INPUT_FILE); VAR%IU = Z  !ZERO OUT UNIT TO INDICATE REPEAT FOUND
-                       !END SELECT
-                       !
-                       IF(SFAC_FILE.NE.UNO) CALL SF%SET_ALL(SFAC_FILE)
+                       IF(SFAC_FILE /= UNO) CALL SF%SET_ALL(SFAC_FILE)
                        !
                        IF(PRESENT(SFAC)) THEN
                                              SFAC = SF
@@ -1257,7 +1252,7 @@ MODULE ULOAD_AND_SFAC_INTERFACE
                                                                         IF(SF%HAS_ALL) VAR%SCALE    = SF%ALL
                                              TYPE IS (LOOKUP_TABLE_TYPE)
                                                                         IF(SF%HAS_ALL) THEN
-                                                                                      IF(SF%ALL.NE.UNO)CALL STOP_ERROR( LINE=LN, INFILE=ERROR_IU, OUTPUT=IOUT, MSG= 'LOOKUP TABLE LOAD ERROR - ULOAD FOUND KEYWORD "REPEAT" WITH A SCALE FACTOR THAT IS NOT EQUAL TO 1. LOOKUP TABLES IMMEDIATELY APPLY SCALE FACTORS SO THERE IS NO WAY TO KEEP THEM SEPARATE. EITHER RE-SPECIFY LOOKUP TABLE OR REMOVE SFAC OR SCALE.', MSG2=MSG)
+                                                                                      IF(SF%ALL /= UNO)CALL STOP_ERROR( LINE=LN, INFILE=ERROR_IU, OUTPUT=IOUT, MSG= 'LOOKUP TABLE LOAD ERROR - ULOAD FOUND KEYWORD "REPEAT" WITH A SCALE FACTOR THAT IS NOT EQUAL TO 1. LOOKUP TABLES IMMEDIATELY APPLY SCALE FACTORS SO THERE IS NO WAY TO KEEP THEM SEPARATE. EITHER RE-SPECIFY LOOKUP TABLE OR REMOVE SFAC OR SCALE.', MSG2=MSG)
                                                                         END IF
                                              TYPE IS (REAL(REAL128));   CALL SF%APPLY(VAR)   ! QUAD PRECISION
                                              END SELECT
@@ -1274,24 +1269,24 @@ MODULE ULOAD_AND_SFAC_INTERFACE
                                 CALL STOP_ERROR( LINE=LN, INFILE=ERROR_IU, OUTPUT=IOUT, MSG= 'ULOAD FOUND KEYWORD "RELOAD" BUT THERE WAS NOT A PREVIOUSLY OPENED FILE TO USE OR THIS INPUT FEATURE DOES NOT SUPPORT THE "RELOAD" KEYWORD.'//NL//'PLEASE MAKE SURE THAT THIS ULOAD WAS PRECEDED BY AN EXTERNAL UNIT, DATAUNIT UNIT, OR DATAFILE FILE'//NL//'SO THT THE FILE CAN BE CONTINUED TO LOAD NEXT INPUT OR CHANGE KEYWORD TO ONE THAT OPENS A FILE OR POINTS TO AN EXISTING OPENED FILE.'//NL//'(e.g. THIS KEYWORD SHOULD ONLY APPEAR IN A TFR AFTER AN EXTERNAL, DATAUNIT, or DATAFILE KEYWORDS TO REUSE THEIR UNIT NUMBERS AND CONTINUE LOADING FROM THEIR FILES)', MSG2=MSG)
                             END IF
                             !
-                            IF(IU.NE.Z) THEN
-                                                  CALL CHECK_FOR_POST_KEY(LLOC,LN,IN,IOUT,ISTART,ISTOP,SFAC_FILE) !ISTART, ISTOP ARE PLACE HOLDERS FOR BUF AND ISPLIT
-                                                  !
-                                                  INQUIRE(IU,FORM=FORM_CHK, OPENED=KEEP_IU)
-                                                  IF(.NOT. KEEP_IU) CALL STOP_ERROR(LINE=LN, INFILE=IN, OUTPUT=IOUT, MSG= 'ULOAD ERROR: RECIEVED UNIT NUMBER "'//NUM2STR(IU)//'" WHICH IS NOT ASSOCIATED WITH A FILE. THIS COULD BE THE RESULT OF USING "EXTERNAL" OR "DATAUNIT" WITH A UNIT THAT IS NOT OPENED BY THE NAME FILE.', MSG2=MSG)
-                                                  BIN = FORM_CHK .NE. 'FORMATTED'
-                                                  !
-                                                  IF(BIN) THEN
-                                                      REWIND(IU) !MOVE BACK TO TOP OF FILE
-                                                  ELSE
-                                                      CALL UTF8_BOM_OFFSET_REWIND(IU)  !Check in case file has a UTF8 BOM header, rewind to correct location
-                                                  END IF
-                                                  !
-                                                  ERROR_IU = IU
-                                                  KEEP_IU  = TRUE
-                                                  LLOC     = ONE
-                                                  IF(.NOT. ALLOW_ERROR) CLEAR_IU = TRUE
-                                                  IF(.NOT. BIN) CALL READ_TO_DATA(LN,IU,IOUT)  !UNIT IS BEING PASSED IN SO READ IN LINE FROM IT
+                            IF(IU /= Z) THEN
+                                             CALL CHECK_FOR_POST_KEY(LLOC,LN,IN,IOUT,ISTART,ISTOP,SFAC_FILE) !ISTART, ISTOP ARE PLACE HOLDERS FOR BUF AND ISPLIT
+                                             !
+                                             INQUIRE(IU,FORM=FORM_CHK, OPENED=KEEP_IU)
+                                             IF(.NOT. KEEP_IU) CALL STOP_ERROR(LINE=LN, INFILE=IN, OUTPUT=IOUT, MSG= 'ULOAD ERROR: RECIEVED UNIT NUMBER "'//NUM2STR(IU)//'" WHICH IS NOT ASSOCIATED WITH A FILE. THIS COULD BE THE RESULT OF USING "EXTERNAL" OR "DATAUNIT" WITH A UNIT THAT IS NOT OPENED BY THE NAME FILE.', MSG2=MSG)
+                                             BIN = FORM_CHK /= 'FORMATTED'
+                                             !
+                                             IF(BIN) THEN
+                                                 REWIND(IU) !MOVE BACK TO TOP OF FILE
+                                             ELSE
+                                                 CALL UTF8_BOM_OFFSET_REWIND(IU)  !Check in case file has a UTF8 BOM header, rewind to correct location
+                                             END IF
+                                             !
+                                             ERROR_IU = IU
+                                             KEEP_IU  = TRUE
+                                             LLOC     = ONE
+                                             IF(.NOT. ALLOW_ERROR) CLEAR_IU = TRUE
+                                             IF(.NOT. BIN) CALL READ_TO_DATA(LN,IU,IOUT)  !UNIT IS BEING PASSED IN SO READ IN LINE FROM IT
                             END IF
                        ELSE
                             CALL STOP_ERROR( LINE=LN, INFILE=ERROR_IU, OUTPUT=IOUT, MSG= 'ULOAD FOUND KEYWORD "RELOAD" BUT THIS INPUT OPTION EITHER DOES NOT SUPPORT RELOAD OR THERE IS A CODE ERROR. PLEASE CHANGE RELOAD TO SOMETHING LIKE "EXTERNAL  55  REWIND"', MSG2=MSG)
@@ -1304,18 +1299,18 @@ MODULE ULOAD_AND_SFAC_INTERFACE
                                 CALL STOP_ERROR( LINE=LN, INFILE=ERROR_IU, OUTPUT=IOUT, MSG= 'ULOAD FOUND KEYWORD "LOAD_NEXT" BUT THERE WAS NOT A PREVIOUSLY OPENED FILE TO USE OR THIS INPUT FEATURE DOES NOT SUPPORT THE "LOAD_NEXT" KEYWORD (viz. SFAC DOES NOT SUPPORT IT).'//NL//'PLEASE MAKE SURE THAT THIS ULOAD WAS PRECEDED BY AN EXTERNAL UNIT, DATAUNIT UNIT, OR DATAFILE FILE'//NL//'SO THT THE FILE CAN BE CONTINUED TO LOAD NEXT INPUT'//NL//'OR CHANGE KEYWORD TO ONE THAT OPENS A FILE OR POINTS TO AN EXISTING OPENED FILE.'//NL//'(e.g. THIS KEYWORD SHOULD ONLY APPEAR IN A TFR AFTER AN EXTERNAL, DATAUNIT, or DATAFILE KEYWORDS TO REUSE THEIR UNIT NUMBERS AND CONTINUE LOADING FROM THEIR FILES)', MSG2=MSG)
                             END IF
                             !
-                            IF(IU.NE.Z) THEN
-                                                  CALL CHECK_FOR_POST_KEY(LLOC,LN,IN,IOUT,ISTART,ISTOP,SFAC_FILE) !ISTART, ISTOP ARE PLACE HOLDERS FOR BUF AND ISPLIT
-                                                  !
-                                                  INQUIRE(IU,FORM=FORM_CHK, OPENED=KEEP_IU)
-                                                  IF(.NOT. KEEP_IU) CALL STOP_ERROR(LINE=LN, INFILE=IN, OUTPUT=IOUT, MSG= 'ULOAD ERROR: RECIEVED UNIT NUMBER "'//NUM2STR(IU)//'" WHICH IS NOT ASSOCIATED WITH A FILE. THIS COULD BE THE RESULT OF USING "EXTERNAL" OR "DATAUNIT" WITH A UNIT THAT IS NOT OPENED BY THE NAME FILE.', MSG2=MSG)
-                                                  BIN = FORM_CHK .NE. 'FORMATTED'
-                                                  !
-                                                  ERROR_IU = IU
-                                                  KEEP_IU  = TRUE
-                                                  LLOC     = ONE
-                                                  IF(.NOT. ALLOW_ERROR) CLEAR_IU = TRUE
-                                                  IF(.NOT. BIN) CALL READ_TO_DATA(LN,IU,IOUT)  !UNIT IS BEING PASSED IN SO READ IN LINE FROM IT
+                            IF(IU /= Z) THEN
+                                             CALL CHECK_FOR_POST_KEY(LLOC,LN,IN,IOUT,ISTART,ISTOP,SFAC_FILE) !ISTART, ISTOP ARE PLACE HOLDERS FOR BUF AND ISPLIT
+                                             !
+                                             INQUIRE(IU,FORM=FORM_CHK, OPENED=KEEP_IU)
+                                             IF(.NOT. KEEP_IU) CALL STOP_ERROR(LINE=LN, INFILE=IN, OUTPUT=IOUT, MSG= 'ULOAD ERROR: RECIEVED UNIT NUMBER "'//NUM2STR(IU)//'" WHICH IS NOT ASSOCIATED WITH A FILE. THIS COULD BE THE RESULT OF USING "EXTERNAL" OR "DATAUNIT" WITH A UNIT THAT IS NOT OPENED BY THE NAME FILE.', MSG2=MSG)
+                                             BIN = FORM_CHK /= 'FORMATTED'
+                                             !
+                                             ERROR_IU = IU
+                                             KEEP_IU  = TRUE
+                                             LLOC     = ONE
+                                             IF(.NOT. ALLOW_ERROR) CLEAR_IU = TRUE
+                                             IF(.NOT. BIN) CALL READ_TO_DATA(LN,IU,IOUT)  !UNIT IS BEING PASSED IN SO READ IN LINE FROM IT
                             END IF
                        ELSE
                             CALL STOP_ERROR( LINE=LN, INFILE=ERROR_IU, OUTPUT=IOUT, MSG= 'ULOAD FOUND KEYWORD "LOAD_NEXT" BUT THIS INPUT OPTION EITHER DOES NOT SUPPORT RELOAD OR THERE IS A CODE ERROR. PLEASE CHANGE LOAD_NEXT TO SOMETHING LIKE "DATAFILE MyFile.txt"', MSG2=MSG)
@@ -1339,8 +1334,8 @@ MODULE ULOAD_AND_SFAC_INTERFACE
               !BIN = VAR%BINARY
               IF(.NOT. VAR%ERROR) THEN
                                         IU = VAR%IU
-                                        IF(IU.NE.Z .AND. .NOT. VAR%OPENCLOSE) KEEP_IU = TRUE  !FONUD EXTERNAL KEYWORD, SO PASS BACK WHAT WAS LOADED
-                                        IF(IU.NE.Z) ERROR_IU = IU
+                                        IF(IU /= Z .AND. .NOT. VAR%OPENCLOSE) KEEP_IU = TRUE  !FONUD EXTERNAL KEYWORD, SO PASS BACK WHAT WAS LOADED
+                                        IF(IU /= Z) ERROR_IU = IU
                                         IF(IU == Z .AND. NO_INTERN) CALL STOP_ERROR( LINE=LN, INFILE=ERROR_IU, OUTPUT=IOUT, MSG= 'ULOAD ERROR: THIS SPECIFIC INPUT LINE DOES NOT ALLOW FOR THE "INTERNAL" KEYWORD OR IMPLIED INTERNAL. PLEASE MOVE INTERNAL INPUT TO SEPARATE FILE AND CHANGE KEYWORD TO "OPEN/CLOSE" OR "EXTERNAL".', MSG2=MSG)
                                         IF(IU == Z) THEN
                                             IU = INFILE  !FOUND INTERNAL
@@ -1348,13 +1343,14 @@ MODULE ULOAD_AND_SFAC_INTERFACE
                                             VAR%OPENCLOSE=FALSE
                                             KEEP_IU = TRUE
                                         END IF
-              ELSEIF(ALLOW_ERROR) THEN; CALL STOP_ERROR( LINE=LN, INFILE=IU, OUTPUT=IOUT, MSG= 'ULOAD ERROR: THIS PARTICULAR INPUT DOES NOT ALLOW AN IMPLIED INTERNAL. PLEASE USE A KEYWORD TO INDICATE WHERE DATA IS LOCATED (e.g INTERNAL|EXTERNAL|OPEN/CLOSE)', MSG2=MSG)
+              ELSEIF(ALLOW_ERROR) THEN
+                                        CALL STOP_ERROR( LINE=LN, INFILE=IU, OUTPUT=IOUT, MSG= 'ULOAD ERROR: THIS PARTICULAR INPUT DOES NOT ALLOW AN IMPLIED INTERNAL. PLEASE USE A KEYWORD TO INDICATE WHERE DATA IS LOCATED (e.g INTERNAL|EXTERNAL|OPEN/CLOSE)', MSG2=MSG)
               END IF
               !
               IF(.NOT. KEEP_IU) IU = Z
               !
               IF(PRESENT(SFAC)) THEN
-                  IF(VAR%SCALE.NE.UNO) CALL SF%SET_ALL(VAR%SCALE)
+                  IF(VAR%SCALE /= UNO) CALL SF%SET_ALL(VAR%SCALE)
                   SFAC = SF
                   VAR%SCALE = UNO
               END IF
@@ -1375,8 +1371,8 @@ MODULE ULOAD_AND_SFAC_INTERFACE
                       BIN = FL%BINARY
                       IF(.NOT. FL%ERROR) THEN
                                              IU = FL%IU
-                                             IF(IU.NE.Z .AND. .NOT. FL%OPENCLOSE) KEEP_IU = TRUE  !FONUD EXTERNAL KEYWORD, SO PASS BACK WHAT WAS LOADED
-                                             IF(IU.NE.Z) ERROR_IU = IU
+                                             IF(IU /= Z .AND. .NOT. FL%OPENCLOSE) KEEP_IU = TRUE  !FONUD EXTERNAL KEYWORD, SO PASS BACK WHAT WAS LOADED
+                                             IF(IU /= Z) ERROR_IU = IU
                                              IF(IU == Z .AND. NO_INTERN) CALL STOP_ERROR( LINE=LN, INFILE=ERROR_IU, OUTPUT=IOUT, MSG= 'ULOAD ERROR: THIS SPECIFIC INPUT LINE DOES NOT ALLOW FOR THE "INTERNAL" KEYWORD. PLEASE MOVE INTERNAL INPUT TO SEPARATE FILE AND CHANGE KEYWORD TO "OPEN/CLOSE" OR "EXTERNAL" OR INSTEAD USE AN IMPLIED INTERNAL BY HAVING THE INPUT DATA ITEM ON THE SAME LINE.', MSG2=MSG)
                                              IF(IU == Z) IU = INFILE  !FOUND INTERNAL
                                              LLOC = ONE
@@ -1387,7 +1383,7 @@ MODULE ULOAD_AND_SFAC_INTERFACE
                       END IF
                 END IF
                 !
-                IF(.NOT. BIN .AND. IU.NE.Z) THEN
+                IF(.NOT. BIN .AND. IU /= Z) THEN
                                             DO !CHECK FOR KEYWORD OF SFAC WITHIN LIST
                                                   N = LLOC
                                                   CALL PARSE_WORD(LN,LLOC,ISTART,ISTOP,COM_STOP=TRUE)
@@ -1423,15 +1419,15 @@ MODULE ULOAD_AND_SFAC_INTERFACE
                             TYPE IS (REAL(REAL128));    READ(IU, IOSTAT=IERR) VAR    ! QUAD PRECISION
                             END SELECT
                             !
-                            IF(IERR.NE.Z .AND. ALLOW_ERROR)   CALL FILE_IO_ERROR( IERR, UNIT=ERROR_IU, LINE=LN, INFILE=IN, OUTPUT=IOUT, MSG= 'ATTEMPT MADE TO READ LIST FROM ULOAD IN A BINARY FILE, BUT IT FAILED TO LOAD INPUT DATA.', MSG2=MSG)
-                            IF(IERR.NE.Z .AND. CLEAR_IU)  IU = Z
+                            IF(IERR /= Z .AND. ALLOW_ERROR)   CALL FILE_IO_ERROR( IERR, UNIT=ERROR_IU, LINE=LN, INFILE=IN, OUTPUT=IOUT, MSG= 'ATTEMPT MADE TO READ LIST FROM ULOAD IN A BINARY FILE, BUT IT FAILED TO LOAD INPUT DATA.', MSG2=MSG)
+                            IF(IERR /= Z .AND. CLEAR_IU)  IU = Z
                 ELSE
-                    IF(IU .NE. Z) THEN  !KEYWORD FOUND SO LOAD IN NEXT LINE
+                    IF(IU /= Z) THEN  !KEYWORD FOUND SO LOAD IN NEXT LINE
                                       IF(READ_ID) THEN
                                             CALL PARSE_WORD(LN,LLOC,ISTART,ISTOP,COM_STOP=TRUE)
                                             IF(PRESENT(ID)) THEN
                                                            READ(LN(ISTART:ISTOP), *, IOSTAT=IERR)      ID
-                                                                                         IF(IERR.NE.Z) ID = Z
+                                                                                         IF(IERR /= Z) ID = Z
                                             END IF
                                       END IF
                                       CALL PARSE_WORD(LN,LLOC,ISTART,ISTOP,COM_STOP=TRUE)
@@ -1462,10 +1458,10 @@ MODULE ULOAD_AND_SFAC_INTERFACE
                                                 CALL VAR%LOAD(LLOC,ISTART,ISTOP,LN,IU,IOUT,FALSE)
                                                 !
                     TYPE IS (IXJ_STRUCTURE);
-                                                IF(IU .NE. Z) THEN
+                                                IF(IU /= Z) THEN
                                                     CALL VAR%LOAD(IU, ERROR_IU, IOUT, TRUE, FIRST_LINE=LN)
                                                     !
-                                                    IF(VAR%ERRMSG .NE. BLNK) IERR = ONE
+                                                    IF(VAR%ERRMSG /= BLNK) IERR = ONE
                                                 ELSE
                                                     CALL STOP_ERROR( LINE=LN, INFILE=ERROR_IU, OUTPUT=IOUT, MSG= 'ULOAD ERROR: IXJ STYLE INPUT DOES NOT ALLOW FOR "IMPLIED INTERNAL" LOAD. PLEASE USE A KEYWORD TO INDICATE WHERE DATA IS LOCATED (e.g INTERNAL|EXTERNAL|OPEN/CLOSE)', MSG2=MSG)
                                                 END IF
@@ -1475,7 +1471,7 @@ MODULE ULOAD_AND_SFAC_INTERFACE
                     !
                     IF(LN(ISTART:ISTOP) == '') IERR = -1234
                     !
-                    IF(IERR.NE.Z .AND. ALLOW_ERROR ) THEN
+                    IF(IERR /= Z .AND. ALLOW_ERROR ) THEN
                            IF(NO_MAIN_KEY) THEN
                                 CALL FILE_IO_ERROR( IERR, UNIT=ERROR_IU, LINE=LN, INFILE=IN, OUTPUT=IOUT, MSG= 'ATTEMPT MADE TO READ LIST FROM ULOAD ON LINE, BUT IT FAILED TO LOAD THE FOLLOWING VALUE "'//LN(ISTART:ISTOP)//'"'//BLN//'NOTE THAT NO KEYWORD WAS FOUND ON THE PREVIOUS LINE, SO CODE AUTOMOVED DOWNWARD TO NEXT LINE.'//NL//'YOU MAYBE MISSING A KEYWORD (viz. INTERNAL, EXTERNAL, OPEN/CLOSE, DATEFILE, DATAUNIT).', MSG2=MSG)
                            ELSE
@@ -1487,13 +1483,13 @@ MODULE ULOAD_AND_SFAC_INTERFACE
                                                                    CALL STOP_ERROR( LINE=LN, INFILE=ERROR_IU, OUTPUT=IOUT, MSG= 'ULOAD ATTEMPTED TO READ A SINGLE VALUE WITHIN THE FOLLOWING "'//LN(ISTART:ISTOP)//'", BUT IT FAILED TO LOAD INTO OneWater. PLEASE CHECK INPUT TO MAKE SURE FORMAT IS WHAT IS EXPECTED.', MSG2=MSG)
                                 END SELECT
                            END IF
-                    ELSEIF(IERR.NE.Z .AND. CLEAR_IU) THEN
+                    ELSEIF(IERR /= Z .AND. CLEAR_IU) THEN
                            IU = Z
                     END IF
                     !
                 END IF
                 !
-                IF(SFAC_FILE.NE.UNO) CALL SF%SET_ALL(SFAC_FILE)
+                IF(SFAC_FILE /= UNO) CALL SF%SET_ALL(SFAC_FILE)
                 !
                 IF(PRESENT(SFAC)) THEN
                                        SFAC = SF
@@ -1525,7 +1521,7 @@ MODULE ULOAD_AND_SFAC_INTERFACE
     INTEGER,                                         INTENT(INOUT):: LLOC      !SET TO -1 IF CHARACTER::VAR IS NOT LONG ENOUGH TO HOLD INPUT
     CHARACTER(*),                                    INTENT(INOUT):: LN        !Temp line to holds read input that is processed
     INTEGER,                                         INTENT(IN   ):: IN, IOUT  !File that input originated from; error output location
-    INTEGER,                                         INTENT(INOUT):: IU        ! If IU=0 input is dermined from directives in IN or SCRATCH, IU.NE.0 indicates input is on that file unit. Same as IN having a LN = "EXTERNAL IU"
+    INTEGER,                                         INTENT(INOUT):: IU        ! If IU=0 input is dermined from directives in IN or SCRATCH, IU /= 0 indicates input is on that file unit. Same as IN having a LN = "EXTERNAL IU"
     !
     LOGICAL,     OPTIONAL,                           INTENT(IN   ):: NOID, BINARY, NOSTOP
     INTEGER,     OPTIONAL, DIMENSION(:), ALLOCATABLE,INTENT(INOUT):: ID                   !Note that ID must be ALLOCATABLE -- This is done to check if it is read
@@ -1565,7 +1561,7 @@ MODULE ULOAD_AND_SFAC_INTERFACE
     END SELECT
     !
     IF(PRESENT(SCRATCH)) THEN
-        IF(SCRATCH.NE. Z) THEN
+        IF(SCRATCH /= Z) THEN
                               INFILE = SCRATCH
         ELSE
                               INFILE = IN
@@ -1615,10 +1611,10 @@ MODULE ULOAD_AND_SFAC_INTERFACE
     END IF
     !
     CLEAR_IU = FALSE
-    IF(IU.NE.Z) THEN
+    IF(IU /= Z) THEN
                     INQUIRE(IU,FORM=FORM_CHK, OPENED=KEEP_IU)
                     IF(.NOT. KEEP_IU) CALL STOP_ERROR( LINE=LN, INFILE=IN, OUTPUT=IOUT, MSG= 'ULOAD ERROR: RECIEVED UNIT NUMBER "'//NUM2STR(IU)//'" WHICH IS NOT ASSOCIATED WITH A FILE. THIS COULD BE THE RESULT OF USING "EXTERNAL" OR "DATAUNIT" WITH A UNIT THAT IS NOT OPENED BY THE NAME FILE.', MSG2=MSG)
-                    BIN = FORM_CHK .NE. 'FORMATTED'
+                    BIN = FORM_CHK /= 'FORMATTED'
                     !
                     ERROR_IU = IU
                     KEEP_IU  = TRUE
@@ -1653,10 +1649,10 @@ MODULE ULOAD_AND_SFAC_INTERFACE
                            ELSEIF(EXT==BLNK .OR. EXT==COM) THEN  !READ NEXT LINE IF BLANK
                                IF(IU==Z) THEN
                                              CALL READ_TO_DATA(LN,INFILE,IOUT)
-                                             IF(LN==BLNK) CALL STOP_ERROR(INFILE=IN,OUTPUT=IOUT,MSG = 'ULOAD FAILED TO LOAD INPUT LINE.'//NL//'THIS MOST LIKELY OCCURED BECAUSE THE END OF FILE WAS REACHED WHILE LOADING INPUT.'//BLN//'POSSIBLE CAUSES ARE NOT ENOUGH STRESS PERIOD INPUT, AN EMPTY FILE,'//NL//'THE INPUT LINE IS EMPTY WHEN NUMBERS WERE EXPECTED,'//NL//'OR YOU SPECIFIED TRANSIENT WHEN YOU MEANT STATIC FOR A LIST-ARRAY INPUT.', MSG2=MSG)
+                                             IF(LN==BLNK) CALL STOP_ERROR(INFILE=IN,OUTPUT=IOUT,MSG = 'ULOAD FAILED TO LOAD INPUT LINE.'//NL//'THIS MOST LIKELY OCCURED BECAUSE THE END OF FILE WAS REACHED WHILE LOADING INPUT.'//BLN//'POSSIBLE CAUSES ARE NOT ENOUGH INPUT LINES, AN EMPTY FILE,'//NL//'THE INPUT LINE IS EMPTY WHEN NUMBERS WERE EXPECTED,'//NL//'OR YOU SPECIFIED TRANSIENT WHEN YOU MEANT STATIC FOR A LIST-ARRAY INPUT.', MSG2=MSG)
                                ELSE
                                              CALL READ_TO_DATA(LN,IU,IOUT)
-                                             IF(LN==BLNK) CALL STOP_ERROR(INFILE=IU,OUTPUT=IOUT,MSG = 'ULOAD FAILED TO LOAD INPUT LINE.'//NL//'THIS MOST LIKELY OCCURED BECAUSE THE END OF FILE WAS REACHED WHILE LOADING INPUT.'//BLN//'POSSIBLE CAUSES ARE NOT ENOUGH STRESS PERIOD INPUT, AN EMPTY FILE,'//NL//'THE INPUT LINE IS EMPTY WHEN NUMBERS WERE EXPECTED,'//NL//'OR YOU SPECIFIED TRANSIENT WHEN YOU MEANT STATIC FOR A LIST-ARRAY INPUT.', MSG2=MSG)
+                                             IF(LN==BLNK) CALL STOP_ERROR(INFILE=IU,OUTPUT=IOUT,MSG = 'ULOAD FAILED TO LOAD INPUT LINE.'//NL//'THIS MOST LIKELY OCCURED BECAUSE THE END OF FILE WAS REACHED WHILE LOADING INPUT.'//BLN//'POSSIBLE CAUSES ARE NOT ENOUGH INPUT LINES, AN EMPTY FILE,'//NL//'THE INPUT LINE IS EMPTY WHEN NUMBERS WERE EXPECTED,'//NL//'OR YOU SPECIFIED TRANSIENT WHEN YOU MEANT STATIC FOR A LIST-ARRAY INPUT.', MSG2=MSG)
                                END IF
                                !
                                LLOC = ONE
@@ -1728,8 +1724,8 @@ MODULE ULOAD_AND_SFAC_INTERFACE
                                                    READ(LN(ISTART:ISTOP), *, IOSTAT=IERR) CONST
                        END SELECT
                        !
-                       IF(IERR.NE.Z .AND. ALLOW_ERROR)   CALL FILE_IO_ERROR( IERR, UNIT=ERROR_IU, LINE=LN, INFILE=IN, OUTPUT=IOUT, MSG= 'FOUND KEYWORD CONSTANT, BUT FAILED TO READ THE VALUE LOCATED AFTER THE KEYWORD "CONSTANT".', MSG2=MSG)
-                       IF(IERR.NE.Z .AND. CLEAR_IU)  IU = Z
+                       IF(IERR /= Z .AND. ALLOW_ERROR)   CALL FILE_IO_ERROR( IERR, UNIT=ERROR_IU, LINE=LN, INFILE=IN, OUTPUT=IOUT, MSG= 'FOUND KEYWORD CONSTANT, BUT FAILED TO READ THE VALUE LOCATED AFTER THE KEYWORD "CONSTANT".', MSG2=MSG)
+                       IF(IERR /= Z .AND. CLEAR_IU)  IU = Z
                        !
                        SELECT TYPE (VAR)
                        TYPE IS (REAL(REAL64));     VAR = CONST
@@ -1759,7 +1755,7 @@ MODULE ULOAD_AND_SFAC_INTERFACE
                        !
                        CALL CHECK_FOR_POST_KEY(LLOC,LN,IN,IOUT,ISTART,ISTOP,SFAC_FILE) !ISTART, ISTOP ARE PLACE HOLDERS FOR BUF AND ISPLIT
                        !
-                       IF(SFAC_FILE.NE.UNO) CALL SF%SET_ALL(SFAC_FILE)
+                       IF(SFAC_FILE /= UNO) CALL SF%SET_ALL(SFAC_FILE)
                        !
                        IF(PRESENT(SFAC)) THEN
                                              SFAC = SF
@@ -1794,7 +1790,7 @@ MODULE ULOAD_AND_SFAC_INTERFACE
                        CALL PARSE_WORD(LN,LLOC,ISTART,ISTOP)
                        CALL CHECK_FOR_POST_KEY(LLOC,LN,IN,IOUT,ISTART,ISTOP,SFAC_FILE) !ISTART, ISTOP ARE PLACE HOLDERS FOR BUF AND ISPLIT
                        !
-                       IF(SFAC_FILE.NE.UNO) CALL SF%SET_ALL(SFAC_FILE)
+                       IF(SFAC_FILE /= UNO) CALL SF%SET_ALL(SFAC_FILE)
                        !
                        IF(PRESENT(SFAC)) THEN
                                              SFAC = SF
@@ -1805,7 +1801,7 @@ MODULE ULOAD_AND_SFAC_INTERFACE
                                              TYPE IS (TIME_SERIES_FILE); VAR%FL%SCALE = SFAC_FILE
                                              TYPE IS (LOOKUP_TABLE_TYPE)
                                                                         IF(SF%HAS_ALL) THEN
-                                                                                      IF(SF%ALL.NE.UNO)CALL STOP_ERROR( LINE=LN, INFILE=ERROR_IU, OUTPUT=IOUT, MSG= 'LOOKUP TABLE LOAD ERROR - ULOAD FOUND KEYWORD "REPEAT" WITH A SCALE FACTOR THAT IS NOT EQUAL TO 1. LOOKUP TABLES IMMEDIATELY APPLY SCALE FACTORS SO THERE IS NO WAY TO KEEP THEM SEPARATE. EITHER RE-SPECIFY LOOKUP TABLE OR REMOVE SFAC OR SCALE.', MSG2=MSG)
+                                                                                      IF(SF%ALL /= UNO)CALL STOP_ERROR( LINE=LN, INFILE=ERROR_IU, OUTPUT=IOUT, MSG= 'LOOKUP TABLE LOAD ERROR - ULOAD FOUND KEYWORD "REPEAT" WITH A SCALE FACTOR THAT IS NOT EQUAL TO 1. LOOKUP TABLES IMMEDIATELY APPLY SCALE FACTORS SO THERE IS NO WAY TO KEEP THEM SEPARATE. EITHER RE-SPECIFY LOOKUP TABLE OR REMOVE SFAC OR SCALE.', MSG2=MSG)
                                                                         END IF
                                              TYPE IS (REAL(REAL128));    CALL SF%APPLY(VAR)  ! QUAD PRECISION
                                              END SELECT
@@ -1821,12 +1817,12 @@ MODULE ULOAD_AND_SFAC_INTERFACE
                               CALL STOP_ERROR( LINE=LN, INFILE=ERROR_IU, OUTPUT=IOUT, MSG= 'ULOAD FOUND KEYWORD "RELOAD" BUT THERE WAS NOT A PREVIOUSLY OPENED FILE TO USE OR THIS INPUT FEATURE DOES NOT SUPPORT THE "RELOAD" KEYWORD.'//NL//'PLEASE MAKE SURE THAT THIS ULOAD WAS PRECEDED BY AN EXTERNAL UNIT, DATAUNIT UNIT, OR DATAFILE FILE'//NL//'SO THT THE FILE CAN BE CONTINUED TO LOAD NEXT INPUT OR CHANGE KEYWORD TO ONE THAT OPENS A FILE OR POINTS TO AN EXISTING OPENED FILE.'//NL//'(e.g. THIS KEYWORD SHOULD ONLY APPEAR IN A TFR AFTER AN EXTERNAL, DATAUNIT, or DATAFILE KEYWORDS TO REUSE THEIR UNIT NUMBERS AND CONTINUE LOADING FROM THEIR FILES)', MSG2=MSG)
                           END IF
                           !
-                          IF(IU.NE.Z) THEN
+                          IF(IU /= Z) THEN
                                                 CALL CHECK_FOR_POST_KEY(LLOC,LN,IN,IOUT,ISTART,ISTOP,SFAC_FILE) !ISTART, ISTOP ARE PLACE HOLDERS FOR BUF AND ISPLIT
                                                 !
                                                 INQUIRE(IU,FORM=FORM_CHK, OPENED=KEEP_IU)
                                                 IF(.NOT. KEEP_IU) CALL STOP_ERROR(LINE=LN, INFILE=IN, OUTPUT=IOUT, MSG= 'ULOAD ERROR: RECIEVED UNIT NUMBER "'//NUM2STR(IU)//'" WHICH IS NOT ASSOCIATED WITH A FILE. THIS COULD BE THE RESULT OF USING "EXTERNAL" OR "DATAUNIT" WITH A UNIT THAT IS NOT OPENED BY THE NAME FILE.', MSG2=MSG)
-                                                BIN = FORM_CHK .NE. 'FORMATTED'
+                                                BIN = FORM_CHK /= 'FORMATTED'
                                                 !
                                                 IF(BIN) THEN
                                                     REWIND(IU) !MOVE BACK TO TOP OF FILE
@@ -1851,12 +1847,12 @@ MODULE ULOAD_AND_SFAC_INTERFACE
                                 CALL STOP_ERROR( LINE=LN, INFILE=ERROR_IU, OUTPUT=IOUT, MSG= 'ULOAD FOUND KEYWORD "LOAD_NEXT" BUT THERE WAS NOT A PREVIOUSLY OPENED FILE TO USE OR THIS INPUT FEATURE DOES NOT SUPPORT THE "LOAD_NEXT" KEYWORD (viz. SFAC DOES NOT SUPPORT IT).'//NL//'PLEASE MAKE SURE THAT THIS ULOAD WAS PRECEDED BY AN EXTERNAL UNIT, DATAUNIT UNIT, OR DATAFILE FILE'//NL//'SO THT THE FILE CAN BE CONTINUED TO LOAD NEXT INPUT'//NL//'OR CHANGE KEYWORD TO ONE THAT OPENS A FILE OR POINTS TO AN EXISTING OPENED FILE.'//NL//'(e.g. THIS KEYWORD SHOULD ONLY APPEAR IN A TFR AFTER AN EXTERNAL, DATAUNIT, or DATAFILE KEYWORDS TO REUSE THEIR UNIT NUMBERS AND CONTINUE LOADING FROM THEIR FILES)', MSG2=MSG)
                             END IF
                             !
-                            IF(IU.NE.Z) THEN
+                            IF(IU /= Z) THEN
                                                   CALL CHECK_FOR_POST_KEY(LLOC,LN,IN,IOUT,ISTART,ISTOP,SFAC_FILE) !ISTART, ISTOP ARE PLACE HOLDERS FOR BUF AND ISPLIT
                                                   !
                                                   INQUIRE(IU,FORM=FORM_CHK, OPENED=KEEP_IU)
                                                   IF(.NOT. KEEP_IU) CALL STOP_ERROR(LINE=LN, INFILE=IN, OUTPUT=IOUT, MSG= 'ULOAD ERROR: RECIEVED UNIT NUMBER "'//NUM2STR(IU)//'" WHICH IS NOT ASSOCIATED WITH A FILE. THIS COULD BE THE RESULT OF USING "EXTERNAL" OR "DATAUNIT" WITH A UNIT THAT IS NOT OPENED BY THE NAME FILE.', MSG2=MSG)
-                                                  BIN = FORM_CHK .NE. 'FORMATTED'
+                                                  BIN = FORM_CHK /= 'FORMATTED'
                                                   !
                                                   ERROR_IU = IU
                                                   KEEP_IU  = TRUE
@@ -1879,8 +1875,8 @@ MODULE ULOAD_AND_SFAC_INTERFACE
           BIN = FL%BINARY
           IF(.NOT. FL%ERROR) THEN
                                  IU = FL%IU
-                                 IF(IU.NE.Z .AND. .NOT. FL%OPENCLOSE) KEEP_IU = TRUE  !FONUD EXTERNAL KEYWORD, SO PASS BACK WHAT WAS LOADED
-                                 IF(IU.NE.Z) ERROR_IU = IU
+                                 IF(IU /= Z .AND. .NOT. FL%OPENCLOSE) KEEP_IU = TRUE  !FONUD EXTERNAL KEYWORD, SO PASS BACK WHAT WAS LOADED
+                                 IF(IU /= Z) ERROR_IU = IU
                                  IF(IU == Z .AND. NO_INTERN) CALL STOP_ERROR( LINE=LN, INFILE=ERROR_IU, OUTPUT=IOUT, MSG= 'ULOAD ERROR: THIS SPECIFIC INPUT LINE DOES NOT ALLOW FOR THE "INTERNAL" KEYWORD. PLEASE MOVE INTERNAL INPUT TO SEPARATE FILE AND CHANGE KEYWORD TO "OPEN/CLOSE" OR "EXTERNAL" OR INSTEAD USE AN IMPLIED INTERNAL BY HAVING ALL THE INPUT DATA ON THE SAME LINE.', MSG2=MSG)
                                  IF(IU == Z) IU = INFILE  !FOUND INTERNAL
                                  LLOC = ONE
@@ -1891,7 +1887,7 @@ MODULE ULOAD_AND_SFAC_INTERFACE
           END IF
     END IF
     !
-    IF(.NOT. BIN .AND. IU.NE.Z) THEN
+    IF(.NOT. BIN .AND. IU /= Z) THEN
                                 DO !CHECK FOR KEYWORD OF SFAC WITHIN LIST
                                       N = LLOC
                                       CALL PARSE_WORD(LN,LLOC,ISTART,ISTOP,COM_STOP=TRUE)
@@ -1927,8 +1923,8 @@ MODULE ULOAD_AND_SFAC_INTERFACE
                 TYPE IS (REAL(REAL128));      READ(IU, IOSTAT=IERR) VAR   ! QUAD PRECISION
                 END SELECT
                 !
-                IF(IERR.NE.Z .AND. ALLOW_ERROR)   CALL FILE_IO_ERROR( IERR, UNIT=ERROR_IU, LINE=LN, INFILE=IN, OUTPUT=IOUT, MSG= 'ATTEMPT MADE TO READ LIST FROM ULOAD IN A BINARY FILE, BUT IT FAILED TO LOAD. PLEASURE ENSURE THAT BINARY FORMAT COMPLIES TO WHAT IS EXPECTED TO BE LOADED.', MSG2=MSG)
-                IF(IERR.NE.Z .AND. CLEAR_IU)  IU = Z
+                IF(IERR /= Z .AND. ALLOW_ERROR)   CALL FILE_IO_ERROR( IERR, UNIT=ERROR_IU, LINE=LN, INFILE=IN, OUTPUT=IOUT, MSG= 'ATTEMPT MADE TO READ LIST FROM ULOAD IN A BINARY FILE, BUT IT FAILED TO LOAD. PLEASURE ENSURE THAT BINARY FORMAT COMPLIES TO WHAT IS EXPECTED TO BE LOADED.', MSG2=MSG)
+                IF(IERR /= Z .AND. CLEAR_IU)  IU = Z
     ELSE
         IF(IU == Z) THEN  !NO KEYWORD, SO ASSUME IT IS ON CURRENT LINE
               IMPLIED_INTERNAL = TRUE
@@ -2042,7 +2038,7 @@ MODULE ULOAD_AND_SFAC_INTERFACE
                         CALL PARSE_WORD(LN,LLOC,ISTART,ISTOP,COM_STOP=TRUE)
                         IF(SET_ID) THEN
                                        READ(LN(ISTART:ISTOP), *, IOSTAT=IERR)      ID(I)
-                                                                     IF(IERR.NE.Z) ID(I) = Z
+                                                                     IF(IERR /= Z) ID(I) = Z
                         END IF
                   END IF
                   !
@@ -2086,11 +2082,11 @@ MODULE ULOAD_AND_SFAC_INTERFACE
                   END SELECT
                   !
                   IF(LN(ISTART:ISTOP) == '') IERR = -1234
-                  IF(IERR.NE.Z) EXIT
+                  IF(IERR /= Z) EXIT
             END DO
         END IF
         !
-        IF(IERR.NE.Z .AND. ALLOW_ERROR) THEN
+        IF(IERR /= Z .AND. ALLOW_ERROR) THEN
                IF(NO_MAIN_KEY) THEN
                     CALL FILE_IO_ERROR( IERR, UNIT=ERROR_IU, LINE=LN, INFILE=IN, OUTPUT=IOUT, MSG= 'ATTEMPT MADE TO READ LIST FROM ULOAD ON LINE, BUT IT FAILED TO LOAD THE FOLLOWING VALUE "'//LN(ISTART:ISTOP)//'"'//BLN//'NOTE THAT NO KEYWORD WAS FOUND ON THE PREVIOUS LINE, SO CODE AUTOMOVED DOWNWARD TO NEXT LINE.'//NL//'YOU MAYBE MISSING A KEYWORD (viz. INTERNAL, EXTERNAL, OPEN/CLOSE, DATEFILE, DATAUNIT).', MSG2=MSG)
                ELSE
@@ -2106,14 +2102,14 @@ MODULE ULOAD_AND_SFAC_INTERFACE
                     END SELECT
 
                END IF
-        ELSEIF(IERR.NE.Z .AND. CLEAR_IU) THEN
+        ELSEIF(IERR /= Z .AND. CLEAR_IU) THEN
                IU = Z
                LLOC = Z
         END IF
         !
     END IF
     !
-    IF(SFAC_FILE.NE.UNO) CALL SF%SET_ALL(SFAC_FILE)
+    IF(SFAC_FILE /= UNO) CALL SF%SET_ALL(SFAC_FILE)
     !
     IF(PRESENT(SFAC)) THEN
                            SFAC = SF
@@ -2153,7 +2149,7 @@ MODULE ULOAD_AND_SFAC_INTERFACE
     INTEGER,                                         INTENT(INOUT):: LLOC      !SET TO -1 IF CHARACTER::VAR IS NOT LONG ENOUGH TO HOLD INPUT
     CHARACTER(*),                                    INTENT(INOUT):: LN        !Temp line to holds read input that is processed
     INTEGER,                                         INTENT(IN   ):: IN, IOUT  !File that input originated from; error output location
-    INTEGER,                                         INTENT(INOUT):: IU        ! If IU=0 input is dermined from directives in IN or SCRATCH, IU.NE.0 indicates input is on that file unit. Same as IN having a LN = "EXTERNAL IU"
+    INTEGER,                                         INTENT(INOUT):: IU        ! If IU=0 input is dermined from directives in IN or SCRATCH, IU /= 0 indicates input is on that file unit. Same as IN having a LN = "EXTERNAL IU"
     !
     LOGICAL,     OPTIONAL,                           INTENT(IN   ):: NOID, BINARY, NOSTOP, READ_BY_DIM2
     INTEGER,     OPTIONAL, DIMENSION(:), ALLOCATABLE,INTENT(INOUT):: ID                   !Note that ID must be ALLOCATABLE -- This is done to check if it is read
@@ -2191,7 +2187,7 @@ MODULE ULOAD_AND_SFAC_INTERFACE
     END SELECT
     !
     IF(PRESENT(SCRATCH)) THEN
-        IF(SCRATCH.NE. Z) THEN
+        IF(SCRATCH /= Z) THEN
                               INFILE = SCRATCH
         ELSE
                               INFILE = IN
@@ -2241,10 +2237,10 @@ MODULE ULOAD_AND_SFAC_INTERFACE
     END IF
     !
     CLEAR_IU = FALSE
-    IF(IU.NE.Z) THEN
+    IF(IU /= Z) THEN
                     INQUIRE(IU,FORM=FORM_CHK, OPENED=KEEP_IU)
                     IF(.NOT. KEEP_IU) CALL STOP_ERROR( LINE=LN, INFILE=IN, OUTPUT=IOUT, MSG= 'ULOAD ERROR: RECIEVED UNIT NUMBER "'//NUM2STR(IU)//'" WHICH IS NOT ASSOCIATED WITH A FILE. THIS COULD BE THE RESULT OF USING "EXTERNAL" OR "DATAUNIT" WITH A UNIT THAT IS NOT OPENED BY THE NAME FILE.', MSG2=MSG)
-                    BIN = FORM_CHK .NE. 'FORMATTED'
+                    BIN = FORM_CHK /= 'FORMATTED'
                     !
                     ERROR_IU = IU
                     KEEP_IU  = TRUE
@@ -2278,10 +2274,10 @@ MODULE ULOAD_AND_SFAC_INTERFACE
                            CASE (BLNK,COM)   !READ NEXT LINE IF BLANK
                                IF(IU==Z) THEN
                                              CALL READ_TO_DATA(LN,INFILE,IOUT)
-                                             IF(LN==BLNK) CALL STOP_ERROR(INFILE=IN,OUTPUT=IOUT,MSG = 'ULOAD FAILED TO LOAD INPUT LINE.'//NL//'THIS MOST LIKELY OCCURED BECAUSE THE END OF FILE WAS REACHED WHILE LOADING INPUT.'//BLN//'POSSIBLE CAUSES ARE NOT ENOUGH STRESS PERIOD INPUT, AN EMPTY FILE,'//NL//'THE INPUT LINE IS EMPTY WHEN NUMBERS WERE EXPECTED,'//NL//'OR YOU SPECIFIED TRANSIENT WHEN YOU MEANT STATIC FOR A LIST-ARRAY INPUT.', MSG2=MSG)
+                                             IF(LN==BLNK) CALL STOP_ERROR(INFILE=IN,OUTPUT=IOUT,MSG = 'ULOAD FAILED TO LOAD INPUT LINE.'//NL//'THIS MOST LIKELY OCCURED BECAUSE THE END OF FILE WAS REACHED WHILE LOADING INPUT.'//BLN//'POSSIBLE CAUSES ARE NOT ENOUGH INPUT LINES, AN EMPTY FILE,'//NL//'THE INPUT LINE IS EMPTY WHEN NUMBERS WERE EXPECTED,'//NL//'OR YOU SPECIFIED TRANSIENT WHEN YOU MEANT STATIC FOR A LIST-ARRAY INPUT.', MSG2=MSG)
                                ELSE
                                              CALL READ_TO_DATA(LN,IU,IOUT)
-                                             IF(LN==BLNK) CALL STOP_ERROR(INFILE=IU,OUTPUT=IOUT,MSG = 'ULOAD FAILED TO LOAD INPUT LINE.'//NL//'THIS MOST LIKELY OCCURED BECAUSE THE END OF FILE WAS REACHED WHILE LOADING INPUT.'//BLN//'POSSIBLE CAUSES ARE NOT ENOUGH STRESS PERIOD INPUT, AN EMPTY FILE,'//NL//'THE INPUT LINE IS EMPTY WHEN NUMBERS WERE EXPECTED,'//NL//'OR YOU SPECIFIED TRANSIENT WHEN YOU MEANT STATIC FOR A LIST-ARRAY INPUT.', MSG2=MSG)
+                                             IF(LN==BLNK) CALL STOP_ERROR(INFILE=IU,OUTPUT=IOUT,MSG = 'ULOAD FAILED TO LOAD INPUT LINE.'//NL//'THIS MOST LIKELY OCCURED BECAUSE THE END OF FILE WAS REACHED WHILE LOADING INPUT.'//BLN//'POSSIBLE CAUSES ARE NOT ENOUGH INPUT LINES, AN EMPTY FILE,'//NL//'THE INPUT LINE IS EMPTY WHEN NUMBERS WERE EXPECTED,'//NL//'OR YOU SPECIFIED TRANSIENT WHEN YOU MEANT STATIC FOR A LIST-ARRAY INPUT.', MSG2=MSG)
                                END IF
                                LLOC = ONE
                                NO_MAIN_KEY = TRUE
@@ -2322,7 +2318,7 @@ MODULE ULOAD_AND_SFAC_INTERFACE
                                                    IF(NEG_LLOC) THEN
                                                        IERR = 123
                                                    ELSE
-                                                       DO CONCURRENT (J=ONE:DIM2, I=ONE:DIM1, I.NE.ONE.AND.J.NE.ONE ); VAR(I,J) = VAR(ONE,ONE)
+                                                       DO CONCURRENT (J=ONE:DIM2, I=ONE:DIM1, I /= ONE.AND.J /= ONE ); VAR(I,J) = VAR(ONE,ONE)
                                                        END DO
                                                    END IF
                                                    !DO I=ONE, DIM1
@@ -2338,8 +2334,8 @@ MODULE ULOAD_AND_SFAC_INTERFACE
                                                    READ(LN(ISTART:ISTOP), *, IOSTAT=IERR) CONST
                        END SELECT
                        !
-                       IF(IERR.NE.Z .AND. ALLOW_ERROR)   CALL FILE_IO_ERROR( IERR, UNIT=ERROR_IU, LINE=LN, INFILE=IN, OUTPUT=IOUT, MSG= 'FOUND KEYWORD CONSTANT, BUT FAILED TO READ THE VALUE LOCATED AFTER THE KEYWORD "CONSTANT".', MSG2=MSG)
-                       IF(IERR.NE.Z .AND. CLEAR_IU)  IU = Z
+                       IF(IERR /= Z .AND. ALLOW_ERROR)   CALL FILE_IO_ERROR( IERR, UNIT=ERROR_IU, LINE=LN, INFILE=IN, OUTPUT=IOUT, MSG= 'FOUND KEYWORD CONSTANT, BUT FAILED TO READ THE VALUE LOCATED AFTER THE KEYWORD "CONSTANT".', MSG2=MSG)
+                       IF(IERR /= Z .AND. CLEAR_IU)  IU = Z
                        !
                        SELECT TYPE (VAR)
                        TYPE IS (REAL(REAL64));     VAR = CONST
@@ -2356,7 +2352,7 @@ MODULE ULOAD_AND_SFAC_INTERFACE
                        !
                        CALL CHECK_FOR_POST_KEY(LLOC,LN,IN,IOUT,ISTART,ISTOP,SFAC_FILE) !ISTART, ISTOP ARE PLACE HOLDERS FOR BUF AND ISPLIT
                        !
-                       IF(SFAC_FILE.NE.UNO) CALL SF%SET_ALL(SFAC_FILE)
+                       IF(SFAC_FILE /= UNO) CALL SF%SET_ALL(SFAC_FILE)
                        !
                        IF(PRESENT(SFAC)) THEN
                                              SFAC = SF
@@ -2381,7 +2377,7 @@ MODULE ULOAD_AND_SFAC_INTERFACE
                        CALL PARSE_WORD(LN,LLOC,ISTART,ISTOP)
                        CALL CHECK_FOR_POST_KEY(LLOC,LN,IN,IOUT,ISTART,ISTOP,SFAC_FILE) !ISTART, ISTOP ARE PLACE HOLDERS FOR BUF AND ISPLIT
                        !
-                       IF(SFAC_FILE.NE.UNO) CALL SF%SET_ALL(SFAC_FILE)
+                       IF(SFAC_FILE /= UNO) CALL SF%SET_ALL(SFAC_FILE)
                        !
                        IF(PRESENT(SFAC)) THEN
                                              SFAC = SF
@@ -2404,12 +2400,12 @@ MODULE ULOAD_AND_SFAC_INTERFACE
                               CALL STOP_ERROR( LINE=LN, INFILE=ERROR_IU, OUTPUT=IOUT, MSG= 'ULOAD FOUND KEYWORD "RELOAD" BUT THERE WAS NOT A PREVIOUSLY OPENED FILE TO USE OR THIS INPUT FEATURE DOES NOT SUPPORT THE "RELOAD" KEYWORD.'//NL//'PLEASE MAKE SURE THAT THIS ULOAD WAS PRECEDED BY AN EXTERNAL UNIT, DATAUNIT UNIT, OR DATAFILE FILE'//NL//'SO THT THE FILE CAN BE CONTINUED TO LOAD NEXT INPUT OR CHANGE KEYWORD TO ONE THAT OPENS A FILE OR POINTS TO AN EXISTING OPENED FILE.'//NL//'(e.g. THIS KEYWORD SHOULD ONLY APPEAR IN A TFR AFTER AN EXTERNAL, DATAUNIT, or DATAFILE KEYWORDS TO REUSE THEIR UNIT NUMBERS AND CONTINUE LOADING FROM THEIR FILES)', MSG2=MSG)
                           END IF
                           !
-                          IF(IU.NE.Z) THEN
+                          IF(IU /= Z) THEN
                                                 CALL CHECK_FOR_POST_KEY(LLOC,LN,IN,IOUT,ISTART,ISTOP,SFAC_FILE) !ISTART, ISTOP ARE PLACE HOLDERS FOR BUF AND ISPLIT
                                                 !
                                                 INQUIRE(IU,FORM=FORM_CHK, OPENED=KEEP_IU)
                                                 IF(.NOT. KEEP_IU) CALL STOP_ERROR(LINE=LN, INFILE=IN, OUTPUT=IOUT, MSG= 'ULOAD ERROR: RECIEVED UNIT NUMBER "'//NUM2STR(IU)//'" WHICH IS NOT ASSOCIATED WITH A FILE. THIS COULD BE THE RESULT OF USING "EXTERNAL" OR "DATAUNIT" WITH A UNIT THAT IS NOT OPENED BY THE NAME FILE.', MSG2=MSG)
-                                                BIN = FORM_CHK .NE. 'FORMATTED'
+                                                BIN = FORM_CHK /= 'FORMATTED'
                                                 !
                                                 IF(BIN) THEN
                                                     REWIND(IU) !MOVE BACK TO TOP OF FILE
@@ -2434,12 +2430,12 @@ MODULE ULOAD_AND_SFAC_INTERFACE
                                 CALL STOP_ERROR( LINE=LN, INFILE=ERROR_IU, OUTPUT=IOUT, MSG= 'ULOAD FOUND KEYWORD "LOAD_NEXT" BUT THERE WAS NOT A PREVIOUSLY OPENED FILE TO USE OR THIS INPUT FEATURE DOES NOT SUPPORT THE "LOAD_NEXT" KEYWORD (viz. SFAC DOES NOT SUPPORT IT).'//NL//'PLEASE MAKE SURE THAT THIS ULOAD WAS PRECEDED BY AN EXTERNAL UNIT, DATAUNIT UNIT, OR DATAFILE FILE'//NL//'SO THT THE FILE CAN BE CONTINUED TO LOAD NEXT INPUT'//NL//'OR CHANGE KEYWORD TO ONE THAT OPENS A FILE OR POINTS TO AN EXISTING OPENED FILE.'//NL//'(e.g. THIS KEYWORD SHOULD ONLY APPEAR IN A TFR AFTER AN EXTERNAL, DATAUNIT, or DATAFILE KEYWORDS TO REUSE THEIR UNIT NUMBERS AND CONTINUE LOADING FROM THEIR FILES)', MSG2=MSG)
                             END IF
                             !
-                            IF(IU.NE.Z) THEN
+                            IF(IU /= Z) THEN
                                                   CALL CHECK_FOR_POST_KEY(LLOC,LN,IN,IOUT,ISTART,ISTOP,SFAC_FILE) !ISTART, ISTOP ARE PLACE HOLDERS FOR BUF AND ISPLIT
                                                   !
                                                   INQUIRE(IU,FORM=FORM_CHK, OPENED=KEEP_IU)
                                                   IF(.NOT. KEEP_IU) CALL STOP_ERROR(LINE=LN, INFILE=IN, OUTPUT=IOUT, MSG= 'ULOAD ERROR: RECIEVED UNIT NUMBER "'//NUM2STR(IU)//'" WHICH IS NOT ASSOCIATED WITH A FILE. THIS COULD BE THE RESULT OF USING "EXTERNAL" OR "DATAUNIT" WITH A UNIT THAT IS NOT OPENED BY THE NAME FILE.', MSG2=MSG)
-                                                  BIN = FORM_CHK .NE. 'FORMATTED'
+                                                  BIN = FORM_CHK /= 'FORMATTED'
                                                   !
                                                   ERROR_IU = IU
                                                   KEEP_IU  = TRUE
@@ -2463,8 +2459,8 @@ MODULE ULOAD_AND_SFAC_INTERFACE
           BIN = FL%BINARY
           IF(.NOT. FL%ERROR) THEN
                                  IU = FL%IU
-                                 IF(IU.NE.Z .AND. .NOT. FL%OPENCLOSE) KEEP_IU = TRUE  !FONUD EXTERNAL KEYWORD, SO PASS BACK WHAT WAS LOADED
-                                 IF(IU.NE.Z) ERROR_IU = IU
+                                 IF(IU /= Z .AND. .NOT. FL%OPENCLOSE) KEEP_IU = TRUE  !FONUD EXTERNAL KEYWORD, SO PASS BACK WHAT WAS LOADED
+                                 IF(IU /= Z) ERROR_IU = IU
                                  IF(IU == Z .AND. NO_INTERN) CALL STOP_ERROR( LINE=LN, INFILE=ERROR_IU, OUTPUT=IOUT, MSG= 'ULOAD ERROR: THIS SPECIFIC INPUT LINE DOES NOT ALLOW FOR THE "INTERNAL" KEYWORD. PLEASE MOVE INTERNAL INPUT TO SEPARATE FILE AND CHANGE KEYWORD TO "OPEN/CLOSE" OR "EXTERNAL".', MSG2=MSG)
                                  IF(IU == Z) IU = INFILE  !FOUND INTERNAL
                                  LLOC = ONE
@@ -2481,7 +2477,7 @@ MODULE ULOAD_AND_SFAC_INTERFACE
           END IF
     END IF
     !
-    IF(.NOT. BIN .AND. IU.NE.Z) THEN
+    IF(.NOT. BIN .AND. IU /= Z) THEN
                                 DO !CHECK FOR KEYWORD OF SFAC WITHIN LIST
                                       N = LLOC
                                       CALL PARSE_WORD(LN,LLOC,ISTART,ISTOP,COM_STOP=TRUE)
@@ -2513,8 +2509,8 @@ MODULE ULOAD_AND_SFAC_INTERFACE
                 TYPE IS (REAL(REAL128));    READ(IU, IOSTAT=IERR) VAR   ! QUAD PRECISION
                 END SELECT
                 !
-                IF(IERR.NE.Z .AND. ALLOW_ERROR)   CALL FILE_IO_ERROR( IERR, UNIT=ERROR_IU, LINE=LN, INFILE=IN, OUTPUT=IOUT, MSG= 'ATTEMPT MADE TO READ AN ARRAY WITH ULOAD IN A BINARY FILE, BUT IT FAILED TO LOAD. PLEASE CHECK THAT INPUT FORMAT IS IN THE EXPECTED BINARY STRUCTURE AND ORDERED CORRECTLY', MSG2=MSG)
-                IF(IERR.NE.Z .AND. CLEAR_IU)  IU = Z
+                IF(IERR /= Z .AND. ALLOW_ERROR)   CALL FILE_IO_ERROR( IERR, UNIT=ERROR_IU, LINE=LN, INFILE=IN, OUTPUT=IOUT, MSG= 'ATTEMPT MADE TO READ AN ARRAY WITH ULOAD IN A BINARY FILE, BUT IT FAILED TO LOAD. PLEASE CHECK THAT INPUT FORMAT IS IN THE EXPECTED BINARY STRUCTURE AND ORDERED CORRECTLY', MSG2=MSG)
+                IF(IERR /= Z .AND. CLEAR_IU)  IU = Z
     ELSE
         IF(READ_BY_DIM1) THEN
                              DO I=1, DIM2
@@ -2561,7 +2557,7 @@ MODULE ULOAD_AND_SFAC_INTERFACE
                                                             END SELECT
                                             END IF
                                             !
-                                            IF(IERR.NE.Z)  EXIT
+                                            IF(IERR /= Z)  EXIT
                              END DO
         ELSE !READ_BY_DIM2
                              DO I=1, DIM1
@@ -2608,7 +2604,7 @@ MODULE ULOAD_AND_SFAC_INTERFACE
                                                             END SELECT
                                             END IF
                                             !
-                                            IF(IERR.NE.Z)  EXIT
+                                            IF(IERR /= Z)  EXIT
                              END DO
         END IF
         !IF(READ_BY_DIM1) THEN
@@ -2619,7 +2615,7 @@ MODULE ULOAD_AND_SFAC_INTERFACE
         !                                          CALL URWORD(LN,LLOC,ISTART,ISTOP,Z,N,R,IOUT,IU)
         !                                          IF(PRESENT(ID)) THEN
         !                                                         READ(LN(ISTART:ISTOP), *, IOSTAT=IERR)      ID(I)
-        !                                                                                       IF(IERR.NE.Z) ID(I) = Z
+        !                                                                                       IF(IERR /= Z) ID(I) = Z
         !                                          END IF
         !                                    END IF
         !                                    !
@@ -2633,7 +2629,7 @@ MODULE ULOAD_AND_SFAC_INTERFACE
         !                                                                     VAR(J,I) = LN(ISTART:ISTOP)
         !                                                                END DO
         !                                    END SELECT
-        !                                    IF(IERR.NE.Z)  EXIT
+        !                                    IF(IERR /= Z)  EXIT
         !                     END DO
         !ELSE !READ_BY_DIM2
         !                     DO I=1, DIM1
@@ -2643,7 +2639,7 @@ MODULE ULOAD_AND_SFAC_INTERFACE
         !                                          CALL URWORD(LN,LLOC,ISTART,ISTOP,Z,N,R,IOUT,IU)
         !                                          IF(PRESENT(ID)) THEN
         !                                                         READ(LN(ISTART:ISTOP), *, IOSTAT=IERR)      ID(I)
-        !                                                                                       IF(IERR.NE.Z) ID(I) = Z
+        !                                                                                       IF(IERR /= Z) ID(I) = Z
         !                                          END IF
         !                                    END IF
         !                                    !
@@ -2657,11 +2653,11 @@ MODULE ULOAD_AND_SFAC_INTERFACE
         !                                                                    VAR(I,J) = LN(ISTART:ISTOP)
         !                                                                END DO
         !                                    END SELECT
-        !                                    IF(IERR.NE.Z)  EXIT
+        !                                    IF(IERR /= Z)  EXIT
         !                     END DO
         !END IF
         !
-        IF(IERR.NE.Z .AND. ALLOW_ERROR) THEN
+        IF(IERR /= Z .AND. ALLOW_ERROR) THEN
                IF(NO_MAIN_KEY) THEN
                     CALL FILE_IO_ERROR( IERR, UNIT=ERROR_IU, LINE=LN, INFILE=IN, OUTPUT=IOUT, MSG= 'ATTEMPT MADE TO READ LIST FROM ULOAD ON LINE, BUT IT FAILED TO LOAD THE FOLLOWING VALUE "'//LN(ISTART:ISTOP)//'"'//BLN//'NOTE THAT NO KEYWORD WAS FOUND ON THE PREVIOUS LINE, SO CODE AUTOMOVED DOWNWARD TO NEXT LINE.'//NL//'YOU MAYBE MISSING A KEYWORD (viz. INTERNAL, EXTERNAL, OPEN/CLOSE, DATEFILE, DATAUNIT).', MSG2=MSG)
                ELSE
@@ -2673,14 +2669,14 @@ MODULE ULOAD_AND_SFAC_INTERFACE
                     END SELECT
 
                END IF
-        ELSEIF(IERR.NE.Z .AND. CLEAR_IU) THEN
+        ELSEIF(IERR /= Z .AND. CLEAR_IU) THEN
                IU = Z
                LLOC = Z
         END IF
         !
     END IF
     !
-    IF(SFAC_FILE.NE.UNO) CALL SF%SET_ALL(SFAC_FILE)
+    IF(SFAC_FILE /= UNO) CALL SF%SET_ALL(SFAC_FILE)
     !
     IF(PRESENT(SFAC)) THEN
                            SFAC = SF
