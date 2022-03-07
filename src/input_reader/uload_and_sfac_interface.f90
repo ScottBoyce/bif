@@ -1098,10 +1098,8 @@ MODULE ULOAD_AND_SFAC_INTERFACE
     IF(.NOT. BIN) THEN
                       DO !CHECK FOR KEYWORD OF SFAC BEFORE LIST
                            N = LLOC
-                           I = COMMENT_INDEX(LN)
-                           CALL PARSE_WORD(LN(:I),LLOC,ISTART,ISTOP)   !GET VALUE
-                           EXT = LN(ISTART:ISTOP)
-                           CALL UPPER(12, EXT)
+                           CALL GET_WORD(LN, LLOC, ISTART, ISTOP, EXT, COM_STOP=TRUE)
+                           !
                            IF (EXT == 'SFAC') THEN
                                IF(IU==Z) THEN
                                              CALL SFAC_READ_AND_RETURN(SF, LN(N:), IN, IOUT, EX1_WORD=EX1_WORD, EX1_DIM=EX1_DIM, EX2_WORD=EX2_WORD, EX2_DIM=EX2_DIM, EX3_WORD=EX3_WORD, EX3_DIM=EX3_DIM, SCRATCH=SCRATCH)
@@ -1111,7 +1109,7 @@ MODULE ULOAD_AND_SFAC_INTERFACE
                                              CALL READ_TO_DATA(LN,IU,IOUT)
                                END IF
                                LLOC = ONE
-                           ELSEIF(EXT==BLNK .OR. EXT==COM) THEN  !READ NEXT LINE IF BLANK
+                           ELSEIF(EXT==BLNK) THEN  ! READ NEXT LINE IF BLANK
                                IF(IU==Z) THEN
                                              CALL READ_TO_DATA(LN,INFILE,IOUT)
                                              IF(LN==BLNK) CALL STOP_ERROR(INFILE=IN,OUTPUT=IOUT,MSG = 'ULOAD FAILED TO LOAD INPUT LINE.'//NL//'THIS MOST LIKELY OCCURED BECAUSE THE END OF FILE WAS REACHED WHILE LOADING INPUT.'//BLN//'POSSIBLE CAUSES ARE NOT ENOUGH INPUT LINES, AN EMPTY FILE,'//NL//'THE INPUT LINE IS EMPTY WHEN A NUMBER WAS EXPECTED,'//NL//'OR YOU SPECIFIED TRANSIENT WHEN YOU MEANT STATIC FOR A LIST-ARRAY INPUT.', MSG2=MSG)
@@ -1323,7 +1321,7 @@ MODULE ULOAD_AND_SFAC_INTERFACE
               IF(IU==Z) THEN
                     N = LLOC
                     !
-                    CALL VAR%OPEN(LN,LLOC,IOUT,IN,NOSTOP=TRUE,REQKEY=TRUE, BINARY=BIN, KEY = EXT)
+                    CALL VAR%OPEN(LN, LLOC, IOUT, IN, REQKEY=TRUE, NOSTOP=TRUE, BINARY=BIN, KEY = EXT)
                     !
                     NEG_LLOC = EXT=='NOKEY'
               ELSE
@@ -1363,7 +1361,7 @@ MODULE ULOAD_AND_SFAC_INTERFACE
                       N = LLOC
                       ALLOCATE(FL)
                       !
-                      CALL FL%OPEN(LN,LLOC,IOUT,IN,NOSTOP=TRUE,REQKEY=TRUE,BINARY=BIN)
+                      CALL FL%OPEN(LN, LLOC, IOUT, IN, REQKEY=TRUE, NOSTOP=TRUE, BINARY=BIN)
                       !
                       SFAC_FILE = FL%SCALE
                       FL%SCALE = UNO
@@ -1386,9 +1384,7 @@ MODULE ULOAD_AND_SFAC_INTERFACE
                 IF(.NOT. BIN .AND. IU /= Z) THEN
                                             DO !CHECK FOR KEYWORD OF SFAC WITHIN LIST
                                                   N = LLOC
-                                                  CALL PARSE_WORD(LN,LLOC,ISTART,ISTOP,COM_STOP=TRUE)
-                                                  EXT = LN(ISTART:ISTOP)
-                                                  CALL UPPER(12, EXT)
+                                                  CALL GET_WORD(LN, LLOC, ISTART, ISTOP, EXT, COM_STOP=TRUE)
                                                   IF (EXT == 'SFAC') THEN
                                                       CALL SFAC_READ_AND_RETURN(SF, LN(N:), IU, IOUT, EX1_WORD=EX1_WORD, EX1_DIM=EX1_DIM, EX2_WORD=EX2_WORD, EX2_DIM=EX2_DIM, EX3_WORD=EX3_WORD, EX3_DIM=EX3_DIM)
                                                       LLOC = ONE
@@ -1631,10 +1627,8 @@ MODULE ULOAD_AND_SFAC_INTERFACE
     IF(.NOT. BIN) THEN
                       DO !CHECK FOR KEYWORD OF SFAC BEFORE LIST
                            N = LLOC
-                           I = COMMENT_INDEX(LN)
-                           CALL PARSE_WORD(LN(:I),LLOC,ISTART,ISTOP)
-                           EXT = LN(ISTART:ISTOP)
-                           CALL UPPER(12, EXT)
+                           CALL GET_WORD(LN, LLOC, ISTART, ISTOP, EXT, COM_STOP=TRUE)
+                           !
                            IF (EXT == 'SFAC') THEN
                                IF(IU==Z) THEN
                                              CALL SFAC_READ_AND_RETURN(SF, LN(N:), IN, IOUT, ROW_WORD, DIM1, EX1_WORD=EX1_WORD, EX1_DIM=EX1_DIM, EX2_WORD=EX2_WORD, EX2_DIM=EX2_DIM, EX3_WORD=EX3_WORD, EX3_DIM=EX3_DIM, SCRATCH=SCRATCH)
@@ -1646,7 +1640,7 @@ MODULE ULOAD_AND_SFAC_INTERFACE
                                LLOC = ONE
                            ELSEIF(EXT=='STATIC' .OR. EXT=='LIST') THEN; CYCLE ! FOUND LAI KEYWORDS, IGNORE THEM
                            !
-                           ELSEIF(EXT==BLNK .OR. EXT==COM) THEN  !READ NEXT LINE IF BLANK
+                           ELSEIF(EXT==BLNK) THEN  !READ NEXT LINE IF BLANK
                                IF(IU==Z) THEN
                                              CALL READ_TO_DATA(LN,INFILE,IOUT)
                                              IF(LN==BLNK) CALL STOP_ERROR(INFILE=IN,OUTPUT=IOUT,MSG = 'ULOAD FAILED TO LOAD INPUT LINE.'//NL//'THIS MOST LIKELY OCCURED BECAUSE THE END OF FILE WAS REACHED WHILE LOADING INPUT.'//BLN//'POSSIBLE CAUSES ARE NOT ENOUGH INPUT LINES, AN EMPTY FILE,'//NL//'THE INPUT LINE IS EMPTY WHEN NUMBERS WERE EXPECTED,'//NL//'OR YOU SPECIFIED TRANSIENT WHEN YOU MEANT STATIC FOR A LIST-ARRAY INPUT.', MSG2=MSG)
@@ -1890,9 +1884,7 @@ MODULE ULOAD_AND_SFAC_INTERFACE
     IF(.NOT. BIN .AND. IU /= Z) THEN
                                 DO !CHECK FOR KEYWORD OF SFAC WITHIN LIST
                                       N = LLOC
-                                      CALL PARSE_WORD(LN,LLOC,ISTART,ISTOP,COM_STOP=TRUE)
-                                      EXT = LN(ISTART:ISTOP)
-                                      CALL UPPER(12, EXT)
+                                      CALL GET_WORD(LN, LLOC, ISTART, ISTOP, EXT, COM_STOP=TRUE)
                                       IF (EXT == 'SFAC') THEN
                                           CALL SFAC_READ_AND_RETURN(SF, LN(N:), IU, IOUT, ROW_WORD, DIM1, EX1_WORD=EX1_WORD, EX1_DIM=EX1_DIM, EX2_WORD=EX2_WORD, EX2_DIM=EX2_DIM, EX3_WORD=EX3_WORD, EX3_DIM=EX3_DIM)
                                           LLOC = ONE
@@ -2257,10 +2249,8 @@ MODULE ULOAD_AND_SFAC_INTERFACE
     IF(.NOT. BIN) THEN
                       DO !CHECK FOR KEYWORD OF SFAC BEFORE LIST
                            N = LLOC
-                           I = COMMENT_INDEX(LN)
-                           CALL PARSE_WORD(LN(:I),LLOC,ISTART,ISTOP)
-                           EXT = LN(ISTART:ISTOP)
-                           CALL UPPER(12, EXT)
+                           CALL GET_WORD(LN, LLOC, ISTART, ISTOP, EXT, COM_STOP=TRUE)
+                           !
                            SELECT CASE(EXT)
                            CASE ('SFAC')
                                IF(IU==Z) THEN
@@ -2271,7 +2261,7 @@ MODULE ULOAD_AND_SFAC_INTERFACE
                                              CALL READ_TO_DATA(LN,IU,IOUT)
                                END IF
                                LLOC = ONE
-                           CASE (BLNK,COM)   !READ NEXT LINE IF BLANK
+                           CASE (BLNK)   !READ NEXT LINE IF BLANK
                                IF(IU==Z) THEN
                                              CALL READ_TO_DATA(LN,INFILE,IOUT)
                                              IF(LN==BLNK) CALL STOP_ERROR(INFILE=IN,OUTPUT=IOUT,MSG = 'ULOAD FAILED TO LOAD INPUT LINE.'//NL//'THIS MOST LIKELY OCCURED BECAUSE THE END OF FILE WAS REACHED WHILE LOADING INPUT.'//BLN//'POSSIBLE CAUSES ARE NOT ENOUGH INPUT LINES, AN EMPTY FILE,'//NL//'THE INPUT LINE IS EMPTY WHEN NUMBERS WERE EXPECTED,'//NL//'OR YOU SPECIFIED TRANSIENT WHEN YOU MEANT STATIC FOR A LIST-ARRAY INPUT.', MSG2=MSG)
@@ -2480,9 +2470,7 @@ MODULE ULOAD_AND_SFAC_INTERFACE
     IF(.NOT. BIN .AND. IU /= Z) THEN
                                 DO !CHECK FOR KEYWORD OF SFAC WITHIN LIST
                                       N = LLOC
-                                      CALL PARSE_WORD(LN,LLOC,ISTART,ISTOP,COM_STOP=TRUE)
-                                      EXT = LN(ISTART:ISTOP)
-                                      CALL UPPER(12, EXT)
+                                      CALL GET_WORD(LN, LLOC, ISTART, ISTOP, EXT, COM_STOP=TRUE)
                                       IF (EXT == 'SFAC') THEN
                                           CALL SFAC_READ_AND_RETURN(SF, LN(N:), IU, IOUT, ROW_WORD, DIM1, COL_WORD, DIM2, EX1_WORD=EX1_WORD, EX1_DIM=EX1_DIM, EX2_WORD=EX2_WORD, EX2_DIM=EX2_DIM, EX3_WORD=EX3_WORD, EX3_DIM=EX3_DIM)
                                           LLOC = ONE
