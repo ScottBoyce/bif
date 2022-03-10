@@ -240,7 +240,7 @@ MODULE GENERIC_INPUT_FILE_INSTRUCTION!, ONLY: GENERIC_INPUT_FILE                
         IERR=69
     END IF
     !
-    IF (IERR .NE. Z) THEN
+    IF (IERR /= Z) THEN
           !
           IERR = Z
           !
@@ -268,7 +268,7 @@ MODULE GENERIC_INPUT_FILE_INSTRUCTION!, ONLY: GENERIC_INPUT_FILE                
                                            IF(FL%ERROR) THEN
                                                FNAME = LN(ISTART:ISTOP)
                                                CALL DATAFILE_UNIT_NUMBER%CHECK_BASE(FNAME,FL%IU,NOT_UNIQUE)
-                                               FL%ERROR = FL%IU.NE.Z .AND. NOT_UNIQUE                 !Found IU and its basename is Unique
+                                               FL%ERROR = FL%IU /= Z .AND. NOT_UNIQUE                 !Found IU and its basename is Unique
                                            END IF
                                            IF(CHECK_POST) CALL CHECK_FOR_POST_KEY(LL, LN, IIN, FL%IOUT, BUF, SPLIT, FL%SCALE, GO_TO_TOP=GO_TO_TOP, DIM=DIM, OLDLOC=PREPOST, NO_WARN=NO_WARN, MSG=MSG)
           ELSEIF(EXT == 'SKIP' .OR. EXT =='NAN' .OR. EXT =='NULL' .OR. EXT =='NUL') THEN
@@ -339,7 +339,7 @@ MODULE GENERIC_INPUT_FILE_INSTRUCTION!, ONLY: GENERIC_INPUT_FILE                
                     !
                     IF(CHECK_POST) CALL CHECK_FOR_POST_KEY(LL, LN, IIN, FL%IOUT, BUF, SPLIT, FL%SCALE, BINARY=FL%BINARY, GO_TO_TOP=GO_TO_TOP, DIM=DIM, OLDLOC=PREPOST, NO_WARN=NO_WARN, MSG=MSG) !FL%BINARY ONLY SET TO TRUE IF BINARY FLAG FOUND, OTHERWISE IGNORED
                     !
-                    IF(ISOPEN .AND. PRESENT(IU)) THEN; IF (I.NE.IU) ISOPEN = FALSE
+                    IF(ISOPEN .AND. PRESENT(IU)) THEN; IF (I /= IU) ISOPEN = FALSE
                     END IF
                     !
                     IF( DATAFILE .AND. ISOPEN) THEN
@@ -376,9 +376,9 @@ MODULE GENERIC_INPUT_FILE_INSTRUCTION!, ONLY: GENERIC_INPUT_FILE                
     END IF
     !
     IF(.NOT. FL%ERROR) THEN
-                           IF( FL%IU .NE. Z) THEN
+                           IF( FL%IU /= Z) THEN
                                                  INQUIRE(FL%IU,FORM=FORM_CHK, ACCESS=ACCESS_TXT, OPENED=ISOPEN)
-                                                 FL%BINARY = FORM_CHK .NE. 'FORMATTED'
+                                                 FL%BINARY = FORM_CHK /= 'FORMATTED'
                                                  FL%STREAM = ACCESS_TXT == 'STREAM'
                            ELSE
                                                  FL%BINARY = FALSE
@@ -498,7 +498,7 @@ MODULE GENERIC_INPUT_FILE_INSTRUCTION!, ONLY: GENERIC_INPUT_FILE                
     END IF
     !
     IF(PRESENT(NOSFAC) .AND. ALLOW_ERROR) THEN
-            IF(NOSFAC  .AND. FL%SCALE.NE.UNO) THEN
+            IF(NOSFAC  .AND. FL%SCALE /= UNO) THEN
                 ERR_MSG = 'GENERIC_INPUT_FILE_INSTRUCTION FOUND KEYWORD "SF" OR "SCALE",'//NL//'BUT THIS MODEL FEATURE DOES NOT ALLOW SCALE FACTORS.'//NL//'PLEASE REMOVE KEYWORD SF OR SCALE'//NL//'("SCALE" IS A NUMBER LOCATED TO THE RIGHT OF THE FILE NAME THAT IS LOADED AS A SCALE FACTOR, PLEASE REMOVE OR PLACE A # TO COMMENT IT OUT).'
                 IF(PRESENT(MSG))  ERR_MSG = ERR_MSG//BLN//'THE FOLLOWING MESSAGE WAS PASSED TO GENERIC_INPUT:'//BLN//MSG
                 CALL FILE_IO_ERROR(IERR,IIN,LINE=LN,OUTPUT=FL%IOUT,MSG=ERR_MSG)
@@ -506,7 +506,7 @@ MODULE GENERIC_INPUT_FILE_INSTRUCTION!, ONLY: GENERIC_INPUT_FILE                
     END IF
     !
     IF(PRESENT(EOL)) THEN
-         IF (.NOT. FL%ERROR .AND. .NOT. FL%BINARY .AND. FL%IU.NE.Z) THEN
+         IF (.NOT. FL%ERROR .AND. .NOT. FL%BINARY .AND. FL%IU /= Z) THEN
              EOL = MAX_LINE_LENGTH(FL%IU)
          ELSE
              EOL = LEN(LN)
@@ -526,7 +526,7 @@ MODULE GENERIC_INPUT_FILE_INSTRUCTION!, ONLY: GENERIC_INPUT_FILE                
           END IF
     END IF
     !
-    IF(GO_TO_TOP .AND. FL%IU.NE.Z) THEN
+    IF(GO_TO_TOP .AND. FL%IU /= Z) THEN
                        IF(FL%IS_EXTERNAL) THEN
                                        CALL UTF8_BOM_OFFSET_REWIND(FL%IU, FL%IS_BOM)  !EXTERNAL and DATAUNIT have no clue if file is UTF8 or UTF8_BOM - This rewinds appropiately
                        ELSE
@@ -543,7 +543,7 @@ MODULE GENERIC_INPUT_FILE_INSTRUCTION!, ONLY: GENERIC_INPUT_FILE                
        !
        IF(ALLOCATED(FNAME)) THEN
                  FL%FNAME = FNAME
-       ELSEIF(FL%IU.NE.Z) THEN
+       ELSEIF(FL%IU /= Z) THEN
                  CALL SET_FILE_NAME_GENERIC_INPUT_FILE(FL)
        ELSE
                  FL%FNAME = 'ERROR - ¿¿¿UNKOWN FILE???'
@@ -569,7 +569,7 @@ MODULE GENERIC_INPUT_FILE_INSTRUCTION!, ONLY: GENERIC_INPUT_FILE                
     !
     IF(FL%BINARY) THEN
         READ(FL%IU, IOSTAT=IERR) LINE
-        FL%ERROR = IERR.NE.Z
+        FL%ERROR = IERR /= Z
         EEOF = IERR < Z
         IF(PRESENT(CNT)) CNT = ONE
         IF(PRESENT(EOL)) EOL = LEN(LINE)
@@ -615,13 +615,13 @@ MODULE GENERIC_INPUT_FILE_INSTRUCTION!, ONLY: GENERIC_INPUT_FILE                
         BACKSPACE(FL%IU)
         READ(FL%IU, *, IOSTAT=IERR) VEC
     END IF
-    FL%ERROR = IERR.NE.Z
+    FL%ERROR = IERR /= Z
     !
   END SUBROUTINE
   !
   SUBROUTINE READ_GENERIC_INPUT_FILE_ARRAY(FL, ARR)
     CLASS(GENERIC_INPUT_FILE),      INTENT(INOUT):: FL
-    REAL(REAL64),DIMENSION(:,:), INTENT(OUT  ):: ARR
+    REAL(REAL64),   DIMENSION(:,:), INTENT(  OUT):: ARR
     INTEGER:: IERR, I
     CHARACTER(10):: LN
     !
@@ -632,18 +632,18 @@ MODULE GENERIC_INPUT_FILE_INSTRUCTION!, ONLY: GENERIC_INPUT_FILE                
         BACKSPACE(FL%IU)
         DO I=ONE, UBOUND(ARR,2)
             READ(FL%IU, *, IOSTAT=IERR) ARR(:,I)
-            IF(IERR.NE.Z) EXIT
+            IF(IERR /= Z) EXIT
         END DO
         !
     END IF
-    FL%ERROR = IERR.NE.Z
+    FL%ERROR = IERR /= Z
     !
   END SUBROUTINE
   !
   IMPURE ELEMENTAL SUBROUTINE REWIND_GENERIC_INPUT_FILE(FL)
     CLASS(GENERIC_INPUT_FILE), INTENT(IN):: FL
     !
-    IF(FL%IU.NE.Z) THEN
+    IF(FL%IU /= Z) THEN
         !
         IF(FL%BINARY) THEN
             !
@@ -673,10 +673,10 @@ MODULE GENERIC_INPUT_FILE_INSTRUCTION!, ONLY: GENERIC_INPUT_FILE                
     INTEGER, OPTIONAL,         INTENT(IN   ):: N
     INTEGER:: I
     !
-    IF(FL%IU.NE.Z) THEN
+    IF(FL%IU /= Z) THEN
         IF(PRESENT(N)) THEN
             DO I=1, N
-                  BACKSPACE(FL%IU) !Potential error is UTF8 BOM file that is opened in the Name File and calling REWIND_GENERIC_INPUT_FILE(FL) outside of the OPEN_GENERIC_INPUT_FILE routiune
+                  BACKSPACE(FL%IU) ! Potential error is UTF8 BOM file that is opened in the Name File and calling REWIND_GENERIC_INPUT_FILE(FL) outside of the OPEN_GENERIC_INPUT_FILE routiune
             END DO
         ELSE
                   BACKSPACE(FL%IU)
@@ -689,7 +689,7 @@ MODULE GENERIC_INPUT_FILE_INSTRUCTION!, ONLY: GENERIC_INPUT_FILE                
     CLASS(GENERIC_INPUT_FILE), INTENT(INOUT):: FL
     LOGICAL:: EXIST
     !
-    IF(FL%IU.NE.Z) THEN
+    IF(FL%IU /= Z) THEN
         IF(.NOT. ALLOCATED(FL%FNAME)) THEN
               CALL GET_FILE_NAME(FL%IU,FL%FNAME,EXIST,FL%IOUT,Z,MSG='GENERIC_INPUT_FILE_INSTRUCTION ERROR: FROUND KEYWORD "EXTERNAL" OR "DATAUNIT", BUT FAILED TO IDENTIFY THE FILE (IN PARTICULAR ITS NAME) THAT IS ASSOCAITED WITH IT.')
         END IF
@@ -726,7 +726,7 @@ MODULE GENERIC_INPUT_FILE_INSTRUCTION!, ONLY: GENERIC_INPUT_FILE                
     CLASS(GENERIC_INPUT_FILE), INTENT(IN):: FL
     INTEGER:: POS
     !
-    IF(FL%IU.NE.Z .AND. FL%STREAM) THEN
+    IF(FL%IU /= Z .AND. FL%STREAM) THEN
         INQUIRE(FL%IU, POS=POS)
     ELSE
         POS = ONE
@@ -738,9 +738,9 @@ MODULE GENERIC_INPUT_FILE_INSTRUCTION!, ONLY: GENERIC_INPUT_FILE                
     CLASS(GENERIC_INPUT_FILE), INTENT(INOUT):: FL
     INTEGER,                  INTENT(IN   ):: POS
     !
-    IF(FL%IU.NE.Z .AND. FL%STREAM) THEN
+    IF(FL%IU /= Z .AND. FL%STREAM) THEN
         READ(FL%IU,'(A)', POS=POS, ADVANCE='NO')
-    ELSEIF(FL%IU.NE.Z) THEN
+    ELSEIF(FL%IU /= Z) THEN
         CALL REWIND_GENERIC_INPUT_FILE(FL)
     END IF
     !

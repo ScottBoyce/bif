@@ -102,7 +102,7 @@ MODULE GENERIC_OUTPUT_FILE_INSTRUCTION!, ONLY: GENERIC_OUTPUT_FILE
   IMPURE ELEMENTAL SUBROUTINE REWIND_GENERIC_OUTPUT_FILE(FL)
     CLASS(GENERIC_OUTPUT_FILE), INTENT(INOUT):: FL
     !
-    IF(FL%IU.NE.Z) REWIND(FL%IU)
+    IF(FL%IU /= Z) REWIND(FL%IU)
     !
   END SUBROUTINE
   !
@@ -251,7 +251,7 @@ MODULE GENERIC_OUTPUT_FILE_INSTRUCTION!, ONLY: GENERIC_OUTPUT_FILE
     !
     ISOPEN = FALSE
     IF(PRESENT(IU)) THEN
-        IF(IU.NE.Z) THEN
+        IF(IU /= Z) THEN
                         INQUIRE(IU, OPENED=ISOPEN)
                         IF(ISOPEN) FL%IU = IU
         END IF
@@ -300,14 +300,14 @@ MODULE GENERIC_OUTPUT_FILE_INSTRUCTION!, ONLY: GENERIC_OUTPUT_FILE
                                                  RETURN
                 ELSEIF(EXT == 'INTERNAL'.OR. EXT == 'LIST' .OR. EXT==BLNK) THEN
                                                  FL%IU = FL%IOUT
-                                                 IF(EXT.NE.BLNK) FOUND_KEY=TRUE
+                                                 IF(EXT /= BLNK) FOUND_KEY=TRUE
                 ELSEIF(EXT == 'EXTERNAL' .OR. EXT=='DATAUNIT') THEN
                                                  CALL GET_INTEGER(LN,LL,ISTART,ISTOP,FL%IOUT,IIN,FL%IU,HAS_ERROR=FL%ERROR)
                                                  !
                                                  IF(FL%ERROR) THEN
                                                      FNAME = LN(ISTART:ISTOP)
                                                      CALL DATAFILE_UNIT_NUMBER%CHECK_BASE(FNAME,FL%IU,NOT_UNIQUE)
-                                                     FL%ERROR = FL%IU.NE.Z .AND. NOT_UNIQUE                 !Found IU and its basename is Unique
+                                                     FL%ERROR = FL%IU /= Z .AND. NOT_UNIQUE                 !Found IU and its basename is Unique
                                                  END IF
                                                  !CALL GET_INTEGER(LN,LL,ISTART,ISTOP,FL%IOUT,IIN,FL%IU,MSG='GENERIC_OUTPUT_FILE_INSTRUCTION ERROR: FROUND KEYWORD "'//TRIM(EXT)//'" WHICH SHOULD BE FOLLOWED BY AN INTEGER REPRESENTING THE UNIT NUMBER TO USE.')
                                                  IF(.NOT. FL%ERROR .AND. CHECK_POST) CALL CHECK_FOR_POST_KEY(LL, LN, IIN, FL%IOUT, BUF, SPLIT, DIM=DIM, FMT=FL%FMT, OLDLOC=PREPOST, NO_WARN=NO_WARN, MSG=MSG)
@@ -331,7 +331,7 @@ MODULE GENERIC_OUTPUT_FILE_INSTRUCTION!, ONLY: GENERIC_OUTPUT_FILE
                       INQUIRE(FILE=FNAME, NUMBER=I, OPENED=ISOPEN)
                       !
                       IF(ISOPEN .AND. PRESENT(IU)) THEN
-                                     IF (I.NE.IU) ISOPEN = FALSE
+                                     IF (I /= IU) ISOPEN = FALSE
                       END IF
                       !
                       ! OVERKILL CHECK
@@ -370,9 +370,9 @@ MODULE GENERIC_OUTPUT_FILE_INSTRUCTION!, ONLY: GENERIC_OUTPUT_FILE
     END IF
     !
     IF(.NOT. FL%ERROR) THEN
-                           IF( FL%IU .NE. Z) THEN
+                           IF( FL%IU /= Z) THEN
                                                  INQUIRE(FL%IU,FORM=FORM_CHK, OPENED=ISOPEN) 
-                                                 FL%BINARY = FORM_CHK .NE. 'FORMATTED'
+                                                 FL%BINARY = FORM_CHK /= 'FORMATTED'
                            ELSE
                                                  ISOPEN = FALSE
                            END IF
@@ -487,7 +487,7 @@ MODULE GENERIC_OUTPUT_FILE_INSTRUCTION!, ONLY: GENERIC_OUTPUT_FILE
     !
     IF(PRESENT(LLOC)) LLOC = LL
     !
-    IF(FL%IU.NE.Z) FL%IS_OPEN = TRUE
+    IF(FL%IU /= Z) FL%IS_OPEN = TRUE
     !
     IF(SAVE_FN) THEN
        IF(ALLOCATED(FNAME)) THEN
@@ -510,11 +510,11 @@ MODULE GENERIC_OUTPUT_FILE_INSTRUCTION!, ONLY: GENERIC_OUTPUT_FILE
     CHARACTER(*),               INTENT(IN   ):: HEADER
     !
     IF(FL%IS_OPEN) THEN
-       IF(FL%BINARY) THEN
-                         WRITE(FL%IU) HEADER
-       ELSE
-                         WRITE(FL%IU,'(A)') HEADER
-       END IF
+        IF(FL%BINARY) THEN
+            WRITE(FL%IU) HEADER
+        ELSE
+            WRITE(FL%IU,'(A)') HEADER
+        END IF
     END IF
     !
     IF(ALLOCATED(FL%FI)) CALL FL%FI%SET_HEADER(HEADER, TRUE)
@@ -526,12 +526,12 @@ MODULE GENERIC_OUTPUT_FILE_INSTRUCTION!, ONLY: GENERIC_OUTPUT_FILE
     CHARACTER(*), OPTIONAL,     INTENT(IN   ):: HEADER
     !
     IF(ALLOCATED(FL%FI)) THEN
-                             IF(PRESENT(HEADER)) THEN
-                                 CALL FL%FI%SIZE_CHECK(HEADER, TRUE)
-                             ELSE
-                                 CALL FL%FI%SIZE_CHECK()
-                             END IF
-                             IF(FL%IU.NE.FL%FI%IU) FL%IU=FL%FI%IU
+        IF(PRESENT(HEADER)) THEN
+            CALL FL%FI%SIZE_CHECK(HEADER, TRUE)
+        ELSE
+            CALL FL%FI%SIZE_CHECK()
+        END IF
+        IF(FL%IU /= FL%FI%IU) FL%IU=FL%FI%IU
     END IF
     !
   END SUBROUTINE
@@ -566,7 +566,7 @@ MODULE GENERIC_OUTPUT_FILE_INSTRUCTION!, ONLY: GENERIC_OUTPUT_FILE
 !       CALL URWORD(LN,LLOC,ISTART,ISTOP,Z,I,R,Z,Z)
 !       READ(LN(ISTART:ISTOP),*,IOSTAT=IERR) FL%IU
 !       !
-!       IF (IERR .NE. Z) THEN
+!       IF (IERR /= Z) THEN
 !             !
 !             EXT = LN(ISTART:ISTOP)
 !             CALL UPPER(EXT)
@@ -605,11 +605,11 @@ MODULE GENERIC_OUTPUT_FILE_INSTRUCTION!, ONLY: GENERIC_OUTPUT_FILE
     CHARACTER(*), INTENT(IN):: LINE
     !
     IF(FL%IS_OPEN) THEN
-       IF(FL%BINARY) THEN
-                         WRITE(FL%IU) LINE
-       ELSE
-                         WRITE(FL%IU,'(A)') TRIM(LINE)
-       END IF
+        IF(FL%BINARY) THEN
+            WRITE(FL%IU) LINE
+        ELSE
+            WRITE(FL%IU,'(A)') TRIM(LINE)
+        END IF
     END IF
     !
   END SUBROUTINE
@@ -624,195 +624,19 @@ MODULE GENERIC_OUTPUT_FILE_INSTRUCTION!, ONLY: GENERIC_OUTPUT_FILE
     CHARACTER(4):: DEC
     !
     IF(FL%IS_OPEN) THEN
-       !
-       IF(FL%BINARY) THEN
-           SELECT TYPE (VAL)
-           TYPE IS (REAL(REAL64))
-                                      WRITE(FL%IU) VAL
-           TYPE IS (INTEGER)
-                                      WRITE(FL%IU) VAL
-           TYPE IS (REAL(REAL32))
-                                      WRITE(FL%IU) VAL
-           TYPE IS (CHARACTER(*))
-                                      WRITE(FL%IU) VAL
-           TYPE IS (REAL(REAL128))
-                                      WRITE(FL%IU) VAL
-           END SELECT
-           RETURN
-       END IF
-       !
-       FMT=BLNK
-       DEC=BLNK
-       IF(PRESENT(WIDTH)) THEN
-           WRITE(FMT,'(I30)') WIDTH - 1  !FORCE 1 blank between numbers
-           FMT = ADJUSTL(FMT)
-           WRITE(DEC,'(I4)') WIDTH - 8  !WIDTH  - 7 - 1
-           DEC = ADJUSTL(DEC)
-       END IF
-       !
-       ADV='YES'
-       IF(PRESENT(ADVANCE)) THEN
-           IF (.NOT. ADVANCE) ADV='NO'
-       END IF
-       !
-       SELECT TYPE (VAL)
-       TYPE IS (REAL(REAL64))
-           IF(FMT==BLNK) THEN
-                           FMT = '(1x ES19.11)'
-           ELSE
-                           FMT = '(1x ES'//TRIM(FMT)//'.'//DEC//')'
-           END IF
-           !
-           WRITE(FL%IU,FMT, ADVANCE=ADV) VAL
-       TYPE IS (REAL(REAL32))
-           IF(FMT==BLNK) THEN
-                           FMT = '(1x ES19.11)'
-           ELSE
-                           FMT = '(1x ES'//TRIM(FMT)//'.'//DEC//')'
-           END IF
-           !
-           WRITE(FL%IU,FMT, ADVANCE=ADV) VAL
-       TYPE IS (INTEGER)
-           IF(FMT==BLNK) THEN
-                           FMT = '(1x I19)'
-           ELSE
-                           FMT = '(1x I'//TRIM(FMT)//')'
-           END IF
-           !
-           WRITE(FL%IU,FMT, ADVANCE=ADV) VAL
-       TYPE IS (CHARACTER(*))
-           IF(FMT==BLNK) THEN
-                           FMT = '(A)'
-           ELSE
-                           FMT = '(1x A'//TRIM(FMT)//')'
-           END IF
-           !
-           WRITE(FL%IU,FMT, ADVANCE=ADV) TRIM(VAL)
-       TYPE IS (REAL(REAL128))
-           IF(FMT==BLNK) THEN
-                           FMT = '(1x ES19.11)'
-           ELSE
-                           FMT = '(1x ES'//TRIM(FMT)//'.'//DEC//')'
-           END IF
-           !
-           WRITE(FL%IU,FMT, ADVANCE=ADV) VAL
-       END SELECT
-    END IF
-    !
-  END SUBROUTINE
-  !
-  SUBROUTINE GENERIC_OUTPUT_FILE_WRITE_VECTOR(FL,VAL,WIDTH,ADVANCE)
-    CLASS(GENERIC_OUTPUT_FILE), INTENT(INOUT):: FL
-    CLASS(*),DIMENSION(:),INTENT(IN):: VAL
-    INTEGER, OPTIONAL,    INTENT(IN):: WIDTH
-    LOGICAL, OPTIONAL, INTENT(IN):: ADVANCE
-    CHARACTER(3 ):: ADV
-    CHARACTER(30):: FMT
-    CHARACTER(4):: DEC
-    INTEGER:: I
-    IF(FL%IS_OPEN) THEN
-       !
-       IF(FL%BINARY) THEN
-           SELECT TYPE (VAL)
-           TYPE IS (REAL(REAL64))  
-                                    WRITE(FL%IU) VAL
-           TYPE IS (INTEGER)  
-                                    WRITE(FL%IU) VAL
-           TYPE IS (REAL(REAL32))  
-                                    WRITE(FL%IU) VAL
-           TYPE IS (CHARACTER(*))  
-                                    WRITE(FL%IU) VAL
-           TYPE IS (REAL(REAL128))  
-                                    WRITE(FL%IU) VAL
-           END SELECT
-           RETURN
-       END IF
-       !
-       FMT=BLNK
-       DEC=BLNK
-       IF(PRESENT(WIDTH)) THEN
-           WRITE(FMT,'(I30)') WIDTH - 1  !FORCE 1 blank between numbers
-           FMT = ADJUSTL(FMT)
-           WRITE(DEC,'(I4)') WIDTH - 8  !WIDTH  - 7 - 1
-           DEC = ADJUSTL(DEC)
-       END IF
-       !
-       ADV='YES'
-       IF(PRESENT(ADVANCE)) THEN
-           IF (.NOT. ADVANCE) ADV='NO'
-       END IF
-       !
-       SELECT TYPE (VAL)
-       TYPE IS (REAL(REAL64))
-           IF(FMT==BLNK) THEN
-                           FMT = '(*(1x ES19.11))'
-           ELSE
-                           FMT = '(*(1x ES'//TRIM(FMT)//'.'//DEC//'))'
-           END IF
-           !
-           WRITE(FL%IU,FMT, ADVANCE=ADV) VAL
-       TYPE IS (REAL(REAL32))
-           IF(FMT==BLNK) THEN
-                           FMT = '(*(1x ES19.11))'
-           ELSE
-                           FMT = '(*(1x ES'//TRIM(FMT)//'.'//DEC//'))'
-           END IF
-           !
-           WRITE(FL%IU,FMT, ADVANCE=ADV) VAL
-       TYPE IS (INTEGER)
-           IF(FMT==BLNK) THEN
-                           FMT = '(*(1x I19))'
-           ELSE
-                           FMT = '(*(1x I'//TRIM(FMT)//'))'
-           END IF
-           !
-           WRITE(FL%IU,FMT, ADVANCE=ADV) VAL
-       TYPE IS (CHARACTER(*))
-           IF(FMT==BLNK) THEN
-                           FMT = '(*(A))'
-           ELSE
-                           FMT = '(*(1x A'//TRIM(FMT)//'))'
-           END IF
-           !
-           DO I=ONE,SIZE(VAL)
-                           WRITE(FL%IU,FMT) TRIM(VAL(I))
-           END DO
-       TYPE IS (REAL(REAL128))
-           IF(FMT==BLNK) THEN
-                           FMT = '(*(1x ES19.11))'
-           ELSE
-                           FMT = '(*(1x ES'//TRIM(FMT)//'.'//DEC//'))'
-           END IF
-           !
-           WRITE(FL%IU,FMT, ADVANCE=ADV) VAL
-       END SELECT
-    END IF
-    !
-  END SUBROUTINE
-  !
-  SUBROUTINE GENERIC_OUTPUT_FILE_WRITE_ARRAY(FL,VAL,WIDTH,ADVANCE)
-    CLASS(GENERIC_OUTPUT_FILE), INTENT(INOUT):: FL
-    CLASS(*),DIMENSION(:,:),INTENT(IN):: VAL
-    INTEGER, OPTIONAL,    INTENT(IN):: WIDTH
-    LOGICAL, OPTIONAL, INTENT(IN):: ADVANCE
-    CHARACTER(3 ):: ADV
-    CHARACTER(30):: FMT
-    CHARACTER(4):: DEC
-    INTEGER:: I
-    IF(FL%IS_OPEN) THEN
         !
         IF(FL%BINARY) THEN
             SELECT TYPE (VAL)
-            TYPE IS (REAL(REAL64))  
-                                    WRITE(FL%IU) VAL
-            TYPE IS (INTEGER)  
-                                    WRITE(FL%IU) VAL
-            TYPE IS (REAL(REAL32))  
-                                    WRITE(FL%IU) VAL
-            TYPE IS (CHARACTER(*))  
-                                    WRITE(FL%IU) VAL
-            TYPE IS (REAL(REAL128))  
-                                    WRITE(FL%IU) VAL
+            TYPE IS (REAL(REAL64))
+                WRITE(FL%IU) VAL
+            TYPE IS (INTEGER)
+                WRITE(FL%IU) VAL
+            TYPE IS (REAL(REAL32))
+                WRITE(FL%IU) VAL
+            TYPE IS (CHARACTER(*))
+                WRITE(FL%IU) VAL
+            TYPE IS (REAL(REAL128))
+                WRITE(FL%IU) VAL
             END SELECT
             RETURN
         END IF
@@ -834,53 +658,229 @@ MODULE GENERIC_OUTPUT_FILE_INSTRUCTION!, ONLY: GENERIC_OUTPUT_FILE
         SELECT TYPE (VAL)
         TYPE IS (REAL(REAL64))
             IF(FMT==BLNK) THEN
-                            FMT = '(*(1x ES19.11))'
+                FMT = '(1x ES19.11)'
             ELSE
-                            FMT = '(*(1x ES'//TRIM(FMT)//'.'//DEC//'))'
+                FMT = '(1x ES'//TRIM(FMT)//'.'//DEC//')'
             END IF
             !
-            DO I=ONE, UBOUND(VAL,2)
-                                 WRITE(FL%IU,FMT, ADVANCE=ADV) VAL(:,I)
-            END DO
+            WRITE(FL%IU,FMT, ADVANCE=ADV) VAL
         TYPE IS (REAL(REAL32))
             IF(FMT==BLNK) THEN
-                            FMT = '(*(1x ES19.11))'
+                FMT = '(1x ES19.11)'
             ELSE
-                            FMT = '(*(1x ES'//TRIM(FMT)//'.'//DEC//'))'
+                FMT = '(1x ES'//TRIM(FMT)//'.'//DEC//')'
             END IF
             !
-            DO I=ONE, UBOUND(VAL,2)
-                                 WRITE(FL%IU,FMT, ADVANCE=ADV) VAL(:,I)
-            END DO
+            WRITE(FL%IU,FMT, ADVANCE=ADV) VAL
         TYPE IS (INTEGER)
             IF(FMT==BLNK) THEN
-                            FMT = '(*(1x I19))'
+                FMT = '(1x I19)'
             ELSE
-                            FMT = '(*(1x I'//TRIM(FMT)//'))'
+                FMT = '(1x I'//TRIM(FMT)//')'
             END IF
             !
-            DO I=ONE, UBOUND(VAL,2)
-                                 WRITE(FL%IU,FMT, ADVANCE=ADV) VAL(:,I)
-            END DO
+            WRITE(FL%IU,FMT, ADVANCE=ADV) VAL
         TYPE IS (CHARACTER(*))
             IF(FMT==BLNK) THEN
-                            FMT = '(*(A))'
+                FMT = '(A)'
             ELSE
-                            FMT = '(*(1x A'//TRIM(FMT)//'))'
+                FMT = '(1x A'//TRIM(FMT)//')'
             END IF
             !
-            DO I=ONE, UBOUND(VAL,2)
-                                 WRITE(FL%IU,FMT, ADVANCE=ADV) VAL(:,I)
+            WRITE(FL%IU,FMT, ADVANCE=ADV) TRIM(VAL)
+        TYPE IS (REAL(REAL128))
+            IF(FMT==BLNK) THEN
+                FMT = '(1x ES19.11)'
+            ELSE
+                FMT = '(1x ES'//TRIM(FMT)//'.'//DEC//')'
+            END IF
+            !
+            WRITE(FL%IU,FMT, ADVANCE=ADV) VAL
+        END SELECT
+    END IF
+    !
+  END SUBROUTINE
+  !
+  SUBROUTINE GENERIC_OUTPUT_FILE_WRITE_VECTOR(FL,VAL,WIDTH,ADVANCE)
+    CLASS(GENERIC_OUTPUT_FILE), INTENT(INOUT):: FL
+    CLASS(*),DIMENSION(:),INTENT(IN):: VAL
+    INTEGER, OPTIONAL,    INTENT(IN):: WIDTH
+    LOGICAL, OPTIONAL, INTENT(IN):: ADVANCE
+    CHARACTER(3 ):: ADV
+    CHARACTER(30):: FMT
+    CHARACTER(4):: DEC
+    INTEGER:: I
+    IF(FL%IS_OPEN) THEN
+        !
+        IF(FL%BINARY) THEN
+            SELECT TYPE (VAL)
+            TYPE IS (REAL(REAL64))
+                WRITE(FL%IU) VAL
+            TYPE IS (INTEGER)
+                WRITE(FL%IU) VAL
+            TYPE IS (REAL(REAL32))
+                WRITE(FL%IU) VAL
+            TYPE IS (CHARACTER(*))
+                WRITE(FL%IU) VAL
+            TYPE IS (REAL(REAL128))
+                WRITE(FL%IU) VAL
+            END SELECT
+            RETURN
+        END IF
+        !
+        FMT=BLNK
+        DEC=BLNK
+        IF(PRESENT(WIDTH)) THEN
+            WRITE(FMT,'(I30)') WIDTH - 1  !FORCE 1 blank between numbers
+            FMT = ADJUSTL(FMT)
+            WRITE(DEC,'(I4)') WIDTH - 8  !WIDTH  - 7 - 1
+            DEC = ADJUSTL(DEC)
+        END IF
+        !
+        ADV='YES'
+        IF(PRESENT(ADVANCE)) THEN
+            IF (.NOT. ADVANCE) ADV='NO'
+        END IF
+        !
+        SELECT TYPE (VAL)
+        TYPE IS (REAL(REAL64))
+            IF(FMT==BLNK) THEN
+                FMT = '(*(1x ES19.11))'
+            ELSE
+                FMT = '(*(1x ES'//TRIM(FMT)//'.'//DEC//'))'
+            END IF
+            !
+            WRITE(FL%IU,FMT, ADVANCE=ADV) VAL
+        TYPE IS (REAL(REAL32))
+            IF(FMT==BLNK) THEN
+                FMT = '(*(1x ES19.11))'
+            ELSE
+                FMT = '(*(1x ES'//TRIM(FMT)//'.'//DEC//'))'
+            END IF
+            !
+            WRITE(FL%IU,FMT, ADVANCE=ADV) VAL
+        TYPE IS (INTEGER)
+            IF(FMT==BLNK) THEN
+                FMT = '(*(1x I19))'
+            ELSE
+                FMT = '(*(1x I'//TRIM(FMT)//'))'
+            END IF
+            !
+            WRITE(FL%IU,FMT, ADVANCE=ADV) VAL
+        TYPE IS (CHARACTER(*))
+            IF(FMT==BLNK) THEN
+                FMT = '(*(A))'
+            ELSE
+                FMT = '(*(1x A'//TRIM(FMT)//'))'
+            END IF
+            !
+            DO I=ONE,SIZE(VAL)
+                WRITE(FL%IU,FMT) TRIM(VAL(I))
             END DO
         TYPE IS (REAL(REAL128))
             IF(FMT==BLNK) THEN
-                            FMT = '(*(1x ES19.11))'
+                FMT = '(*(1x ES19.11))'
             ELSE
-                            FMT = '(*(1x ES'//TRIM(FMT)//'.'//DEC//'))'
+                FMT = '(*(1x ES'//TRIM(FMT)//'.'//DEC//'))'
+            END IF
+            !
+            WRITE(FL%IU,FMT, ADVANCE=ADV) VAL
+        END SELECT
+    END IF
+    !
+  END SUBROUTINE
+  !
+  SUBROUTINE GENERIC_OUTPUT_FILE_WRITE_ARRAY(FL,VAL,WIDTH,ADVANCE)
+    CLASS(GENERIC_OUTPUT_FILE), INTENT(INOUT):: FL
+    CLASS(*),DIMENSION(:,:),INTENT(IN):: VAL
+    INTEGER, OPTIONAL,    INTENT(IN):: WIDTH
+    LOGICAL, OPTIONAL, INTENT(IN):: ADVANCE
+    CHARACTER(3 ):: ADV
+    CHARACTER(30):: FMT
+    CHARACTER(4):: DEC
+    INTEGER:: I
+    IF(FL%IS_OPEN) THEN
+        !
+        IF(FL%BINARY) THEN
+            SELECT TYPE (VAL)
+            TYPE IS (REAL(REAL64))
+                WRITE(FL%IU) VAL
+            TYPE IS (INTEGER)
+                WRITE(FL%IU) VAL
+            TYPE IS (REAL(REAL32))
+                WRITE(FL%IU) VAL
+            TYPE IS (CHARACTER(*))
+                WRITE(FL%IU) VAL
+            TYPE IS (REAL(REAL128))
+                WRITE(FL%IU) VAL
+            END SELECT
+            RETURN
+        END IF
+        !
+        FMT=BLNK
+        DEC=BLNK
+        IF(PRESENT(WIDTH)) THEN
+            WRITE(FMT,'(I30)') WIDTH - 1  !FORCE 1 blank between numbers
+            FMT = ADJUSTL(FMT)
+            WRITE(DEC,'(I4)') WIDTH - 8  !WIDTH  - 7 - 1
+            DEC = ADJUSTL(DEC)
+        END IF
+        !
+        ADV='YES'
+        IF(PRESENT(ADVANCE)) THEN
+            IF (.NOT. ADVANCE) ADV='NO'
+        END IF
+        !
+        SELECT TYPE (VAL)
+        TYPE IS (REAL(REAL64))
+            IF(FMT==BLNK) THEN
+                FMT = '(*(1x ES19.11))'
+            ELSE
+                FMT = '(*(1x ES'//TRIM(FMT)//'.'//DEC//'))'
             END IF
             !
             DO I=ONE, UBOUND(VAL,2)
-                                 WRITE(FL%IU,FMT, ADVANCE=ADV) VAL(:,I)
+                WRITE(FL%IU,FMT, ADVANCE=ADV) VAL(:,I)
+            END DO
+        TYPE IS (REAL(REAL32))
+            IF(FMT==BLNK) THEN
+                FMT = '(*(1x ES19.11))'
+            ELSE
+                FMT = '(*(1x ES'//TRIM(FMT)//'.'//DEC//'))'
+            END IF
+            !
+            DO I=ONE, UBOUND(VAL,2)
+                WRITE(FL%IU,FMT, ADVANCE=ADV) VAL(:,I)
+            END DO
+        TYPE IS (INTEGER)
+            IF(FMT==BLNK) THEN
+                FMT = '(*(1x I19))'
+            ELSE
+                FMT = '(*(1x I'//TRIM(FMT)//'))'
+            END IF
+            !
+            DO I=ONE, UBOUND(VAL,2)
+                WRITE(FL%IU,FMT, ADVANCE=ADV) VAL(:,I)
+            END DO
+        TYPE IS (CHARACTER(*))
+            IF(FMT==BLNK) THEN
+                FMT = '(*(A))'
+            ELSE
+                FMT = '(*(1x A'//TRIM(FMT)//'))'
+            END IF
+            !
+            DO I=ONE, UBOUND(VAL,2)
+                WRITE(FL%IU,FMT, ADVANCE=ADV) VAL(:,I)
+            END DO
+        TYPE IS (REAL(REAL128))
+            IF(FMT==BLNK) THEN
+                FMT = '(*(1x ES19.11))'
+            ELSE
+                FMT = '(*(1x ES'//TRIM(FMT)//'.'//DEC//'))'
+            END IF
+            !
+            DO I=ONE, UBOUND(VAL,2)
+                WRITE(FL%IU,FMT, ADVANCE=ADV) VAL(:,I)
             END DO
         END SELECT
     END IF
@@ -891,9 +891,9 @@ MODULE GENERIC_OUTPUT_FILE_INSTRUCTION!, ONLY: GENERIC_OUTPUT_FILE
     CLASS(GENERIC_OUTPUT_FILE), INTENT(INOUT):: FL
     LOGICAL:: EXIST
     !
-    IF(FL%IU.NE.Z) THEN
+    IF(FL%IU /= Z) THEN
         IF(.NOT. ALLOCATED(FL%FNAME)) THEN
-              CALL GET_FILE_NAME(FL%IU,FL%FNAME,EXIST,FL%IOUT,Z,MSG='GENERIC_INPUT_FILE_INSTRUCTION ERROR: FROUND KEYWORD "EXTERNAL" OR "DATAUNIT", BUT FAILED TO IDENTIFY THE FILE (IN PARTICULAR ITS NAME) THAT IS ASSOCAITED WITH IT.')
+            CALL GET_FILE_NAME(FL%IU,FL%FNAME,EXIST,FL%IOUT,Z,MSG='GENERIC_OUTPUT_FILE ERROR: FROUND KEYWORD "EXTERNAL" OR "DATAUNIT", BUT FAILED TO IDENTIFY THE FILE (IN PARTICULAR ITS NAME) THAT IS ASSOCAITED WITH IT.')
         END IF
     ELSEIF(ALLOCATED(FL%FNAME)) THEN
         DEALLOCATE(FL%FNAME)
@@ -906,9 +906,9 @@ MODULE GENERIC_OUTPUT_FILE_INSTRUCTION!, ONLY: GENERIC_OUTPUT_FILE
     INTEGER:: IERR
     !
     IF    (FL%OPENCLOSE) THEN
-                         CLOSE(FL%IU, IOSTAT=IERR)
+        CLOSE(FL%IU, IOSTAT=IERR)
     ELSEIF(FL%IU /= Z) THEN
-                         FLUSH(FL%IU, IOSTAT=IERR)
+        FLUSH(FL%IU, IOSTAT=IERR)
     END IF
     !
     IF(ALLOCATED(FL%FI))    DEALLOCATE(FL%FI)
