@@ -1,8 +1,55 @@
+!--------------------------------------------------------------------------------------------------------
 !
-! CODE DEVELOPED BY SCOTT E BOYCE 
-!                   CONTACT <seboyce@usgs.gov> or <Boyce@engineer.com>
+! GENERIC_INPUT_FILE_INSTRUCTION MODULE
 !
+! Read-Only File Object/Data Type.
 !
+! Code developed by Scott E Boyce
+!                   Contact <seboyce@usgs.gov> or <Boyce@engineer.com>
+!--------------------------------------------------------------------------------------------------------
+!
+! Module provides a data type with a generic interface for opening a read only file. 
+!
+! Given a line sent to open statement it will:
+! 
+! first  checks for unit number. if there then it will use that.
+! second checks for "external"   keyword and then obtain unit number after it
+! third  checks for "open/close" keyword and then opens file and sets unit number
+! fourth attempts to open file specified within line. raises an error if it cannot be opened. error can be overrided with nostop
+!
+!--------------------------------------------------------------------------------------------------------
+!
+! Example Use
+!
+!  PROGRAM EXAMPLE
+!    !
+!    USE GENERIC_INPUT_FILE_INSTRUCTION, ONLY: GENERIC_INPUT_FILE
+!    !
+!    TYPE(GENERIC_INPUT_FILE):: FL
+!    CHARACTER(128):: LINE
+!    !
+!    ! Example 1 open a file
+!    !
+!    FL%OPEN('Input_File.txt')
+!    !
+!    ! File is opened on unit stored on FL%IU
+!    READ(FL%IU, '(A)') LINE
+!    !
+!    ! Or use built in read function
+!    CALL FL%READ(LINE)
+!    !
+!    ! Move back 1 line
+!    CALL FL%BACKSPACE()
+!    !
+!    ! Move back to first line
+!    CALL FL%REWIND()
+!    !
+!    ! Close file   - Note automatically done if FL is deallocated.
+!    CALL FL%CLOSE()
+!    !
+!    END PROGRAM
+!
+!--------------------------------------------------------------------------------------------------------
 !       
 !   GENERIC_INPUT_FILE_INSTRUCTION
 !                           DATA TYPE
