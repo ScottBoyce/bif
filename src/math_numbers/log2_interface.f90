@@ -43,7 +43,7 @@ MODULE LOG2_INTERFACE
     REAL(REAL64), INTENT(IN):: X
     REAL(REAL64):: LOG2
     !
-    IF( X > 0D0) THEN
+    IF( X > 0.0_real64) THEN
                  LOG2 = LOG(X) * LOG_2_inv ! / 0.693147180559945286_REAL64
     ELSE
                  LOG2 = -HUGE(X)

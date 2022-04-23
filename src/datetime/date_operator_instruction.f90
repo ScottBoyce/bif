@@ -1393,9 +1393,9 @@ MODULE DATE_OPERATOR_INSTRUCTION!, ONLY: DATE_OPERATOR
                                        DT%JDN   = JULIANDAY(DT%DAY, DT%MONTH, DT%YEAR) 
                                        !
                                        IF(ISLEAPYEAR(DT%YEAR)) THEN
-                                           YFRAC = YFRAC * 366D0
+                                           YFRAC = YFRAC * 366.0_real64
                                        ELSE
-                                           YFRAC = YFRAC * 365D0
+                                           YFRAC = YFRAC * 365.0_real64
                                        END IF
                                        !
                                        CALL ADD_DAY_INT(DT, FRAC=YFRAC)
@@ -1693,7 +1693,7 @@ MODULE DATE_OPERATOR_INSTRUCTION!, ONLY: DATE_OPERATOR
     ELSEIF(DT%YEAR.NE.NINER) THEN
                                  NDAY = YEAR_DAY_COUNT_DBLE(DT%YEAR, LEAP)
     ELSE
-                                 NDAY = 365D0
+                                 NDAY = 365.0_real64
     END IF
     !
   END FUNCTION
@@ -1950,20 +1950,20 @@ MODULE DATE_OPERATOR_INSTRUCTION!, ONLY: DATE_OPERATOR
         YEAR = DT2%YEAR - ONE
         DO WHILE (YEAR >= DT%YEAR)
             IF ( ISLEAPYEAR(YEAR) ) THEN
-                DIFF=DIFF-366D0
+                DIFF=DIFF-366.0_real64
             ELSE
-                DIFF=DIFF-365D0
+                DIFF=DIFF-365.0_real64
             END IF
             YEAR = YEAR - ONE
         END DO
     ELSEIF (DT%YEAR > DT2%YEAR) THEN
-        !DIFF= -1D0*DBLE(DT2%JDN) - DT2%FRAC
+        !DIFF= -1.D0*DBLE(DT2%JDN) - DT2%FRAC
         YEAR = DT2%YEAR 
         DO WHILE (YEAR <  DT%YEAR)
             IF ( ISLEAPYEAR(YEAR) ) THEN
-                DIFF=DIFF+366D0
+                DIFF=DIFF+366.0_real64
             ELSE
-                DIFF=DIFF+365D0
+                DIFF=DIFF+365.0_real64
             END IF
             YEAR = YEAR + ONE
         END DO
@@ -2056,13 +2056,13 @@ MODULE DATE_OPERATOR_INSTRUCTION!, ONLY: DATE_OPERATOR
     ELSEIF(ABS(DT%FRAC-0.5D0) <= HALFSEC ) THEN
         TIME = "12:00:00"
     ELSE
-        HOUR= INT( 24D0 * DT%FRAC)
+        HOUR= INT( 24.0_real64 * DT%FRAC)
         !
-        TEMP = (24D0 * DT%FRAC) - DBLE(HOUR)
-        MIN =INT( 60D0*TEMP )
+        TEMP = (24.0_real64 * DT%FRAC) - DBLE(HOUR)
+        MIN =INT( 60.0_real64*TEMP )
         !
-        TEMP = 60D0*TEMP - DBLE(MIN)
-        SEC = INT( 60D0*TEMP )
+        TEMP = 60.0_real64*TEMP - DBLE(MIN)
+        SEC = INT( 60.0_real64*TEMP )
         IF(SEC < Z) SEC = Z
         !
         IF( SEC==60) THEN
@@ -2309,7 +2309,7 @@ MODULE DATE_OPERATOR_INSTRUCTION!, ONLY: DATE_OPERATOR
                             PPRINT = PPRINT//TRIM('0')//' hours, '
                     END IF
                     !
-                    DIFF = DIFF * 60D0  !Now in minutes
+                    DIFF = DIFF * 60.0_real64  !Now in minutes
                     !
                     IF(DIFF > UNO) THEN
                             !
@@ -2329,7 +2329,7 @@ MODULE DATE_OPERATOR_INSTRUCTION!, ONLY: DATE_OPERATOR
                             PPRINT = PPRINT//TRIM('0')//' minutes, '
                     END IF
                     !
-                    DIFF = DIFF * 60D0  !Now in seconds
+                    DIFF = DIFF * 60.0_real64  !Now in seconds
                     !
                     IF(DIFF > UNO .AND. NUM .NE. BLNK ) THEN !>1sec and have written a previous time unit
                             !
@@ -2357,7 +2357,7 @@ MODULE DATE_OPERATOR_INSTRUCTION!, ONLY: DATE_OPERATOR
     ELSEIF(IPRT == ONE) THEN
                             DIFF = DIFF*DAY2SEC
                             !
-                            IF(DIFF > 10000D0) THEN
+                            IF(DIFF > 10000.0_real64) THEN
                                   WRITE(NUM,'(F15.0)') DIFF
                             ELSE
                                   WRITE(NUM,'(F15.3)') DIFF
@@ -2368,7 +2368,7 @@ MODULE DATE_OPERATOR_INSTRUCTION!, ONLY: DATE_OPERATOR
     ELSEIF(IPRT == TWO) THEN
                             DIFF = DIFF*DAY2MIN
                             !
-                            IF(DIFF > 10000D0) THEN
+                            IF(DIFF > 10000.0_real64) THEN
                                   WRITE(NUM,'(F15.0)') DIFF
                             ELSE
                                   WRITE(NUM,'(F15.3)') DIFF
@@ -2381,7 +2381,7 @@ MODULE DATE_OPERATOR_INSTRUCTION!, ONLY: DATE_OPERATOR
                             DIFF = DIFF*DAY2HR
                             !
                             !
-                            IF(DIFF > 10000D0) THEN
+                            IF(DIFF > 10000.0_real64) THEN
                                   WRITE(NUM,'(F15.1)') DIFF
                             ELSE
                                   WRITE(NUM,'(F15.5)') DIFF
@@ -2391,7 +2391,7 @@ MODULE DATE_OPERATOR_INSTRUCTION!, ONLY: DATE_OPERATOR
                             PPRINT = TRIM(NUM)//' hours'
     ELSEIF(IPRT ==   4) THEN
                             !
-                            IF(DIFF > 10000D0) THEN
+                            IF(DIFF > 10000.0_real64) THEN
                                   WRITE(NUM,'(F15.2)') DIFF
                             ELSE
                                   WRITE(NUM,'(F15.5)') DIFF

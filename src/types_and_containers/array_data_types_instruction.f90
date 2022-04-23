@@ -1182,27 +1182,27 @@ MODULE ARRAY_DATA_TYPES!, ONLY: INTEGER_VECTOR, DOUBLE_VECTOR, INTEGER_MATRIX, D
                                          NUM = 'inf'
      ELSEIF(VAL <= -0.999999*HUGE(VAL))  THEN
                                          NUM = '-inf'
-     ELSEIF(VAL==0D0)                     THEN
+     ELSEIF(VAL==0.D0)                    THEN
                                          WRITE(NUM,'(F3.1)') VAL
-     ELSEIF(VAL>=1D100 .OR. VAL<=-1D100) THEN
+     ELSEIF(VAL>=1.D100 .OR. VAL<=-1.D100) THEN
                                          WRITE(NUM,'(ES16.7E3)') VAL
-     ELSEIF(VAL>=1D10 .OR. VAL<=-1D10)   THEN
+     ELSEIF(VAL>=1.D10 .OR. VAL<=-1.D10)   THEN
                                          WRITE(NUM,'(ES16.7E2)') VAL
-     ELSEIF( DVAL10 == AINT(DVAL10) .AND. (DVAL10>=1d0.OR.DVAL10<=-1d0) ) THEN
+     ELSEIF( DVAL10 == AINT(DVAL10) .AND. (DVAL10>=1.d0.OR.DVAL10<=-1.d0) ) THEN
                                                                           WRITE(NUM,'(F16.1)') VAL
-     ELSEIF( DVAL1C == AINT(DVAL1C) .AND. (DVAL1C>=1d0.OR.DVAL1C<=-1d0) ) THEN
+     ELSEIF( DVAL1C == AINT(DVAL1C) .AND. (DVAL1C>=1.d0.OR.DVAL1C<=-1.d0) ) THEN
                                                                           WRITE(NUM,'(F16.2)') VAL
-     ELSEIF( DVAL1K == AINT(DVAL1K) .AND. (DVAL1K>=1d0.OR.DVAL1K<=-1d0) ) THEN
+     ELSEIF( DVAL1K == AINT(DVAL1K) .AND. (DVAL1K>=1.d0.OR.DVAL1K<=-1.d0) ) THEN
                                                                           WRITE(NUM,'(F16.3)') VAL
-     ELSEIF(VAL>=1D6 .OR. VAL<=-1D6)              THEN
+     ELSEIF(VAL>=1.D6 .OR. VAL<=-1.D6)            THEN
                                                   WRITE(NUM,'(ES16.7E1)') VAL
-     ELSEIF(VAL>=1D2 .OR. VAL<=-1D2 )             THEN
+     ELSEIF(VAL>=1.D2 .OR. VAL<=-1.D2 )           THEN
                                                   WRITE(NUM,'(F16.5)') VAL
      ELSEIF(VAL>=0.00099D0 .OR. VAL<=-0.00099D0 ) THEN
                                                   WRITE(NUM,'(F16.7)') VAL
-     ELSEIF(VAL>=1D-9 .OR. VAL<=-1D-9)            THEN
+     ELSEIF(VAL>=1.D-9 .OR. VAL<=-1.D-9)          THEN
                                                   WRITE(NUM,'(ES16.7E1)') VAL
-     ELSEIF(VAL>=1D-99 .OR. VAL<=-1D-99)          THEN
+     ELSEIF(VAL>=1.D-99 .OR. VAL<=-1.D-99)        THEN
                                                   WRITE(NUM,'(ES16.7E2)') VAL
      ELSE
                                                   WRITE(NUM,'(ES16.7E3)') VAL

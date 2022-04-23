@@ -1355,7 +1355,7 @@ RECURSIVE PURE SUBROUTINE PROCESS_MAGIC(Eqn,R,MAGIC_ANS,NML,NMV,ERRMSG)
                                      R = R + ONE
                           IF(I == Z) CALL MAKE_INT_FROM_Eqn(Eqn(R)%T,SS,SubEqn,Rsub,MP,NML,NMV,ERRMSG,I)
                                      R = R + ONE
-                          IF(I == Z) FRAC = DBLE(HH)/24D0 + DBLE(MM)/1440D0 + DBLE(SS)/86400D0
+                          IF(I == Z) FRAC = DBLE(HH)/24.D0 + DBLE(MM)/1440.D0 + DBLE(SS)/86400.D0
                        END IF
                        !
                        IF(I == Z) THEN
@@ -3000,7 +3000,7 @@ PURE FUNCTION DBLE2STR(DVAL)
         NUM = '-inf'
     ELSE
      !
-     IF(DVAL==0D0)                               THEN
+     IF(DVAL==0.D0)                              THEN
         WRITE(NUM,'(F3.1)') DVAL
      ELSEIF(DVAL>=1D100 .OR. DVAL<=-1D100)       THEN
         WRITE(NUM,'(ES40.7E3)') DVAL
@@ -3016,7 +3016,7 @@ PURE FUNCTION DBLE2STR(DVAL)
         WRITE(NUM,'(ES40.7E1)') DVAL
      ELSEIF(DVAL>=1D-99 .OR. DVAL<=-1D-99)       THEN
         WRITE(NUM,'(ES40.7E2)') DVAL
-     ELSEIF(DVAL>0D0 .OR. DVAL<0D0)              THEN
+     ELSEIF(DVAL>0.D0 .OR. DVAL<0.D0)            THEN
         WRITE(NUM,'(ES40.7E3)') DVAL
      END IF
     END IF
@@ -3036,10 +3036,10 @@ PURE FUNCTION DBLE2STR(DVAL)
       CASE('NAN');   VAL = IEEE_VALUE(VAL, IEEE_QUIET_NAN)
       CASE('INF');   VAL = inf
       CASE('-INF');  VAL = ninf
-      CASE('-5','-5.','-5.0');  VAL = -5D0
-      CASE('-4','-4.','-4.0');  VAL = -4D0
-      CASE('-3','-3.','-3.0');  VAL = -3D0
-      CASE('-2','-2.','-2.0');  VAL = -2D0
+      CASE('-5','-5.','-5.0');  VAL = -5.D0
+      CASE('-4','-4.','-4.0');  VAL = -4.D0
+      CASE('-3','-3.','-3.0');  VAL = -3.D0
+      CASE('-2','-2.','-2.0');  VAL = -2.D0
       CASE('-1','-1.','-1.0');  VAL = DNEG
       CASE('0',  '0.', '0.0');  VAL = DZ
       CASE('0.001');            VAL = MILLI
@@ -3059,13 +3059,13 @@ PURE FUNCTION DBLE2STR(DVAL)
       CASE('3',  '3.', '3.0');  VAL = TRES
       CASE('4',  '4.', '4.0');  VAL = QUAD
       CASE('5',  '5.', '5.0');  VAL = CINCO
-      CASE('6',  '6.', '6.0');  VAL = 6D0
-      CASE('7',  '7.', '7.0');  VAL = 7D0
-      CASE('8',  '8.', '8.0');  VAL = 8D0
-      CASE('9',  '9.', '9.0');  VAL = 9D0
+      CASE('6',  '6.', '6.0');  VAL = 6.D0
+      CASE('7',  '7.', '7.0');  VAL = 7.D0
+      CASE('8',  '8.', '8.0');  VAL = 8.D0
+      CASE('9',  '9.', '9.0');  VAL = 9.D0
       CASE('10','10.','10.0');  VAL = DIEZ
       CASE('20','20.','20.0');  VAL = VIGINTI
-      CASE('25','25.','25.0');  VAL = 25D0
+      CASE('25','25.','25.0');  VAL = 25.D0
       CASE('60','60.','60.0');  VAL = SEXAGEN
       CASE('100','100.','100.0');  VAL = HECTO
       CASE('1000','1000.','1000.0');  VAL = KILO
