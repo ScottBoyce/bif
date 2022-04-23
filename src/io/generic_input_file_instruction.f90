@@ -80,6 +80,7 @@ MODULE GENERIC_INPUT_FILE_INSTRUCTION!, ONLY: GENERIC_INPUT_FILE                
   USE FILE_IO_INTERFACE,      ONLY: DATAFILE_UNIT_NUMBER, GET_FILE_NAME,        &
                                     READ_TO_DATA, MAX_LINE_LENGTH, COMMENT_INDEX
   USE STRINGS,                ONLY: UPPER, GET_INTEGER, GET_NUMBER, SPECIAL_BLANK_STRIP
+  USE PATH_INTERFACE,         ONLY: GET_CWD
   !
   IMPLICIT NONE
   !
@@ -290,12 +291,20 @@ MODULE GENERIC_INPUT_FILE_INSTRUCTION!, ONLY: GENERIC_INPUT_FILE                
     REQ_NEW_UNIT = FALSE
     IF(PRESENT(NEW_UNIT)) REQ_NEW_UNIT = NEW_UNIT
     !
-    CALL PARSE_WORD(LN,LL,ISTART,ISTOP)
+    I = LL
+    CALL GET_WORD(LN,LL,ISTART,ISTOP,EXT)
     !
-    EXT = LN(ISTART:ISTOP)
-    CALL UPPER(EXT)
-    !
-    IF (NOREQKEY .AND. CHECK_ONLY_UNIT .AND. LN(ISTART:ISTOP) /= BLNK) THEN
+    IF (ISTART > ISTOP) THEN
+        IERR     = ONE
+        FL%ERROR = TRUE
+        CALL ADD_MSG(ERR_MSG, &
+                'Failed to successfully parse the line to find a directive keyword or file to open.'//NL// &
+                'The line may be empty, or is empty at the starting point of parsing.'//NL// &
+                'The line passed to the routine is:'//NL// &
+                '"'//TRIM(LN)//'"'//NL// &
+                'And the portion of the line that is being parsed is:'//NL// &
+                '"'//TRIM(LN(I:))//'"')
+    ELSE IF (NOREQKEY .AND. CHECK_ONLY_UNIT .AND. LN(ISTART:ISTOP) /= BLNK) THEN
                       READ(LN(ISTART:ISTOP),*,IOSTAT=IERR) FL%IU
     ELSE
         IERR=69
@@ -320,6 +329,14 @@ MODULE GENERIC_INPUT_FILE_INSTRUCTION!, ONLY: GENERIC_INPUT_FILE                
                                            FOUND_KEY = TRUE
                                            FL%IU = Z
                                            IF(CHECK_POST) CALL CHECK_FOR_POST_KEY(LL, LN, IIN, FL%IOUT, BUF, SPLIT, FL%SCALE, GO_TO_TOP=GO_TO_TOP, DIM=DIM, OLDLOC=PREPOST, NO_WARN=NO_WARN, MSG=MSG)
+                                           !
+                                           ! IF(IIN == Z) CALL ADD_MSG(ERR_MSG, 'Found INTERNAL directive keyword, but the code does not know what the internal unit number is.'//NL//'That is, the code is not setup to handel the INTERNAL directive'//NL//' This is either a code bug or there will be another message stating INTERNAL is not supported.')
+                                           IF( PRESENT(NO_INTERNAL) ) THEN
+                                                    IF(NO_INTERNAL) THEN
+                                                        FL%ERROR = TRUE
+                                                        CALL ADD_MSG(ERR_MSG, 'Found INTERNAL directive keyword, but this input data item does not allow it.'//NL//'Please change input to specify a separate file with the OPEN/CLOSE, DATAFILE, or EXTERNAL directives.')
+                                                    END IF
+                                           END IF
           ELSEIF(EXT == 'EXTERNAL' .OR. EXT =='DATAUNIT') THEN
                                            FOUND_KEY      = TRUE
                                            FL%IS_EXTERNAL = TRUE
@@ -332,6 +349,23 @@ MODULE GENERIC_INPUT_FILE_INSTRUCTION!, ONLY: GENERIC_INPUT_FILE                
                                                FL%ERROR = FL%IU /= Z .AND. NOT_UNIQUE                 !Found IU and its basename is Unique
                                            END IF
                                            IF(CHECK_POST) CALL CHECK_FOR_POST_KEY(LL, LN, IIN, FL%IOUT, BUF, SPLIT, FL%SCALE, GO_TO_TOP=GO_TO_TOP, DIM=DIM, OLDLOC=PREPOST, NO_WARN=NO_WARN, MSG=MSG)
+                                           !
+                                           IF(FL%ERROR) THEN
+                                               FL%IU = Z
+                                               CALL ADD_MSG(ERR_MSG, &
+                                                       'Found '//TRIM(EXT)//' directive, but failed to read the unit number or file base name after the directive.'//NL// &
+                                                       'The following is what found: "'//FNAME//'"'//BLN//                                                                &
+                                                       'Typically, the external unit input is defined as:'//NL//                                                          &
+                                                       ' EXTERNAL  56        # for a file that is already opened using unit 56'//NL//                                     &
+                                                       ' EXTERNAL  base.txt  # for a file that is already opened and located at some/path/to/base.txt'//BLN//             &
+                                                       ' DATAUNIT  56        # for a file that is already opened using unit 56'//NL//                                     &
+                                                       ' DATAUNIT  base.txt  # for a file that is already opened and located at some/path/to/base.txt'//BLN//             &
+                                                       'Note a base name must match exactly to one file that is already opened and the match is case sensitive.'//BLN//   &
+                                                       'The following are a list of unit numbers that were registered with the program'//NL//                             &
+                                                       '  and can be used to look up by basename.'//NL//                                                                  &
+                                                       'Other unit numbers may be opened, but these are what was registered '//NL//                                       &
+                                                       '  and can be looked with a base name.'//BLN//DATAFILE_UNIT_NUMBER%PRINT_STR())
+                                           END IF
           ELSEIF(EXT == 'SKIP' .OR. EXT =='NAN' .OR. EXT =='NULL' .OR. EXT =='NUL') THEN
                                            FOUND_KEY = TRUE
                                            FL%IU = Z
@@ -339,22 +373,40 @@ MODULE GENERIC_INPUT_FILE_INSTRUCTION!, ONLY: GENERIC_INPUT_FILE                
                                            FL%SKIP   = TRUE
                                            IF(CHECK_POST) CALL CHECK_FOR_POST_KEY(LL, LN, IIN, FL%IOUT, BUF, SPLIT, FL%SCALE, DIM=DIM, OLDLOC=PREPOST, NO_WARN=NO_WARN, MSG=MSG)
           ELSEIF(EXT == 'CONSTANT' ) THEN
-                                           FOUND_KEY = TRUE
-                                           FL%IU = Z
+                                           FOUND_KEY      = TRUE
                                            FL%IS_CONSTANT = TRUE
-                                           !
-                                           IF(PRESENT(NO_CONSTANT)) THEN; IF(NO_CONSTANT) FL%ERROR = TRUE
-                                           END IF
+                                           FL%IU = Z
                                            !
                                            IF(.NOT. ALLOCATED(FL%CONST)) ALLOCATE(FL%CONST)
                                            !
                                            IF(.NOT.PRESENT(KEY)) KEY = EXT
                                            !
-                                           CALL GET_NUMBER(LN,LL,ISTART,ISTOP,FL%IOUT,IIN,FL%CONST, MSG='GENERIC_INPUT_FILE_INSTRUCTION ERROR: FROUND KEYWORD "CONSTANT" WHICH SHOULD BE FOLLOWED BY AN NUMBER REPRESENTING THE CONSTANT VALUE.')
+                                           CALL GET_NUMBER(LN,LL,ISTART,ISTOP,FL%IOUT,IIN,FL%CONST,HAS_ERROR=FL%ERROR)
                                            !
                                            IF(CHECK_POST) CALL CHECK_FOR_POST_KEY(LL, LN, IIN, FL%IOUT, BUF, SPLIT, FL%SCALE, DIM=DIM, OLDLOC=PREPOST, NO_WARN=NO_WARN, MSG=MSG)
+                                           !
+                                           IF(FL%ERROR) THEN
+                                               CALL ADD_MSG(ERR_MSG, &
+                                                       'Found CONSTANT directive, but failed to sucessifully load the constant value (CONST). '//NL//  &   ! Temp use of vairable to hold error message
+                                                       'The following is what found: "'//LN(ISTART:ISTOP)//'"'//BLN//                                  &
+                                                       'An example input would be:'//NL//                                                              &
+                                                       ' CONSTANT  2.5   # to use a constant value of 2.5 for input')
+                                           END IF
+                                           !
+                                           IF(PRESENT(NO_CONSTANT)) THEN
+                                                   IF(NO_CONSTANT) THEN
+                                                       FL%ERROR = TRUE
+                                                       CALL ADD_MSG(ERR_MSG, &
+                                                              'Found CONSTANT directive, but this '//NL//                                               &
+                                                              '   specific input that is opening a file for input reading'//NL//                 &
+                                                              '   does not allow using the CONSTANT directive.'//BLN//                           &
+                                                              'Or at least GENERIC_INPUT_FILE came across "CONSTANT"'//NL//                      &
+                                                              'and it was not passed the fortran arguments to handel a constant keyword,'//NL//  &
+                                                              'so you may have it in the wrong input location.')
+                                                   END IF
+                                           END IF
           ELSE
-                IF (EXT == 'OPEN/CLOSE' .OR. EXT == 'DATAFILE') THEN  !OPEN/CLOSE FILE
+                IF (EXT == 'OPEN/CLOSE' .OR. EXT == 'DATAFILE' .or. EXT == 'OPENCLOSE') THEN  !OPEN/CLOSE FILE
                                            FOUND_KEY = TRUE
                                            !
                                            DATAFILE  = EXT == 'DATAFILE'
@@ -365,10 +417,13 @@ MODULE GENERIC_INPUT_FILE_INSTRUCTION!, ONLY: GENERIC_INPUT_FILE                
                                            CALL PARSE_WORD(LN,LL,ISTART,ISTOP)   !MOVE TO NEXT WORD WHICH IS THE FILE NAME
                                            FL%OPENCLOSE = TRUE
                 ELSEIF(EXT == 'NO_EXTERN') THEN
-                                           FOUND_KEY    = TRUE  !OPEN A CLONE OF FILE --EXT == 'NO_EXTERN' IF EXT == EXTERNAL AND REQ_NEW_UNIT = TRUE
+                                           FOUND_KEY    = TRUE  ! OPEN A CLONE OF FILE --EXT == 'NO_EXTERN' IF EXT == EXTERNAL AND REQ_NEW_UNIT = TRUE
                                            FL%OPENCLOSE = TRUE
                 ELSEIF(NOREQKEY) THEN
                                            FL%OPENCLOSE = TRUE
+                                           EXT='IMPLIED_FILE'
+                ELSE
+                                           EXT='IMPLIED_LINE' ! Failed to open a file, set flag to indicate that input is either bad or located along line (Implied Internal)
                 END IF
                 !
                 IF(PRESENT(FORCE_DATAFILE) .AND. FL%OPENCLOSE .AND. .NOT. DATAFILE .AND. .NOT. REQ_NEW_UNIT) DATAFILE = FORCE_DATAFILE
@@ -378,18 +433,49 @@ MODULE GENERIC_INPUT_FILE_INSTRUCTION!, ONLY: GENERIC_INPUT_FILE                
                     I      = Z
                     EXIST  = FALSE
                     ISOPEN = FALSE
+                    CALL ADD_MSG(ERR_MSG, &
+                            'Found '//TRIM(EXT)//' directive,'//NL// &
+                            '  which should be followed by a file name to open,'//NL// &
+                            '  but nothing was found after it.')
                 ELSEIF(EXT == 'NO_EXTERN') THEN
                     !
                     CALL GET_INTEGER(LN,LL,ISTART,ISTOP,FL%IOUT,IIN,I,MSG='GENERIC_INPUT_FILE_INSTRUCTION ERROR: FROUND KEYWORD "EXTERNAL" OR "DATAUNIT" WHICH SHOULD BE FOLLOWED BY AN INTEGER REPRESENTING THE UNIT NUMBER TO USE.')
                     !                 
-                    CALL GET_FILE_NAME(I,FNAME,EXIST,FL%IOUT,IIN,MSG='GENERIC_INPUT_FILE_INSTRUCTION ERROR: FROUND KEYWORD "EXTERNAL" OR "DATAUNIT", BUT FAILED TO IDENTIFY THE FILE (IN PARTICULAR ITS NAME) THAT IS ASSOCAITED WITH IT.')
-                    !                    
+                    CALL GET_FILE_NAME(I,FNAME,EXIST,FL%IOUT,IIN,HAS_ERROR=FL%ERROR)
+                    IF(FL%ERROR) THEN
+                        CALL ADD_MSG(ERR_MSG, &
+                                'Found EXTERNAL OR DATAUNIT directive,'//NL//                        &
+                                '   but failed to identify an open file associated with the unit number: '//NUM2STR(FL%IU)//NL// &
+                                'This probably is because it was either closed at some point,'//NL// &
+                                '   or never sucessfully opened.')
+                    END IF
                     I = Z
                     ISOPEN = FALSE
                 ELSE
                     ALLOCATE( FNAME, SOURCE = LN(ISTART:ISTOP) )
                     !
                     INQUIRE(FILE=FNAME, NUMBER=I, OPENED=ISOPEN, EXIST=EXIST)
+                    !
+                    IF(.not. EXIST) THEN
+                        CALL ADD_MSG(ERR_MSG, &
+                                'Found '//TRIM(EXT)//' directive,'//NL//  &
+                                '  but the file specified to open:'//NL// &
+                                '     "'//FNAME//'"'//NL//                &
+                                '  was not found.'//NL//                  &
+                                'Please check to see if the path and file name are correct.'//NL// &
+                                'If you are are using a relative path to specify the file (such as: ../dir/file.txt),'//NL// &
+                                '  then the current working director (point for  relative paths) is:'//NL// &
+                                '     "'//GET_CWD()//'"'//BLN//                                    &
+                                '  ***Note: in a path to a file'//NL//                             &
+                                '     the the "/" works for both Windows and Linux,' //NL//        &
+                                '     but the "\" only works on Windows.')
+                        IF(EXT == 'IMPLIED_FILE') &
+                            CALL ADD_MSG(ERR_MSG, &
+                                'The IMPLIED_FILE directive is a place holder for when no directive is found.'//NL//  &
+                                'The given input line assumes that it contains a file name that should be opened.'//NL//  &
+                                'That is: "path/to/myFile.txt" is marked as an IMPLIED_FILE and'//NL//  &
+                                '         treated as equivalent to "OPEN/CLOSE  path/to/myFile.txt"')
+                    END IF
                     !
                     ! OVERKILL CHECK
                     !IF(DATAFILE .AND. .NOT.ISOPEN .AND. EXIST)  CALL DATAFILE_UNIT_NUMBER%CHECK_NAME(FNAME,I,ISOPEN)
@@ -419,12 +505,26 @@ MODULE GENERIC_INPUT_FILE_INSTRUCTION!, ONLY: GENERIC_INPUT_FILE                
                                                !
                                                IF     (FL%ERROR) THEN
                                                                      FL%OPENCLOSE = FALSE
+                                                                     CALL ADD_MSG(ERR_MSG, &
+                                                                             'Found '//TRIM(EXT)//' directive,'//NL//  &
+                                                                             '  but failed to open the file:'//NL// &
+                                                                             '     "'//FNAME//'"'//NL//                &
+                                                                             'The reason for the failure is unknown.'//NL//                  &
+                                                                             'The path to the file seems to be correct.'//NL// &
+                                                                             '  That is, the file was found, but failed to establish a connection and open the file.'//NL// &
+                                                                             '    (Perhaps the file is locked by another program?)')
+                                                                     IF(EXT == 'IMPLIED_FILE') &
+                                                                         CALL ADD_MSG(ERR_MSG, &
+                                                                             'The IMPLIED_FILE directive is a place holder for when no directive is found.'//NL//  &
+                                                                             'The given input line assumes that it contains a file name that should be opened.'//NL//  &
+                                                                             'That is: "path/to/myFile.txt" is marked as an IMPLIED_FILE and'//NL//  &
+                                                                             '         treated as equivalent to "OPEN/CLOSE  path/to/myFile.txt"')
                                                ELSEIF (DATAFILE) THEN
                                                                      FL%OPENCLOSE = FALSE
                                                                      CALL DATAFILE_UNIT_NUMBER%ADD(FL%IU, FL%IS_BOM)
                                                END IF
                     ELSE
-                                               FL%ERROR = TRUE  !DID NOT FIND OPEN/CLOSE KEYWORD AND REQKEY=TRUE
+                                               FL%ERROR = TRUE  ! Did not find OPEN/CLOSE keyword and REQKEY=TRUE - Error message written later if not "IMPLIED_LINE"
                     END IF
                 ELSE
                                                FL%IU    = Z
@@ -432,6 +532,7 @@ MODULE GENERIC_INPUT_FILE_INSTRUCTION!, ONLY: GENERIC_INPUT_FILE                
                 END IF
           END IF
     ELSE  !FOUND UNIT NUMBER--CHECK FOR POST KEYS
+          EXT ='IMPLIED_UNIT'
           FL%IS_EXTERNAL = TRUE
           IF(CHECK_POST) CALL CHECK_FOR_POST_KEY(LL, LN, IIN, FL%IOUT, BUF, SPLIT, FL%SCALE, GO_TO_TOP=GO_TO_TOP, DIM=DIM, OLDLOC=PREPOST, NO_WARN=NO_WARN, MSG=MSG)
     END IF
@@ -450,90 +551,62 @@ MODULE GENERIC_INPUT_FILE_INSTRUCTION!, ONLY: GENERIC_INPUT_FILE                
                            IF(.NOT. ISOPEN) FL%ERROR = TRUE !FILE IS NOT INTERNAL, NOR UNIT WAS ASSOCIATED WITH A FILE, NOR WAS IT SUCCESFULLY OPENED.
     END IF
     !
+    IF(ALLOW_ERROR .AND. FL%IU /= Z) THEN
+      IF( EXT == 'EXTERNAL' .or. EXT == 'DATAUNIT' .or. EXT == 'IMPLIED_UNIT' ) THEN
+        I = FL%IU
+        BLOCK 
+            CHARACTER(12):: ACTION_TXT
+            INQUIRE(UNIT=I, ACTION=ACTION_TXT, OPENED=ISOPEN)
+            IF( ACTION_TXT /= 'READ' .and. ACTION_TXT /= 'READWRITE' ) ISOPEN = FALSE
+        END BLOCK
+        !
+        IF(.NOT. ISOPEN) FL%ERROR = TRUE ! Unit associated with no file or not opened with correct permissions
+        !
+        IF(FL%ERROR) THEN
+           CALL ADD_MSG(ERR_MSG, &
+                   'Found '//TRIM(EXT)//' directive,'//NL//                         &
+                   '  but the unit number specified, '//NUM2STR(FL%IU)//','//NL//   &
+                   ' is not associated with an opened file or'//NL//                &
+                   ' is not associated with a file opened with a "READ" permission.')
+           IF(EXT == 'IMPLIED_UNIT') &
+               CALL ADD_MSG(ERR_MSG, &
+                   'The IMPLIED_UNIT directive is a place holder for when no directive is found'//NL// &
+                   '  but a unit number was sucessfully read in.'//BLN//                               &
+                   'This input line assumes that if it contains an integer,'//NL//                     &
+                   '  then it is a unit number associated with a file.'//NL//                          &
+                   'That is: "56" is marked as an IMPLIED_UNIT and'//NL//                              &
+                   '         treated as equivalent to "EXTERNAL  56"'//NL//                            &
+                   'Note, IMPLIED_UNIT is typically not allowed unless'//NL//                          &
+                   '  the code is set up to handle it.'//NL//  &
+                   '  (in this case this input does allow for it).')
+           
+        END IF
+      END IF
+    END IF
+    !
     ! ERROR OCCURED AND EITHER STOPPING IS ALLOWED OR THAT A KEYWORD WAS FOUND SO IT CAN NOT BE AN IMPLIED INTERNAL
     IF (FL%ERROR .AND. (ALLOW_ERROR .OR. FOUND_KEY) .AND. .NOT. FL%SKIP) THEN
-        IF(.NOT. NOREQKEY .AND.  .NOT. FOUND_KEY) THEN
-                  ERR_MSG = ERR_MSG//NL//                                                             &
-                                   'THIS GENERIC INPUT REQUIRES YOU SPECIFY AN INPUT KEYWORD TO SPECIFY DIRECTLY HOW THE GENERIC INPUT FILE SHOULD BE PROCESSED.'//BLN// &
-                                   'ACCEPTIBLE GENERIC INPUT KEYWORDS ARE:'//NL//                     &
-                                   '   INTERNAL'//NL//                                                &
-                                   '   EXTERNAL'//NL//                                                &
-                                   '   OPEN/CLOSE'//NL//                                              &
-                                   '   DATAUNIT'//NL//                                                &
-                                   '   DATAFILE'//NL//                                                &
-                                   '   NULL'//NL//                                                    &
-                                   '   AND SKIP'//NL//                                                &
-                                   ' (and for some special circumstances CONSTANT works too.)'//NL
-        ELSEIF(EXT == 'CONSTANT') THEN
-                  ERR_MSG = NL//'FOUND KEYWORD "CONSTANT", BUT THIS IS NOT ALLOWED FOR THIS INPUT STRUCTURE'//NL// &
-                                'OR AT LEAST GENERIC_INPUT CAME ACROSS "CONSTANT"'//NL//                           &
-                                'AND IT WAS NOT PASSED THE FORTRAN ARGUMENTS TO HANDEL A CONSTANT KEYWORD,'//NL//  &
-                                'SO YOU MAY HAVE IT IN THE WRONG INPUT LOCATION'//NL//                             &
-                                'OR IT IS NOT ALLOWED FOR THE CURRENT INPUT FEATURE.'
-                  !
-        ELSEIF(ALLOCATED(FNAME) .AND. EXT /= 'EXTERNAL' .AND. EXT /= 'DATAUNIT' ) THEN
-            IF(EXT == 'OPEN/CLOSE') THEN
-                  ERR_MSG = NL//'FOUND KEYWORD "OPEN/CLOSE",'
-            ELSEIF( EXT == 'DATAFILE') THEN
-                  ERR_MSG = NL//'FOUND KEYWORD "DATAFILE",'
-            ELSE
-                  ERR_MSG = NL//'NO KEYWORD FOUND, ASSUMING FILE NAME IS JUST SPECIFIED ON CURRENT LINE,'
-            END IF
-                  IF(FNAME==BLNK) THEN
-                      ERR_MSG = ERR_MSG//NL//'BUT FAILED TO FIND A FILE NAME, UNIT NUMBER, OR THAT WOULD IDENTIFY WHAT TO DO.'//BLN//   &
-                                             'PLEASE CHECK TO SEE IF FILE OR UNIT NUMBER IS CORRECTLY SPECIFIED'//NL//                  &
-                                             'AND THE PATH AND FILE NAME CORRECT.'
-                  ELSE
-                      ERR_MSG = ERR_MSG//NL//                                                                 &
-                                       'BUT FAILED TO OPEN THE FOLLOWING FILE:'//BLN//'"'//FNAME//'"'//BLN//  &
-                                       'PLEASE CHECK TO SEE IF THE PATH AND FILE NAME CORRECT.'//BLN//        &
-                                       ' ***NOTE THAT THE "/" WORKS FOR BOTH WINDOWS AND LINUX,' //NL//       &
-                                       '    BUT THE "\" ONLY WORKS ON WINDOWS.'
-                  END IF
-        ELSE
-            IF(EXT == 'EXTERNAL') THEN
-                ERR_MSG = NL//'FOUND KEYWORD "EXTERNAL",'
-            ELSEIF( EXT == 'DATAUNIT') THEN
-                ERR_MSG = NL//'FOUND KEYWORD "DATAUNIT",'
-            ELSE
-                ERR_MSG = NL//'NO KEYWORD FOUND AND A UNIT NUMBER WAS SUCCESSFULLY READ,'//NL//           &
-                              'SO IT WAS ASSUMED TO BE A UNIT SPECIFIED IN THE NAME FILE OR ALREADY OPEN,'
-            END IF
-            !
-            ERR_MSG = ERR_MSG//BLN//'BUT UNIT NUMBER WAS NOT ASSOCIATED WITH ANY FILE (NOT OPEN) FOR WRITING.'//NL// &
-                                    'THIS PROBABLY IS BECAUSE IT WAS NOT SPECIFIED IN THE NAME FILE,'//NL//          &
-                                    'FILE WAS CLOSED AT SOME POINT,'//NL//                                           &
-                                    'OR EVEN NEVER SUCESSFULLY OPENED.'//BLN
-            IF( ALLOCATED(FNAME) ) THEN 
-                ERR_MSG = ERR_MSG//'THE FOLLOWING IS THE UNIT NUMBER OR BASENAME OF A FILE THAT WAS SEARCHED FOR: "'//FNAME//'"'//BLN
-                !
-                IF(NOT_UNIQUE) ERR_MSG = ERR_MSG//'-> BUT THE BASENAME WAS NOT UNIQUE WITHIN THE LIST OF CURRENTLY OPENED FILES.'//BLN
-                !
-                ERR_MSG = ERR_MSG//                                                                                      &
-                                   'NOTE THAT A BASENAME MUST MATCH EXACTLY TO ONE FILE THAT IS ALREADY OPENED.'//NL//   &
-                                   '                                             --That is, its Case Sensitive.'//NL//   &
-                                   'FOR EXAMPLE, IF THE NAME FILE HAS:'//BLN//                                           &
-                                   'DATA   23    ./Dir1/Dir2/MyFile.txt'//BLN//                                          &
-                                   'THEN ONLY ONE OF THE FOLLOWING WILL FIND THE FILE:'//BLN//                           &
-                                   TRIM(EXT)//' 23'//NL//                                                                &
-                                   TRIM(EXT)//' MyFile.txt'//BLN
-            ELSE
-                ERR_MSG = ERR_MSG//'THE FOLLOWING IS THE UNIT NUMBER SEARCHED FOR: "'//NUM2STR(FL%IU)//'"'//BLN
-            END IF
-            !
-            ERR_MSG = ERR_MSG//'PLEASE CHECK TO SEE IF UNIT IS SPECIFIED IN THE NAME FILE WITH DATA OR DATA(BINARY) KEYWORDS.'//BLN// &
-                               'SEE ABOVE--IN THE LIST/WARN FILE--FOR A TRANSCRIPT OF ALL THE CURRENTLY OPEN DATAFILES AND THEIR UNIT NUMBERS.'//BLN
-            !
-            CALL DATAFILE_UNIT_NUMBER%PRINT(FL%IOUT)
-            CALL DATAFILE_UNIT_NUMBER%PRINT(GET_WARN())
-            !
-        END IF
-        !
-        ERR_MSG = 'FAILED TO OPEN FILE WITH GENERIC_INPUT_FILE_INSTRUCTION.'//BLN//ERR_MSG
-        !
-        IF(PRESENT(MSG))  ERR_MSG = ERR_MSG//BLN//'THE FOLLOWING MESSAGE WAS PASSED TO GENERIC_INPUT:'//BLN//MSG
-        !
-        CALL FILE_IO_ERROR(IERR,IIN,LINE=LN,OUTPUT=FL%IOUT,MSG=ERR_MSG)
+      IF(.not. NOREQKEY .AND.  .not. FOUND_KEY) THEN  ! Require keword, but none found
+          CALL HED_MSG(ERR_MSG, &
+                  'Failed to identify a directive keyword while processing the'//NL//    &
+                  '   line that specified the input file to make a connection to (ie open the file).'//NL// &
+                  'However, the input for opening this file requires that the directive keyword'//NL//      &
+                  '   be specified (no implied opening of a file by name).'//BLN//                          &
+                  'This input expects one of the following directive keywords:'//NL//                       &
+                  '   INTERNAL'  //NL//                                                                     &
+                  '   OPEN/CLOSE'//NL//                                                                     &
+                  '   OPENCLOSE' //NL//                                                                     &
+                  '   DATAFILE'  //NL//                                                                     &
+                  '   DATAUNIT'  //NL//                                                                     &
+                  '   EXTERNAL'  //NL//                                                                     &
+                  '   NULL'      //NL//                                                                     &
+                  '   and SKIP')
+      END IF
+      !
+      CALL HED_MSG(ERR_MSG,'FAILED TO OPEN FILE WITH GENERIC_INPUT_FILE.')
+      !
+      CALL FILE_IO_ERROR(LINE=LN, INFILE=IIN, OUTPUT=FL%IOUT, MSG=ERR_MSG, MSG2=MSG)
+      !
     END IF
     !
     IF(PRESENT(NO_INTERNAL) .AND. FL%IU == Z .AND. .NOT. FL%ERROR) THEN
@@ -611,16 +684,38 @@ MODULE GENERIC_INPUT_FILE_INSTRUCTION!, ONLY: GENERIC_INPUT_FILE                
        END IF
     END IF
     !
+    CONTAINS
+       !
+       PURE SUBROUTINE ADD_MSG(TXT, MSG)
+         CHARACTER(:), ALLOCATABLE, INTENT(INOUT):: TXT
+         CHARACTER(*),              INTENT(IN   ):: MSG
+         IF(ALLOCATED(TXT)) THEN
+                      TXT = TXT//BLN//MSG
+         ELSE
+                      TXT = MSG
+         END IF
+       END SUBROUTINE
+       !
+       PURE SUBROUTINE HED_MSG(TXT, MSG)
+         CHARACTER(:), ALLOCATABLE, INTENT(INOUT):: TXT
+         CHARACTER(*),              INTENT(IN   ):: MSG
+         IF(ALLOCATED(TXT)) THEN
+                      TXT = MSG//BLN//TXT
+         ELSE
+                      TXT = MSG
+         END IF
+       END SUBROUTINE
+       !
   END SUBROUTINE
   !
   SUBROUTINE READ_GENERIC_INPUT_FILE_LINE(FL, LINE, CNT, EOL, EOF, NOSHIFT, READ_COM)
-    CLASS(GENERIC_INPUT_FILE), INTENT(INOUT):: FL
-    CHARACTER(*),              INTENT(OUT  ):: LINE
-    INTEGER,OPTIONAL,          INTENT(OUT  ):: CNT     !RETURNS A COUNT OF HOW MANY LINES WERE LOADED
-    INTEGER,OPTIONAL,          INTENT(OUT  ):: EOL     !LOCATIONS OF WHERE THE END OF LINE IS OR ONE SPACE BEFORE #
-    LOGICAL,OPTIONAL,          INTENT(OUT  ):: EOF     !SET TO TRUE IF END OF FILE IS REACHED
-    LOGICAL,OPTIONAL,          INTENT(IN   ):: NOSHIFT !SET TO TRUE TO NOT TO USE ADJUSTL
-    LOGICAL,OPTIONAL,          INTENT(IN   ):: READ_COM !IF TRUE, THEN COMMENTED LINES ARE NOT BYPASSED (default is False)
+    CLASS(GENERIC_INPUT_FILE), INTENT(IN ):: FL
+    CHARACTER(*),              INTENT(OUT):: LINE
+    INTEGER,OPTIONAL,          INTENT(OUT):: CNT     !RETURNS A COUNT OF HOW MANY LINES WERE LOADED
+    INTEGER,OPTIONAL,          INTENT(OUT):: EOL     !LOCATIONS OF WHERE THE END OF LINE IS OR ONE SPACE BEFORE #
+    LOGICAL,OPTIONAL,          INTENT(OUT):: EOF     !SET TO TRUE IF END OF FILE IS REACHED
+    LOGICAL,OPTIONAL,          INTENT(IN ):: NOSHIFT !SET TO TRUE TO NOT TO USE ADJUSTL
+    LOGICAL,OPTIONAL,          INTENT(IN ):: READ_COM !IF TRUE, THEN COMMENTED LINES ARE NOT BYPASSED (default is False)
     INTEGER:: IERR
     LOGICAL:: EEOF
     !
@@ -630,13 +725,12 @@ MODULE GENERIC_INPUT_FILE_INSTRUCTION!, ONLY: GENERIC_INPUT_FILE                
     !
     IF(FL%BINARY) THEN
         READ(FL%IU, IOSTAT=IERR) LINE
-        FL%ERROR = IERR /= Z
+        IF    (IERR > Z) CALL FILE_IO_ERROR(IERR,FL%IU,LINE=LINE,INFILE=FL%IU,OUTPUT=FL%IOUT, MSG='ERROR WHILE READING A GENERIC_INPUT FILE')
         EEOF = IERR < Z
         IF(PRESENT(CNT)) CNT = ONE
         IF(PRESENT(EOL)) EOL = LEN(LINE)
     ELSEIF(IERR==Z) THEN
         CALL READ_TO_DATA(LINE,FL%IU,FL%IOUT,Z,CNT,EOL,EEOF,NOSHIFT)
-        FL%ERROR = EEOF
     ELSE
           READ(FL%IU,'(A)',IOSTAT=IERR) LINE
           IF    (IERR > Z) THEN                                   !LINE FAILED TO READ, THIS IS MOST LIKELY DUE TO END OF FILE LINE,INFILE,OUTPUT,MSG
@@ -664,8 +758,8 @@ MODULE GENERIC_INPUT_FILE_INSTRUCTION!, ONLY: GENERIC_INPUT_FILE                
   END SUBROUTINE
   !
   SUBROUTINE READ_GENERIC_INPUT_FILE_VECTOR(FL, VEC)
-    CLASS(GENERIC_INPUT_FILE),      INTENT(INOUT):: FL
-    REAL(REAL64),DIMENSION(:),  INTENT(OUT  ):: VEC
+    CLASS(GENERIC_INPUT_FILE), INTENT(INOUT):: FL
+    REAL(REAL64),DIMENSION(:), INTENT(OUT  ):: VEC
     INTEGER:: IERR
     CHARACTER(10):: LN
     !

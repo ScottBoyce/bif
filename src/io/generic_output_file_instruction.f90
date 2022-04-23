@@ -29,6 +29,7 @@ MODULE GENERIC_OUTPUT_FILE_INSTRUCTION!, ONLY: GENERIC_OUTPUT_FILE
   USE FILE_IO_INTERFACE,      ONLY: DATAFILE_UNIT_NUMBER, GET_FILE_NAME
   USE STRINGS,                ONLY: UPPER, GET_INTEGER
   USE FILE_INCREMENTER_INTERFACE, ONLY: FILE_INCREMENTER
+  USE PATH_INTERFACE,         ONLY: GET_CWD
   !
   IMPLICIT NONE
   !
@@ -241,8 +242,20 @@ MODULE GENERIC_OUTPUT_FILE_INSTRUCTION!, ONLY: GENERIC_OUTPUT_FILE
     END IF
     !
     IF(.NOT. ISOPEN) THEN
-            CALL PARSE_WORD(LN,LL,ISTART,ISTOP)
-            IF (NOREQKEY .AND. CHECK_ONLY_UNIT .AND. LN(ISTART:ISTOP) /= BLNK) THEN
+            I = LL
+            CALL GET_WORD(LN,LL,ISTART,ISTOP,EXT)
+            !
+            IF (ISTART > ISTOP) THEN
+                IERR     = ONE
+                FL%ERROR = TRUE
+                CALL ADD_MSG(ERR_MSG, &
+                        'Failed to successfully parse the line to find a directive keyword or file to open.'//NL// &
+                        'The line may be empty, or is empty at the starting point of parsing.'//NL// &
+                        'The line passed to the routine is:'//NL// &
+                        '"'//TRIM(LN)//'"'//NL// &
+                        'And the portion of the line that is being parsed is:'//NL// &
+                        '"'//TRIM(LN(I:))//'"')
+            ELSEIF (NOREQKEY .AND. CHECK_ONLY_UNIT .AND. LN(ISTART:ISTOP) /= BLNK) THEN
                               READ(LN(ISTART:ISTOP),*,IOSTAT=IERR) IU_READ
             ELSE
                 IERR=69
@@ -295,6 +308,24 @@ MODULE GENERIC_OUTPUT_FILE_INSTRUCTION!, ONLY: GENERIC_OUTPUT_FILE
                                                  !CALL GET_INTEGER(LN,LL,ISTART,ISTOP,FL%IOUT,IIN,FL%IU,MSG='GENERIC_OUTPUT_FILE_INSTRUCTION ERROR: FROUND KEYWORD "'//TRIM(EXT)//'" WHICH SHOULD BE FOLLOWED BY AN INTEGER REPRESENTING THE UNIT NUMBER TO USE.')
                                                  IF(.NOT. FL%ERROR .AND. CHECK_POST) CALL CHECK_FOR_POST_KEY(LL, LN, IIN, FL%IOUT, BUF, SPLIT, DIM=DIM, FMT=FL%FMT, OLDLOC=PREPOST, NO_WARN=NO_WARN, MSG=MSG)
                                                  FOUND_KEY=TRUE
+                                                 !
+                                                 IF(FL%ERROR) THEN
+                                                     FL%IU = Z
+                                                     CALL ADD_MSG(ERR_MSG, &
+                                                             'Found '//TRIM(EXT)//' directive, but failed to read the unit number or file base name after the directive.'//NL// &
+                                                             'The following is what found: "'//FNAME//'"'//BLN//                                                                &
+                                                             'Typically, the external unit input is defined as:'//NL//                                                          &
+                                                             ' EXTERNAL  56        # for a file that is already opened using unit 56'//NL//                                     &
+                                                             ' EXTERNAL  base.txt  # for a file that is already opened and located at some/path/to/base.txt'//BLN//             &
+                                                             ' DATAUNIT  56        # for a file that is already opened using unit 56'//NL//                                     &
+                                                             ' DATAUNIT  base.txt  # for a file that is already opened and located at some/path/to/base.txt'//BLN//             &
+                                                             'Note a base name must match exactly to one file that is already opened and the match is case sensitive.'//BLN//   &
+                                                             'The following are a list of unit numbers that were registered with the program'//NL//                             &
+                                                             '  and can be used to look up by basename.'//NL//                                                                  &
+                                                             'Other unit numbers may be opened, but these are what was registered '//NL//                                       &
+                                                             '  and can be looked with a base name.'//BLN//DATAFILE_UNIT_NUMBER%PRINT_STR())
+                                                 END IF
+                                                 IF(ALLOCATED(FNAME)) DEALLOCATE(FNAME)
                 ELSE
                       IF (EXT == 'OPEN/CLOSE' .OR. EXT=='DATAFILE') THEN  ! OPEN/CLOSE KEYWORD
                                                  DATAFILE = EXT=='DATAFILE'
@@ -486,6 +517,28 @@ MODULE GENERIC_OUTPUT_FILE_INSTRUCTION!, ONLY: GENERIC_OUTPUT_FILE
        END IF
     END IF
     !
+    CONTAINS
+       !
+       PURE SUBROUTINE ADD_MSG(TXT, MSG)
+         CHARACTER(:), ALLOCATABLE, INTENT(INOUT):: TXT
+         CHARACTER(*),              INTENT(IN   ):: MSG
+         IF(ALLOCATED(TXT)) THEN
+                      TXT = TXT//BLN//MSG
+         ELSE
+                      TXT = MSG
+         END IF
+       END SUBROUTINE
+       !
+       PURE SUBROUTINE HED_MSG(TXT, MSG)
+         CHARACTER(:), ALLOCATABLE, INTENT(INOUT):: TXT
+         CHARACTER(*),              INTENT(IN   ):: MSG
+         IF(ALLOCATED(TXT)) THEN
+                      TXT = MSG//BLN//TXT
+         ELSE
+                      TXT = MSG
+         END IF
+       END SUBROUTINE
+       !
   END SUBROUTINE
   !
   SUBROUTINE GENERIC_OUTPUT_SET_HEADER(FL, HEADER)
