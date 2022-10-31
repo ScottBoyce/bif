@@ -6,15 +6,22 @@
 # If you use BiF-lib, this MAKEFILE, a derivative of this makefile 
 #   please include in any publications the following citations:
 #
-#    Boyce, S.E., 2021, Batteries Included Fortran Library (BiF-Lib), version 1.0.0: U.S. Geological Survey Software Release, https://doi.org/10.5066/xyz
+#    Boyce, S.E., 2022, Batteries Included Fortran Library (BiF-Lib), version 1.1.0: U.S. Geological Survey Software Release, https://doi.org/10.5066/xyz
 #
-#    Boyce, S.E., 2021, MODFLOW One-Water Hydrologic Flow Model (MF-OWHM) Conjunctive Use and Integrated Hydrologic Flow Modeling Software, version 2.0.x: U.S. Geological Survey Software Release, https://doi.org/10.5066/P9P8I8GS
+#    Boyce, S.E., 2022, MODFLOW One-Water Hydrologic Flow Model (MF-OWHM) Conjunctive Use and Integrated Hydrologic Flow Modeling Software, version 2.2.x: U.S. Geological Survey Software Release, https://doi.org/10.5066/P9P8I8GS
 #
 # PROVIDED AS IS WITHOUT WARRANTY OR HELP.
 #
 # See next section to set the compiler type variables
 #   The initial setup has the compiler type variables set to the 
-#   GNU gfortran AND gcc to make a debug x64 version
+#   Intel Fortran Compiler Classic (ifort)
+#
+# This makefile contains the options for compiling BiF using Intel, GFortran, and LLVM. 
+#   It is recommended to use the Intel Fortran Compiler Classic for compiling BiF.
+#   gfortran is unlikely to successfully compile do to the variability of versions 
+#   included with linux or windows and several known compiler bugs present in multiple versions.
+#   At some point, BiF may be refactored to work around the known compiler bugs.
+#   The LLVM compilers, FLANG and CLANG, are still experimental and not yet fully supported.
 #
 # To Invoke/Compile type from command prompt:
 # make                  Compile the src files and the main.f90 that is used for testing. Binary located in bin
@@ -217,6 +224,7 @@ main_src:= \
            $(src_dir)/io/cycling_text_file_interface.f90                       \
            $(src_dir)/io/generic_input_file_instruction.f90                    \
            $(src_dir)/io/generic_output_file_instruction.f90                   \
+           $(src_dir)/io/write_array_interface.f90                             \
            $(src_dir)/input_reader/generic_block_reader_instruction.f90        \
            $(src_dir)/datetime/time_series_file_instruction.f90                \
            $(src_dir)/types_and_containers/IXJ_instruction.f90                 \
