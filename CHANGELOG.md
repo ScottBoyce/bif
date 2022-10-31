@@ -48,6 +48,7 @@ Header TBA
   - `SET_TO_CWD` sets the variable `CHARACTER(*):: CWD` to the current working directory and optional integer variable, `LENGTH`, as the size of the character array. 
     - Pretty much this routine just does `CWD = GET_CWD()` and `LENGTH = LEN(GET_CWD())`
     - Note it is possible to have, `LENGTH > LEN(CWD)`, that case `CWD` does not hold the entire path.
+
 - `src/io/generic_open_interface.fpp` subroutine `GENERIC_OPEN() ` added the optional argument `POSITION`
   - All Fortran `OPEN(POSITION=)` strings are accepted.  
     However it is recommended to only use:
@@ -55,15 +56,54 @@ Header TBA
     - `POSITION="ASIS"`
     - `POSITION="REWIND"`
   - If not specified, then it is set to `POSITION="REWIND"`.
-- `src/io/file_io_interface.f90` data type `UNIT_ARRAY_BUILDER` added the `PRINT_STR()` type bound routine.
-  - This routine is identical to `UNIT_ARRAY_BUILDER%PRINT(IOUT)`, except that it returns a `character(*)` rather than writing to a file.
+
+- `src/io/file_io_interface.f90` data type `UNIT_ARRAY_BUILDER` added the `FUNCTION PRINT_STR()` type bound routine.
+
+  - This routine is identical to `SUBROUTINE UNIT_ARRAY_BUILDER%PRINT(IOUT)`, except that it returns a `character(*)` rather than writing to a file.
+  - The function call is: `str = UNIT_ARRAY_BUILDER%PRINT_STR()`
+
+- `src/io/post_key_sub.f90` added the optional argument `NO_WARN` to `SUBROUTINE CHECK_FOR_POST_KEY`. 
+  - If present, and set to `.TRUE.` will disable any warning messages when searching for a post-keyword option. 
+
+  - This optional argument  is also added:
+    - `src/io/generic_input_file_instruction.f90` in the routine `GENERIC_INPUT%OPEN`  
+
+    - `src/io/generic_output_file_instruction.f90` in the routine `GENERIC_OUTPUT%OPEN`
+
+- Added test for `MODULE GENERIC_INPUT_FILE_INSTRUCTION`
 
 
 &nbsp; 
 
 #### Bug Fixes
 
-- `src/math_numbers/descriptive_statistics.f90`
+- `src/datetime/calendar_functions.f90` 
+  uses the function `julianday_to_date(jdn_in, year_in, day, month, year, jdn, leap)` for converting Julian Day of the Year (`jdn_in`) to a calendar month, day, and year. However if `jdn_in > 364`, then the routine would only check if year_in is a leap year rather than each interval of Julian days overlapped a leap year. This has been fixed to account the appropriate 365 and 366 day years.
+
+- `src/system/directory_iso_c_binding.f90`  `FUNCTION MAKE_C_CHAR` takes a Fortran character type and converts it to a C-string. The function was modified to return a character array (correct method) instead of CHARACTER(*). 
+  
+  - That is, the function previously returned:  
+    &nbsp; &nbsp; &nbsp; `CHARACTER(len=LEN(F_STR)+1, kind=C_CHAR)`  
+    now returns:  
+    &nbsp; &nbsp; &nbsp; `CHARACTER(len=1, kind=C_CHAR), DIMENSION(LEN(F_STR)+1)`
+  
+- `C_LOC` requires argument that has either the `TARGET` or `POINTER` attribute but does NOT support `ALLOCATABLE` arrays. Routines that make use of `C_LOC` had the TARGET attribute added to incoming arrays. Also `FUNCTION GET_C_LOC` was added that adds to an array the `TARGET` attribute and returns its `C_LOC`. This effected the following files:
+
+  - `src/util_misc/same_memory_address_interface.f90`  
+    `src/dynamic_arrays/dynamic_array_int32.f90`
+
+- `makefile` added gfortran complier flag fno-range-check to prevent compiler errors.
+
+- Added decimal to literal real numbers in a variaty of files. For example, changes `1D0` to `1.D0`
+
+  - `src/datetime/calendar_functions.f90`  
+    `src/datetime/date_operator_instruction.f90`  
+    `src/math_numbers/EquationParser.f90`  
+    `src/math_numbers/log2_interface.f90`  
+    `src/spatial/xy_grid_coordinate_interface.f90`  
+    `src/types_and_containers/array_data_types_instruction.f90`  
+    `src/types_and_containers/linked_list_instruction.f90`  
+    `src/unit_test/unit_testing_instruction.f90`
 
 - `src/math_numbers/descriptive_statistics.f90`   
   changed the intent for the `online_stats%merge` routine from `intent(in)` to `intent(inout)`
@@ -83,9 +123,17 @@ Header TBA
 
 #### Refactoring
 
+- `src/io/generic_input_file_instruction.f90` and `src/io/generic_output_file_instruction.f90` improved error messages.
+
 - `src/strings/parse_word_interface.f90` replaced `" "` with the `CONSTANT` module parameter `BLNK`
 
-- ``src/strings/string_routines.f90` embedded the `PARSE_WORD` subroutine to increase the likelihood that the compiler will inline it for faster execution. This also removes the dependency on the `PARSE_WORD_INTERFACE` module.
+- `src/strings/string_routines.f90` embedded the `PARSE_WORD` subroutine to increase the likelihood that the compiler will inline it for faster execution. This also removes the dependency on the `PARSE_WORD_INTERFACE` module.
+
+- `src/input_reader/sub_block_input_interface.f90` removed unused module imports.
+
+- `src/input_reader/uload_and_sfac_interface.f90` changed `.ne.` to `/=` for clarity.
+
+- `src/input_reader/uload_and_sfac_interface.f90` switched to `get_word` routine to replace using the following routines: `comment_index()`, `parse_word()` and `upper()`.
 
 &nbsp; 
 
