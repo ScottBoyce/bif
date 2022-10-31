@@ -47,7 +47,7 @@ MODULE SAME_MEMORY_ADDRESS_INTERFACE
   !@@@@@@@@@@@@@@@@@@@@@@@@@@@@@@@@@@@@@@@@@@@@@@@@@@@@@@@@@@@@@@@@@@@@@@@@@@@@@@@@@@@@@@@@@@@@@@@@@@@@@@@@@@@@@@@@@@@@@@@@@
   ! 
   PURE FUNCTION SAME_MEMORY_ADDRESS_INT32(A, B) RESULT(ANS)
-    INTEGER(INT32), dimension(:), contiguous, intent(in):: A, B
+    INTEGER(INT32), dimension(:), contiguous, target, intent(in):: A, B
     LOGICAL:: ANS
     !
     ANS = FALSE
@@ -58,7 +58,7 @@ MODULE SAME_MEMORY_ADDRESS_INTERFACE
   ! ------------------------------------------------------------------------------------------------------------------------
   ! 
   PURE FUNCTION SAME_MEMORY_ADDRESS_INT64(A, B) RESULT(ANS)
-    INTEGER(INT64), dimension(:), contiguous, intent(in):: A, B
+    INTEGER(INT64), dimension(:), contiguous, target, intent(in):: A, B
     LOGICAL:: ANS
     !
     ANS = FALSE
@@ -69,7 +69,7 @@ MODULE SAME_MEMORY_ADDRESS_INTERFACE
   ! ------------------------------------------------------------------------------------------------------------------------
   ! 
   PURE FUNCTION SAME_MEMORY_ADDRESS_REL32(A, B) RESULT(ANS)
-    REAL(REL32), dimension(:), contiguous, intent(in):: A, B
+    REAL(REL32), dimension(:), contiguous, target, intent(in):: A, B
     LOGICAL:: ANS
     !
     ANS = FALSE
@@ -80,7 +80,7 @@ MODULE SAME_MEMORY_ADDRESS_INTERFACE
   ! ------------------------------------------------------------------------------------------------------------------------
   ! 
   PURE FUNCTION SAME_MEMORY_ADDRESS_REL64(A, B) RESULT(ANS)
-    REAL(REL64), dimension(:), contiguous, intent(in):: A, B
+    REAL(REL64), dimension(:), contiguous, target, intent(in):: A, B
     LOGICAL:: ANS
     !
     ANS = FALSE
@@ -91,7 +91,7 @@ MODULE SAME_MEMORY_ADDRESS_INTERFACE
   !#########################################################################################################################
   ! 
   PURE FUNCTION SAME_MEMORY_ADDRESS_DIM2_INT32(A, B) RESULT(ANS)
-    INTEGER(INT32), dimension(:,:), contiguous, intent(in):: A, B
+    INTEGER(INT32), dimension(:,:), contiguous, target, intent(in):: A, B
     LOGICAL:: ANS
     !
     ANS = FALSE
@@ -102,7 +102,7 @@ MODULE SAME_MEMORY_ADDRESS_INTERFACE
   ! ------------------------------------------------------------------------------------------------------------------------
   ! 
   PURE FUNCTION SAME_MEMORY_ADDRESS_DIM2_INT64(A, B) RESULT(ANS)
-    INTEGER(INT64), dimension(:,:), contiguous, intent(in):: A, B
+    INTEGER(INT64), dimension(:,:), contiguous, target, intent(in):: A, B
     LOGICAL:: ANS
     !
     ANS = FALSE
@@ -113,7 +113,7 @@ MODULE SAME_MEMORY_ADDRESS_INTERFACE
   ! ------------------------------------------------------------------------------------------------------------------------
   ! 
   PURE FUNCTION SAME_MEMORY_ADDRESS_DIM2_REL32(A, B) RESULT(ANS)
-    REAL(REL32), dimension(:,:), contiguous, intent(in):: A, B
+    REAL(REL32), dimension(:,:), contiguous, target, intent(in):: A, B
     LOGICAL:: ANS
     !
     ANS = FALSE
@@ -124,7 +124,7 @@ MODULE SAME_MEMORY_ADDRESS_INTERFACE
   ! ------------------------------------------------------------------------------------------------------------------------
   ! 
   PURE FUNCTION SAME_MEMORY_ADDRESS_DIM2_REL64(A, B) RESULT(ANS)
-    REAL(REL64), dimension(:,:), contiguous, intent(in):: A, B
+    REAL(REL64), dimension(:,:), contiguous, target, intent(in):: A, B
     LOGICAL:: ANS
     !
     ANS = FALSE
@@ -135,7 +135,7 @@ MODULE SAME_MEMORY_ADDRESS_INTERFACE
   !#########################################################################################################################
   ! 
   PURE FUNCTION SAME_MEMORY_ADDRESS_DIM3_INT32(A, B) RESULT(ANS)
-    INTEGER(INT32), dimension(:,:,:), contiguous, intent(in):: A, B
+    INTEGER(INT32), dimension(:,:,:), contiguous, target, intent(in):: A, B
     LOGICAL:: ANS
     !
     ANS = FALSE
@@ -146,7 +146,7 @@ MODULE SAME_MEMORY_ADDRESS_INTERFACE
   ! ------------------------------------------------------------------------------------------------------------------------
   ! 
   PURE FUNCTION SAME_MEMORY_ADDRESS_DIM3_INT64(A, B) RESULT(ANS)
-    INTEGER(INT64), dimension(:,:,:), contiguous, intent(in):: A, B
+    INTEGER(INT64), dimension(:,:,:), contiguous, target, intent(in):: A, B
     LOGICAL:: ANS
     !
     ANS = FALSE
@@ -157,7 +157,7 @@ MODULE SAME_MEMORY_ADDRESS_INTERFACE
   ! ------------------------------------------------------------------------------------------------------------------------
   ! 
   PURE FUNCTION SAME_MEMORY_ADDRESS_DIM3_REL32(A, B) RESULT(ANS)
-    REAL(REL32), dimension(:,:,:), contiguous, intent(in):: A, B
+    REAL(REL32), dimension(:,:,:), contiguous, target, intent(in):: A, B
     LOGICAL:: ANS
     !
     ANS = FALSE
@@ -168,7 +168,7 @@ MODULE SAME_MEMORY_ADDRESS_INTERFACE
   ! ------------------------------------------------------------------------------------------------------------------------
   ! 
   PURE FUNCTION SAME_MEMORY_ADDRESS_DIM3_REL64(A, B) RESULT(ANS)
-    REAL(REL64), dimension(:,:,:), contiguous, intent(in):: A, B
+    REAL(REL64), dimension(:,:,:), contiguous, target, intent(in):: A, B
     LOGICAL:: ANS
     !
     ANS = FALSE
@@ -181,7 +181,7 @@ MODULE SAME_MEMORY_ADDRESS_INTERFACE
   !@@@@@@@@@@@@@@@@@@@@@@@@@@@@@@@@@@@@@@@@@@@@@@@@@@@@@@@@@@@@@@@@@@@@@@@@@@@@@@@@@@@@@@@@@@@@@@@@@@@@@@@@@@@@@@@@@@@@@@@@@
   ! 
   PURE FUNCTION SAME_MEMORY_LOCATION_INT32(A, B) RESULT(ANS)
-    INTEGER(INT32), dimension(*), intent(in):: A, B
+    INTEGER(INT32), dimension(*), target, intent(in):: A, B
     LOGICAL:: ANS
     !
     ANS = C_ASSOCIATED(C_LOC(A),C_LOC(B))
@@ -191,7 +191,7 @@ MODULE SAME_MEMORY_ADDRESS_INTERFACE
   ! ------------------------------------------------------------------------------------------------------------------------
   ! 
   PURE FUNCTION SAME_MEMORY_LOCATION_INT64(A, B) RESULT(ANS)
-    INTEGER(INT64), dimension(*), intent(in):: A, B
+    INTEGER(INT64), dimension(*), target, intent(in):: A, B
     LOGICAL:: ANS
     !
     ANS = C_ASSOCIATED(C_LOC(A),C_LOC(B))
@@ -201,7 +201,7 @@ MODULE SAME_MEMORY_ADDRESS_INTERFACE
   ! ------------------------------------------------------------------------------------------------------------------------
   ! 
   PURE FUNCTION SAME_MEMORY_LOCATION_REL32(A, B) RESULT(ANS)
-    REAL(REL32), dimension(*), intent(in):: A, B
+    REAL(REL32), dimension(*), target, intent(in):: A, B
     LOGICAL:: ANS
     !
     ANS = C_ASSOCIATED(C_LOC(A),C_LOC(B))
@@ -211,7 +211,7 @@ MODULE SAME_MEMORY_ADDRESS_INTERFACE
   ! ------------------------------------------------------------------------------------------------------------------------
   ! 
   PURE FUNCTION SAME_MEMORY_LOCATION_REL64(A, B) RESULT(ANS)
-    REAL(REL64), dimension(*), intent(in):: A, B
+    REAL(REL64), dimension(*), target, intent(in):: A, B
     LOGICAL:: ANS
     !
     ANS = C_ASSOCIATED(C_LOC(A),C_LOC(B))
