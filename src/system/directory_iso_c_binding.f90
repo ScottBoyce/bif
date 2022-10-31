@@ -118,15 +118,15 @@ MODULE DIRECTORY_ISO_C_BINDING
   END SUBROUTINE
   !
   PURE FUNCTION MAKE_C_CHAR(F_STR) RESULT(C_STR)
-    CHARACTER(len=*,            kind=F_CHAR), INTENT(IN) :: F_STR
-    CHARACTER(len=LEN(F_STR)+1, kind=C_CHAR)             :: C_STR
-    INTEGER :: I
+    CHARACTER(len=*, kind=F_CHAR),              INTENT(IN) :: F_STR
+    CHARACTER(len=1, kind=C_CHAR), DIMENSION(LEN(F_STR)+1) :: C_STR
+    INTEGER :: I, N
     !
-    I = LEN(F_STR)
-    C_STR(1:I) = F_STR
-    !
-    I = I + 1
-    C_STR(I:I) = C_NULL_CHAR
+    N = LEN(F_STR)
+    DO I=1, N
+        C_STR(I) = F_STR(I:I)
+    END DO
+    C_STR(N+1) = C_NULL_CHAR
     !
   END FUNCTION
   !
