@@ -10,7 +10,7 @@
 !    
 MODULE DYNAMIC_ARRAY_INT32_INSTRUCTION!, ONLY: SIZE, DYNAMIC_ARRAY_INT32
   USE, INTRINSIC:: ISO_FORTRAN_ENV, ONLY: INT32
-  USE, INTRINSIC:: ISO_C_BINDING,   ONLY: C_LOC, C_ASSOCIATED
+  USE, INTRINSIC:: ISO_C_BINDING,   ONLY: C_LOC, C_ASSOCIATED, C_PTR
   !
   IMPLICIT NONE(TYPE, EXTERNAL)
   !
@@ -175,6 +175,14 @@ MODULE DYNAMIC_ARRAY_INT32_INSTRUCTION!, ONLY: SIZE, DYNAMIC_ARRAY_INT32
     CLASS(DYNAMIC_ARRAY_INT32), intent(in):: dyn
     INTEGER:: cap
     cap = dyn%dim
+  END FUNCTION
+  !
+  !#########################################################################################################################
+  ! 
+  PURE FUNCTION get_c_loc(array) RESULT(cloc)
+    INTEGER(INT32), dimension(:), target, intent(in) :: array
+    TYPE(C_PTR):: cloc
+    cloc = C_LOC(array)
   END FUNCTION
   !
   !#########################################################################################################################
@@ -1098,7 +1106,7 @@ MODULE DYNAMIC_ARRAY_INT32_INSTRUCTION!, ONLY: SIZE, DYNAMIC_ARRAY_INT32
     END IF
     !
     IF( dyn%dim == dyn_in%dim ) THEN
-            IF( C_ASSOCIATED(C_LOC(dyn%array), C_LOC(dyn_in%array)) ) THEN  ! Arrays are the same memory location
+            IF( C_ASSOCIATED(get_c_loc(dyn%array), get_c_loc(dyn_in%array)) ) THEN  ! Arrays are the same memory location
                               !
                               dyn%siz  = dyn_in%siz
                               dyn%iter = dyn_in%iter
