@@ -489,7 +489,7 @@ MODULE UNIT_TESTING_INSTRUCTION
     CLASS(UNIT_TESTS), intent(inout):: UT
     INTEGER, optional, intent(in   ):: By
     TYPE(UNIT_TEST), dimension(:), allocatable:: TMP
-    INTEGER:: GROW, I
+    INTEGER:: GROW
     !
                     GROW = 32
     IF(PRESENT(By)) GROW = 32*(By/32) + 32  !Make sure it is a multiple of 32

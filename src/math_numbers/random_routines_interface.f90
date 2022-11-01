@@ -1428,7 +1428,6 @@ MODULE RANDOM_ROUTINES!, ONLY: RANDOM_GENERATOR, SHUFFLE, SET_FORTRAN_SEED, COIN
     CHARACTER(*),            intent(in   ) :: str ! Max size of 127
     INTEGER:: ldim, shft, i, lstr
     INTEGER(INT64):: r
-    INTEGER(INT8):: L, U
     !
     lstr = len(str)
     !
@@ -1857,7 +1856,6 @@ MODULE RANDOM_ROUTINES!, ONLY: RANDOM_GENERATOR, SHUFFLE, SET_FORTRAN_SEED, COIN
     CHARACTER(*),               intent(in   ) :: str ! Max size of 127
     INTEGER:: ldim, dim, shft, i, j, lstr
     INTEGER(INT64):: r
-    INTEGER(INT8):: L, U
     !
     lstr = len(str)
     !

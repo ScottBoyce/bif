@@ -256,8 +256,7 @@ MODULE POST_KEY_SUB!, ONLY: CHECK_FOR_POST_KEY, FILE_AND_POST_KEY_PARSE
     INTEGER,                   INTENT(INOUT):: ISTART, ISTOP           ! Holds portion of line that contains DIRECTIVE, FILENAME, and POSTkeywords.
     LOGICAL,         OPTIONAL, INTENT(IN    ):: CHECK_SCALE_WITHOUT_SF ! Default is False, if TRUE, then will check for scale factor even if SF is not present.
     CHARACTER(32):: KEY  !Note 32 is hardwired into case check
-    CHARACTER(:), ALLOCATABLE:: ERR
-    INTEGER:: I, N, ISTR, ISTP, LLOC_BAK, IERR, C, ITMP !,Z
+    INTEGER:: ISTR, ISTP, IERR, C, ITMP !,Z
     DOUBLE PRECISION:: SF
     LOGICAL:: CHECK_SCALE
     !
