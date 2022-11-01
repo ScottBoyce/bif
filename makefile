@@ -6,6 +6,8 @@
 # If you use BiF-lib, this MAKEFILE, a derivative of this makefile 
 #   please include in any publications the following citations:
 #
+#    Boyce, S.E., Hanson, R.T., Ferguson, I., Schmid, W., Henson, W., Reimann, T., Mehl, S.M., and Earll, M.M., 2020, One-Water Hydrologic Flow Model: A MODFLOW based conjunctive-use simulation software: U.S. Geological Survey Techniques and Methods 6–A60, 435 p., https://doi.org/10.3133/tm6A60
+#
 #    Boyce, S.E., 2022, Batteries Included Fortran Library (BiF-Lib), version 1.1.0: U.S. Geological Survey Software Release, https://doi.org/10.5066/xyz
 #
 #    Boyce, S.E., 2022, MODFLOW One-Water Hydrologic Flow Model (MF-OWHM) Conjunctive Use and Integrated Hydrologic Flow Modeling Software, version 2.2.x: U.S. Geological Survey Software Release, https://doi.org/10.5066/P9P8I8GS
@@ -248,35 +250,22 @@ all_src := $(main_src) $(MAIN)
 #
 VPATH := $(sort $(dir $(all_src)))  $(int_dir)  $(bin_dir)  $(TESTDIR) 
 #
-# Source Group Directories
-#GROUPS := $(src_dir)/datetime             \
-#          $(src_dir)/dynamic_arrays       \
-#          $(src_dir)/error                \
-#          $(src_dir)/input_reader         \
-#          $(src_dir)/io                   \
-#          $(src_dir)/math_numbers         \
-#          $(src_dir)/sort                 \
-#          $(src_dir)/spatial              \
-#          $(src_dir)/strings              \
-#          $(src_dir)/system               \
-#          $(src_dir)/types_and_containers \
-#          $(src_dir)/unicode              \
-#          $(src_dir)/unit_test            \
-#          $(src_dir)/util_misc
-#VPATH := $(src_dir)   $(int_dir)   $(bin_dir)   $(dir $(MAIN))  $(GROUPS)  $(TESTDIR) 
 #############################################################################
 #
 # Change all source names with extension changed to ".o"
-obj:=  $(patsubst               %.f90, %.o,   \
-         $(patsubst             %.f,   %.o,   \
-           $(patsubst           %.fpp, %.o,   \
-             $(patsubst         %.c,   %.o,   \
-               $(patsubst       %.for, %.o,   \
-                 $(patsubst     %.F,   %.o,   \
-                   $(patsubst   %.F90, %.o,   \
-                     $(patsubst %.FOR, %.o,   \
-                            $(notdir $(all_src))  \
-        ) ) ) ) ) ) ) )
+obj:=$(addsuffix .o, $(basename $(notdir $(all_src))))
+
+# Old method, manually replace each extension by patter matching
+#obj:=  $(patsubst               %.f90, %.o,   \
+#         $(patsubst             %.f,   %.o,   \
+#           $(patsubst           %.fpp, %.o,   \
+#             $(patsubst         %.c,   %.o,   \
+#               $(patsubst       %.for, %.o,   \
+#                 $(patsubst     %.F,   %.o,   \
+#                   $(patsubst   %.F90, %.o,   \
+#                     $(patsubst %.FOR, %.o,   \
+#                            $(notdir $(all_src))  \
+#        ) ) ) ) ) ) ) )
 #
 #obj:= $(patsubst %.f90,%.o,$(patsubst %.f,%.o,$(src)))
 #
