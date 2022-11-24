@@ -557,6 +557,7 @@ MODULE DYNAMIC_ARRAY_INT32_INSTRUCTION!, ONLY: SIZE, DYNAMIC_ARRAY_INT32
     CLASS(DYNAMIC_ARRAY_INT32), intent(inout):: dyn
     INTEGER,                           value :: pos
     INTEGER(INT32),               intent(in) :: val
+    INTEGER:: I
     !
     IF (pos == Z) pos = dyn%siz + 1
     IF (pos <  Z) pos = dyn%siz + pos + 2 ! Negative starts from end, such that -1 points to end of list
@@ -574,8 +575,8 @@ MODULE DYNAMIC_ARRAY_INT32_INSTRUCTION!, ONLY: SIZE, DYNAMIC_ARRAY_INT32
     IF( dyn%dim < pos ) CALL GROW_DIM_INT32(dyn, pos)
     IF( dyn%siz < pos ) THEN
                         dyn%siz = dyn%siz + 1
-                        DO CONCURRENT ( INTEGER:: I = dyn%siz : pos-1 )
-                                                                dyn%array(I) = Z
+                        DO CONCURRENT ( I = dyn%siz : pos-1 )
+                                            dyn%array(I) = Z
                         END DO
                         dyn%array(pos) = Z
                         RETURN
@@ -620,6 +621,7 @@ MODULE DYNAMIC_ARRAY_INT32_INSTRUCTION!, ONLY: SIZE, DYNAMIC_ARRAY_INT32
     CLASS(DYNAMIC_ARRAY_INT32), intent(inout) :: dyn
     INTEGER,                            value :: pos
     INTEGER(INT32),                intent(in) :: val
+    INTEGER:: I
     !
     IF (pos == Z) pos = dyn%siz
     IF (pos <  Z) pos = dyn%siz + pos + 1 ! Negative starts from end, such that -1 points to lst%tail
@@ -629,8 +631,8 @@ MODULE DYNAMIC_ARRAY_INT32_INSTRUCTION!, ONLY: SIZE, DYNAMIC_ARRAY_INT32
     IF( dyn%dim < pos ) CALL GROW_DIM_INT32(dyn, pos)
     IF( dyn%siz < pos ) THEN
                         dyn%siz = dyn%siz + 1
-                        DO CONCURRENT ( INTEGER:: I = dyn%siz : pos-1 )
-                                                                dyn%array(I) = Z
+                        DO CONCURRENT ( I = dyn%siz : pos-1 )
+                                            dyn%array(I) = Z
                         END DO
     END IF
     !
@@ -642,14 +644,15 @@ MODULE DYNAMIC_ARRAY_INT32_INSTRUCTION!, ONLY: SIZE, DYNAMIC_ARRAY_INT32
     CLASS(DYNAMIC_ARRAY_INT32), intent(inout) :: dyn
     INTEGER,                       intent(in) :: I, J
     INTEGER(INT32),                intent(in) :: val
+    INTEGER:: K
     !
     IF( I > J .OR. I < 1 .OR. J < 1 ) RETURN ! Bad index
     !
     IF( dyn%dim < J ) CALL GROW_DIM_INT32(dyn, J)
     IF( dyn%siz < J ) THEN
                         dyn%siz = dyn%siz + 1
-                        DO CONCURRENT ( INTEGER:: K = dyn%siz : J-1 )
-                                                                dyn%array(K) = Z
+                        DO CONCURRENT ( K = dyn%siz : J-1 )
+                                            dyn%array(K) = Z
                         END DO
                         dyn%siz = J
                         call set_ptr(dyn)
@@ -956,6 +959,7 @@ MODULE DYNAMIC_ARRAY_INT32_INSTRUCTION!, ONLY: SIZE, DYNAMIC_ARRAY_INT32
   PURE SUBROUTINE REALLOCATE_INT32(dyn)
     CLASS(DYNAMIC_ARRAY_INT32), intent(inout):: dyn
     INTEGER(INT32), dimension(:), allocatable:: tmp
+    INTEGER:: I
     !
     IF(dyn%dim < 1) RETURN
     !
@@ -972,8 +976,8 @@ MODULE DYNAMIC_ARRAY_INT32_INSTRUCTION!, ONLY: SIZE, DYNAMIC_ARRAY_INT32
                            ELSE
                                ALLOCATE(tmp(dyn%dim), SOURCE=Z)
                                !
-                               DO CONCURRENT( INTEGER:: I=1 : dyn%siz )
-                                                                       TMP(I) = dyn%array(I)
+                               DO CONCURRENT( I=1 : dyn%siz )
+                                                    TMP(I) = dyn%array(I)
                                END DO
                                !DO CONCURRENT( INTEGER:: I=dyn%siz+1 : dyn%dim )
                                !                                        TMP(I) = Z
@@ -990,9 +994,10 @@ MODULE DYNAMIC_ARRAY_INT32_INSTRUCTION!, ONLY: SIZE, DYNAMIC_ARRAY_INT32
   PURE SUBROUTINE ADD_VAL(dyn, val)
     CLASS(DYNAMIC_ARRAY_INT32), intent(inout):: dyn
     INTEGER(INT32),             intent(in   ):: val
+    INTEGER:: I
     !
-    DO CONCURRENT ( INTEGER:: I=1 : dyn%siz )
-                                    dyn%array(I) = dyn%array(I) + val
+    DO CONCURRENT ( I=1 : dyn%siz )
+                          dyn%array(I) = dyn%array(I) + val
     END DO
     !
   END SUBROUTINE
@@ -1002,11 +1007,12 @@ MODULE DYNAMIC_ARRAY_INT32_INSTRUCTION!, ONLY: SIZE, DYNAMIC_ARRAY_INT32
   PURE SUBROUTINE SUB_VAL_RIGHT(dyn, val)
     CLASS(DYNAMIC_ARRAY_INT32), intent(inout):: dyn
     INTEGER(INT32),                    value :: val
+    INTEGER:: I
     !
     IF( val /= Z ) THEN
         val = -1_int32 * val
-        DO CONCURRENT ( INTEGER:: I=1 : dyn%siz )
-                                        dyn%array(I) = dyn%array(I) + val
+        DO CONCURRENT ( I=1 : dyn%siz )
+                              dyn%array(I) = dyn%array(I) + val
         END DO
     END IF
     !
@@ -1015,9 +1021,10 @@ MODULE DYNAMIC_ARRAY_INT32_INSTRUCTION!, ONLY: SIZE, DYNAMIC_ARRAY_INT32
   PURE SUBROUTINE SUB_VAL_LEFT(dyn, val)
     CLASS(DYNAMIC_ARRAY_INT32), intent(inout):: dyn
     INTEGER(INT32),             intent(in   ):: val
+    INTEGER:: I
     !
-    DO CONCURRENT ( INTEGER:: I=1 : dyn%siz )
-                                    dyn%array(I) = val - dyn%array(I)
+    DO CONCURRENT ( I=1 : dyn%siz )
+                          dyn%array(I) = val - dyn%array(I)
     END DO
     !
   END SUBROUTINE
@@ -1027,9 +1034,10 @@ MODULE DYNAMIC_ARRAY_INT32_INSTRUCTION!, ONLY: SIZE, DYNAMIC_ARRAY_INT32
   PURE SUBROUTINE MLT_VAL(dyn, val)
     CLASS(DYNAMIC_ARRAY_INT32), intent(inout):: dyn
     INTEGER(INT32),             intent(in   ):: val
+    INTEGER:: I
     !
-    DO CONCURRENT ( INTEGER:: I=1 : dyn%siz )
-                                    dyn%array(I) = dyn%array(I) * val
+    DO CONCURRENT ( I=1 : dyn%siz )
+                          dyn%array(I) = dyn%array(I) * val
     END DO
     !
   END SUBROUTINE
@@ -1039,10 +1047,11 @@ MODULE DYNAMIC_ARRAY_INT32_INSTRUCTION!, ONLY: SIZE, DYNAMIC_ARRAY_INT32
   PURE SUBROUTINE DIV_VAL_DENOM(dyn, val)
     CLASS(DYNAMIC_ARRAY_INT32), intent(inout):: dyn
     INTEGER(INT32),             intent(in   ):: val
+    INTEGER:: I
     !
     IF( val /= Z ) THEN
-        DO CONCURRENT ( INTEGER:: I=1 : dyn%siz )
-                                        dyn%array(I) = dyn%array(I) / val
+        DO CONCURRENT ( I=1 : dyn%siz )
+                              dyn%array(I) = dyn%array(I) / val
         END DO
     ELSEIF( dyn%siz > Z ) THEN
             dyn%array(1:dyn%siz) = Z
@@ -1055,10 +1064,11 @@ MODULE DYNAMIC_ARRAY_INT32_INSTRUCTION!, ONLY: SIZE, DYNAMIC_ARRAY_INT32
   PURE SUBROUTINE DIV_VAL_NUMER(val, dyn)
     INTEGER(INT32),             intent(in   ):: val
     CLASS(DYNAMIC_ARRAY_INT32), intent(inout):: dyn
+    INTEGER:: I
     !
     IF( val /= Z ) THEN
-        DO CONCURRENT ( INTEGER:: I=1 : dyn%siz, dyn%array(I) /= Z )
-                                                 dyn%array(I) =  val / dyn%array(I)
+        DO CONCURRENT ( I=1 : dyn%siz, dyn%array(I) /= Z )
+                              dyn%array(I) =  val / dyn%array(I)
         END DO
     ELSEIF( dyn%siz > Z ) THEN
             dyn%array(1:dyn%siz) = Z
@@ -1071,9 +1081,10 @@ MODULE DYNAMIC_ARRAY_INT32_INSTRUCTION!, ONLY: SIZE, DYNAMIC_ARRAY_INT32
   PURE SUBROUTINE POW_VAL(dyn, val)
     CLASS(DYNAMIC_ARRAY_INT32), intent(inout):: dyn
     INTEGER(INT32),             intent(in   ):: val
+    INTEGER:: I
     !
-    DO CONCURRENT ( INTEGER:: I=1 : dyn%siz )
-                                    dyn%array(I) = dyn%array(I) ** val
+    DO CONCURRENT ( I=1 : dyn%siz )
+                          dyn%array(I) = dyn%array(I) ** val
     END DO
     !
   END SUBROUTINE
@@ -1186,17 +1197,17 @@ MODULE DYNAMIC_ARRAY_INT32_INSTRUCTION!, ONLY: SIZE, DYNAMIC_ARRAY_INT32
     CLASS(DYNAMIC_ARRAY_INT32), intent(in):: dyn1
     CLASS(DYNAMIC_ARRAY_INT32), intent(in):: dyn2
     TYPE(DYNAMIC_ARRAY_INT32):: dyn
-    INTEGER:: siz
+    INTEGER:: siz, I
     siz = dyn1%siz + dyn2%siz
     !
     IF( dyn%dim < siz ) CALL GROW_DIM_INT32(dyn, siz)
     !
     dyn%siz = siz
-    DO CONCURRENT( INTEGER:: I=1:dyn1%siz )
-                                 dyn%array(I) = dyn1%array(I)
+    DO CONCURRENT( I=1:dyn1%siz )
+                       dyn%array(I) = dyn1%array(I)
     END DO
-    DO CONCURRENT( INTEGER:: I=dyn1%siz+1 : siz )
-                                 dyn%array(I) = dyn2%array(I-dyn1%siz)
+    DO CONCURRENT( I=dyn1%siz+1 : siz )
+                     dyn%array(I) = dyn2%array(I-dyn1%siz)
     END DO
     !
     call set_ptr(dyn)
@@ -1211,14 +1222,14 @@ MODULE DYNAMIC_ARRAY_INT32_INSTRUCTION!, ONLY: SIZE, DYNAMIC_ARRAY_INT32
     CLASS(DYNAMIC_ARRAY_INT32), intent(in):: dyn1
     CLASS(DYNAMIC_ARRAY_INT32), intent(in):: dyn2
     TYPE(DYNAMIC_ARRAY_INT32):: dyn
-    INTEGER:: siz
+    INTEGER:: siz, I
     siz = min( dyn1%siz, dyn2%siz )
     !
     IF( dyn%dim < siz ) CALL GROW_DIM_INT32(dyn, siz)
     !
     dyn%siz = siz
-    DO CONCURRENT( INTEGER:: I=1:siz )
-                                 dyn%array(I) = dyn1%array(I) + dyn2%array(I)
+    DO CONCURRENT( I=1:siz )
+                       dyn%array(I) = dyn1%array(I) + dyn2%array(I)
     END DO
     !
     call set_ptr(dyn)
@@ -1229,12 +1240,13 @@ MODULE DYNAMIC_ARRAY_INT32_INSTRUCTION!, ONLY: SIZE, DYNAMIC_ARRAY_INT32
     CLASS(DYNAMIC_ARRAY_INT32), intent(in):: dyn1
     INTEGER(INT32),             intent(in):: val
     TYPE(DYNAMIC_ARRAY_INT32):: dyn
+    INTEGER:: I
     !
     IF( dyn%dim < dyn1%siz ) CALL GROW_DIM_INT32(dyn, dyn1%siz)
     !
     dyn%siz = dyn1%siz
-    DO CONCURRENT( INTEGER:: I=1:dyn%siz )
-                                 dyn%array(I) = dyn1%array(I) + val
+    DO CONCURRENT( I=1:dyn%siz )
+                       dyn%array(I) = dyn1%array(I) + val
     END DO
     !
     call set_ptr(dyn)
@@ -1245,12 +1257,13 @@ MODULE DYNAMIC_ARRAY_INT32_INSTRUCTION!, ONLY: SIZE, DYNAMIC_ARRAY_INT32
     CLASS(DYNAMIC_ARRAY_INT32), intent(in):: dyn1
     INTEGER(INT32),             intent(in):: val
     TYPE(DYNAMIC_ARRAY_INT32):: dyn
+    INTEGER:: I
     !
     IF( dyn%dim < dyn1%siz ) CALL GROW_DIM_INT32(dyn, dyn1%siz)
     !
     dyn%siz = dyn1%siz
-    DO CONCURRENT( INTEGER:: I=1:dyn%siz )
-                                 dyn%array(I) = dyn1%array(I) + val
+    DO CONCURRENT( I=1:dyn%siz )
+                       dyn%array(I) = dyn1%array(I) + val
     END DO
     !
     call set_ptr(dyn)
@@ -1261,14 +1274,14 @@ MODULE DYNAMIC_ARRAY_INT32_INSTRUCTION!, ONLY: SIZE, DYNAMIC_ARRAY_INT32
     CLASS(DYNAMIC_ARRAY_INT32),   intent(in):: dyn1
     INTEGER(INT32), dimension(:), intent(in):: vec
     TYPE(DYNAMIC_ARRAY_INT32):: dyn
-    INTEGER:: siz
+    INTEGER:: siz, I
     siz = min( dyn1%siz, SIZE(vec) )
     !
     IF( dyn%dim < siz ) CALL GROW_DIM_INT32(dyn, siz)
     !
     dyn%siz = siz
-    DO CONCURRENT( INTEGER:: I=1:siz )
-                                 dyn%array(I) = dyn1%array(I) + vec(I)
+    DO CONCURRENT( I=1:siz )
+                       dyn%array(I) = dyn1%array(I) + vec(I)
     END DO
     !
     call set_ptr(dyn)
@@ -1279,14 +1292,14 @@ MODULE DYNAMIC_ARRAY_INT32_INSTRUCTION!, ONLY: SIZE, DYNAMIC_ARRAY_INT32
     CLASS(DYNAMIC_ARRAY_INT32),   intent(in):: dyn1
     INTEGER(INT32), dimension(:), intent(in):: vec
     TYPE(DYNAMIC_ARRAY_INT32):: dyn
-    INTEGER:: siz
+    INTEGER:: siz, I
     siz = min( dyn1%siz, SIZE(vec) )
     !
     IF( dyn%dim < siz ) CALL GROW_DIM_INT32(dyn, siz)
     !
     dyn%siz = siz
-    DO CONCURRENT( INTEGER:: I=1:siz )
-                                 dyn%array(I) = dyn1%array(I) + vec(I)
+    DO CONCURRENT( I=1:siz )
+                       dyn%array(I) = dyn1%array(I) + vec(I)
     END DO
     !
     call set_ptr(dyn)
@@ -1301,14 +1314,14 @@ MODULE DYNAMIC_ARRAY_INT32_INSTRUCTION!, ONLY: SIZE, DYNAMIC_ARRAY_INT32
     CLASS(DYNAMIC_ARRAY_INT32), intent(in):: dyn1
     CLASS(DYNAMIC_ARRAY_INT32), intent(in):: dyn2
     TYPE(DYNAMIC_ARRAY_INT32):: dyn
-    INTEGER:: siz
+    INTEGER:: siz, I
     siz = min( dyn1%siz, dyn2%siz )
     !
     IF( dyn%dim < siz ) CALL GROW_DIM_INT32(dyn, siz)
     !
     dyn%siz = siz
-    DO CONCURRENT( INTEGER:: I=1:siz )
-                                 dyn%array(I) = dyn1%array(I) - dyn2%array(I)
+    DO CONCURRENT( I=1:siz )
+                       dyn%array(I) = dyn1%array(I) - dyn2%array(I)
     END DO
     !
     call set_ptr(dyn)
@@ -1319,12 +1332,13 @@ MODULE DYNAMIC_ARRAY_INT32_INSTRUCTION!, ONLY: SIZE, DYNAMIC_ARRAY_INT32
     CLASS(DYNAMIC_ARRAY_INT32), intent(in):: dyn1
     INTEGER(INT32),             intent(in):: val
     TYPE(DYNAMIC_ARRAY_INT32):: dyn
+    INTEGER:: I
     !
     IF( dyn%dim < dyn1%siz ) CALL GROW_DIM_INT32(dyn, dyn1%siz)
     !
     dyn%siz = dyn1%siz
-    DO CONCURRENT( INTEGER:: I=1:dyn%siz )
-                                 dyn%array(I) = dyn1%array(I) - val
+    DO CONCURRENT( I=1:dyn%siz )
+                       dyn%array(I) = dyn1%array(I) - val
     END DO
     !
     call set_ptr(dyn)
@@ -1335,12 +1349,13 @@ MODULE DYNAMIC_ARRAY_INT32_INSTRUCTION!, ONLY: SIZE, DYNAMIC_ARRAY_INT32
     CLASS(DYNAMIC_ARRAY_INT32), intent(in):: dyn1
     INTEGER(INT32),             intent(in):: val
     TYPE(DYNAMIC_ARRAY_INT32):: dyn
+    INTEGER:: I
     !
     IF( dyn%dim < dyn1%siz ) CALL GROW_DIM_INT32(dyn, dyn1%siz)
     !
     dyn%siz = dyn1%siz
-    DO CONCURRENT( INTEGER:: I=1:dyn%siz )
-                                 dyn%array(I) =  val - dyn1%array(I)
+    DO CONCURRENT( I=1:dyn%siz )
+                       dyn%array(I) =  val - dyn1%array(I)
     END DO
     !
     call set_ptr(dyn)
@@ -1351,14 +1366,14 @@ MODULE DYNAMIC_ARRAY_INT32_INSTRUCTION!, ONLY: SIZE, DYNAMIC_ARRAY_INT32
     CLASS(DYNAMIC_ARRAY_INT32),   intent(in):: dyn1
     INTEGER(INT32), dimension(:), intent(in):: vec
     TYPE(DYNAMIC_ARRAY_INT32):: dyn
-    INTEGER:: siz
+    INTEGER:: siz, I
     siz = min( dyn1%siz, SIZE(vec) )
     !
     IF( dyn%dim < siz ) CALL GROW_DIM_INT32(dyn, siz)
     !
     dyn%siz = siz
-    DO CONCURRENT( INTEGER:: I=1:siz )
-                                 dyn%array(I) = dyn1%array(I) - vec(I)
+    DO CONCURRENT( I=1:siz )
+                       dyn%array(I) = dyn1%array(I) - vec(I)
     END DO
     !
     call set_ptr(dyn)
@@ -1369,14 +1384,14 @@ MODULE DYNAMIC_ARRAY_INT32_INSTRUCTION!, ONLY: SIZE, DYNAMIC_ARRAY_INT32
     CLASS(DYNAMIC_ARRAY_INT32),   intent(in):: dyn1
     INTEGER(INT32), dimension(:), intent(in):: vec
     TYPE(DYNAMIC_ARRAY_INT32):: dyn
-    INTEGER:: siz
+    INTEGER:: siz, I
     siz = min( dyn1%siz, SIZE(vec) )
     !
     IF( dyn%dim < siz ) CALL GROW_DIM_INT32(dyn, siz)
     !
     dyn%siz = siz
-    DO CONCURRENT( INTEGER:: I=1:siz )
-                                 dyn%array(I) =  vec(I) - dyn1%array(I)
+    DO CONCURRENT( I=1:siz )
+                       dyn%array(I) =  vec(I) - dyn1%array(I)
     END DO
     !
     call set_ptr(dyn)
@@ -1391,14 +1406,14 @@ MODULE DYNAMIC_ARRAY_INT32_INSTRUCTION!, ONLY: SIZE, DYNAMIC_ARRAY_INT32
     CLASS(DYNAMIC_ARRAY_INT32), intent(in):: dyn1
     CLASS(DYNAMIC_ARRAY_INT32), intent(in):: dyn2
     TYPE(DYNAMIC_ARRAY_INT32):: dyn
-    INTEGER:: siz
+    INTEGER:: siz, I
     siz = min( dyn1%siz, dyn2%siz )
     !
     IF( dyn%dim < siz ) CALL GROW_DIM_INT32(dyn, siz)
     !
     dyn%siz = siz
-    DO CONCURRENT( INTEGER:: I=1:siz )
-                                 dyn%array(I) = dyn1%array(I) * dyn2%array(I)
+    DO CONCURRENT( I=1:siz )
+                       dyn%array(I) = dyn1%array(I) * dyn2%array(I)
     END DO
     !
     call set_ptr(dyn)
@@ -1409,12 +1424,13 @@ MODULE DYNAMIC_ARRAY_INT32_INSTRUCTION!, ONLY: SIZE, DYNAMIC_ARRAY_INT32
     CLASS(DYNAMIC_ARRAY_INT32), intent(in):: dyn1
     INTEGER(INT32),             intent(in):: val
     TYPE(DYNAMIC_ARRAY_INT32):: dyn
+    INTEGER:: I
     !
     IF( dyn%dim < dyn1%siz ) CALL GROW_DIM_INT32(dyn, dyn1%siz)
     !
     dyn%siz = dyn1%siz
-    DO CONCURRENT( INTEGER:: I=1:dyn%siz )
-                                 dyn%array(I) = dyn1%array(I) * val
+    DO CONCURRENT( I=1:dyn%siz )
+                       dyn%array(I) = dyn1%array(I) * val
     END DO
     !
     call set_ptr(dyn)
@@ -1425,12 +1441,13 @@ MODULE DYNAMIC_ARRAY_INT32_INSTRUCTION!, ONLY: SIZE, DYNAMIC_ARRAY_INT32
     CLASS(DYNAMIC_ARRAY_INT32), intent(in):: dyn1
     INTEGER(INT32),             intent(in):: val
     TYPE(DYNAMIC_ARRAY_INT32):: dyn
+    INTEGER:: I
     !
     IF( dyn%dim < dyn1%siz ) CALL GROW_DIM_INT32(dyn, dyn1%siz)
     !
     dyn%siz = dyn1%siz
-    DO CONCURRENT( INTEGER:: I=1:dyn%siz )
-                                 dyn%array(I) = dyn1%array(I) * val
+    DO CONCURRENT( I=1:dyn%siz )
+                       dyn%array(I) = dyn1%array(I) * val
     END DO
     !
     call set_ptr(dyn)
@@ -1441,14 +1458,14 @@ MODULE DYNAMIC_ARRAY_INT32_INSTRUCTION!, ONLY: SIZE, DYNAMIC_ARRAY_INT32
     CLASS(DYNAMIC_ARRAY_INT32),   intent(in):: dyn1
     INTEGER(INT32), dimension(:), intent(in):: vec
     TYPE(DYNAMIC_ARRAY_INT32):: dyn
-    INTEGER:: siz
+    INTEGER:: siz, I
     siz = min( dyn1%siz, SIZE(vec) )
     !
     IF( dyn%dim < siz ) CALL GROW_DIM_INT32(dyn, siz)
     !
     dyn%siz = siz
-    DO CONCURRENT( INTEGER:: I=1:siz )
-                                 dyn%array(I) = dyn1%array(I) * vec(I)
+    DO CONCURRENT( I=1:siz )
+                       dyn%array(I) = dyn1%array(I) * vec(I)
     END DO
     !
     call set_ptr(dyn)
@@ -1459,14 +1476,14 @@ MODULE DYNAMIC_ARRAY_INT32_INSTRUCTION!, ONLY: SIZE, DYNAMIC_ARRAY_INT32
     CLASS(DYNAMIC_ARRAY_INT32),   intent(in):: dyn1
     INTEGER(INT32), dimension(:), intent(in):: vec
     TYPE(DYNAMIC_ARRAY_INT32):: dyn
-    INTEGER:: siz
+    INTEGER:: siz, I
     siz = min( dyn1%siz, SIZE(vec) )
     !
     IF( dyn%dim < siz ) CALL GROW_DIM_INT32(dyn, siz)
     !
     dyn%siz = siz
-    DO CONCURRENT( INTEGER:: I=1:siz )
-                                 dyn%array(I) = dyn1%array(I) * vec(I)
+    DO CONCURRENT( I=1:siz )
+                       dyn%array(I) = dyn1%array(I) * vec(I)
     END DO
     !
     call set_ptr(dyn)
@@ -1481,18 +1498,18 @@ MODULE DYNAMIC_ARRAY_INT32_INSTRUCTION!, ONLY: SIZE, DYNAMIC_ARRAY_INT32
     CLASS(DYNAMIC_ARRAY_INT32), intent(in):: dyn1
     CLASS(DYNAMIC_ARRAY_INT32), intent(in):: dyn2
     TYPE(DYNAMIC_ARRAY_INT32):: dyn
-    INTEGER:: siz
+    INTEGER:: siz, I
     siz = min( dyn1%siz, dyn2%siz )
     !
     IF( dyn%dim < siz ) CALL GROW_DIM_INT32(dyn, siz)
     !
     dyn%siz = siz
-    DO CONCURRENT( INTEGER:: I=1:siz )
-                             IF( dyn2%array(I) /= Z ) THEN
-                                  dyn%array(I) = dyn1%array(I) / dyn2%array(I)
-                             ELSE
-                                  dyn%array(I) = Z
-                             END IF
+    DO CONCURRENT( I=1:siz )
+                       IF( dyn2%array(I) /= Z ) THEN
+                            dyn%array(I) = dyn1%array(I) / dyn2%array(I)
+                       ELSE
+                            dyn%array(I) = Z
+                       END IF
     END DO
     !
     call set_ptr(dyn)
@@ -1503,13 +1520,14 @@ MODULE DYNAMIC_ARRAY_INT32_INSTRUCTION!, ONLY: SIZE, DYNAMIC_ARRAY_INT32
     CLASS(DYNAMIC_ARRAY_INT32), intent(in):: dyn1
     INTEGER(INT32),             intent(in):: val
     TYPE(DYNAMIC_ARRAY_INT32):: dyn
+    INTEGER:: I
     !
     IF( dyn%dim < dyn1%siz ) CALL GROW_DIM_INT32(dyn, dyn1%siz)
     !
     dyn%siz = dyn1%siz
     IF( val /= Z ) THEN
-        DO CONCURRENT( INTEGER:: I=1:dyn%siz )
-                                     dyn%array(I) = dyn1%array(I) / val       
+        DO CONCURRENT( I=1:dyn%siz )
+                           dyn%array(I) = dyn1%array(I) / val       
         END DO
     ELSEIF(dyn%siz > Z) THEN
         dyn%array(1:dyn%siz) = Z
@@ -1523,17 +1541,18 @@ MODULE DYNAMIC_ARRAY_INT32_INSTRUCTION!, ONLY: SIZE, DYNAMIC_ARRAY_INT32
     CLASS(DYNAMIC_ARRAY_INT32), intent(in):: dyn1
     INTEGER(INT32),             intent(in):: val
     TYPE(DYNAMIC_ARRAY_INT32):: dyn
+    INTEGER:: I
     !
     IF( dyn%dim < dyn1%siz ) CALL GROW_DIM_INT32(dyn, dyn1%siz)
     !
     dyn%siz = dyn1%siz
     IF( val /= Z ) THEN
-        DO CONCURRENT( INTEGER:: I=1:dyn%siz )
-                             IF( dyn1%array(I) /= Z ) THEN
-                                  dyn%array(I) = val / dyn1%array(I)
-                             ELSE
-                                  dyn%array(I) = Z
-                             END IF      
+        DO CONCURRENT( I=1:dyn%siz )
+                           IF( dyn1%array(I) /= Z ) THEN
+                                dyn%array(I) = val / dyn1%array(I)
+                           ELSE
+                                dyn%array(I) = Z
+                           END IF      
         END DO
     ELSEIF(dyn%siz > Z) THEN
         dyn%array(1:dyn%siz) = Z
@@ -1547,18 +1566,18 @@ MODULE DYNAMIC_ARRAY_INT32_INSTRUCTION!, ONLY: SIZE, DYNAMIC_ARRAY_INT32
     CLASS(DYNAMIC_ARRAY_INT32),   intent(in):: dyn1
     INTEGER(INT32), dimension(:), intent(in):: vec
     TYPE(DYNAMIC_ARRAY_INT32):: dyn
-    INTEGER:: siz
+    INTEGER:: siz, I
     siz = min( dyn1%siz, SIZE(vec) )
     !
     IF( dyn%dim < siz ) CALL GROW_DIM_INT32(dyn, siz)
     !
     dyn%siz = siz
-    DO CONCURRENT( INTEGER:: I=1:siz )
-                             IF( vec(I) /= Z ) THEN
-                                  dyn%array(I) = dyn1%array(I) / vec(I)
-                             ELSE
-                                  dyn%array(I) = Z
-                             END IF
+    DO CONCURRENT( I=1:siz )
+                       IF( vec(I) /= Z ) THEN
+                            dyn%array(I) = dyn1%array(I) / vec(I)
+                       ELSE
+                            dyn%array(I) = Z
+                       END IF
     END DO
     !
     call set_ptr(dyn)
@@ -1569,14 +1588,14 @@ MODULE DYNAMIC_ARRAY_INT32_INSTRUCTION!, ONLY: SIZE, DYNAMIC_ARRAY_INT32
     CLASS(DYNAMIC_ARRAY_INT32),   intent(in):: dyn1
     INTEGER(INT32), dimension(:), intent(in):: vec
     TYPE(DYNAMIC_ARRAY_INT32):: dyn
-    INTEGER:: siz
+    INTEGER:: siz, I
     siz = min( dyn1%siz, SIZE(vec) )
     !
     IF( dyn%dim < siz ) CALL GROW_DIM_INT32(dyn, siz)
     !
     dyn%siz = siz
-    DO CONCURRENT( INTEGER:: I=1:siz, dyn1%array(I) /= Z )
-                             dyn%array(I) =  vec(I) / dyn1%array(I)
+    DO CONCURRENT( I=1:siz, dyn1%array(I) /= Z )
+                   dyn%array(I) =  vec(I) / dyn1%array(I)
     END DO
     !
     call set_ptr(dyn)
@@ -1591,14 +1610,14 @@ MODULE DYNAMIC_ARRAY_INT32_INSTRUCTION!, ONLY: SIZE, DYNAMIC_ARRAY_INT32
     CLASS(DYNAMIC_ARRAY_INT32), intent(in):: dyn1
     CLASS(DYNAMIC_ARRAY_INT32), intent(in):: dyn2
     TYPE(DYNAMIC_ARRAY_INT32):: dyn
-    INTEGER:: siz
+    INTEGER:: siz, I
     siz = min( dyn1%siz, dyn2%siz )
     !
     IF( dyn%dim < siz ) CALL GROW_DIM_INT32(dyn, siz)
     !
     dyn%siz = siz
-    DO CONCURRENT( INTEGER:: I=1:siz )
-                                 dyn%array(I) = dyn1%array(I) ** dyn2%array(I)
+    DO CONCURRENT( I=1:siz )
+                       dyn%array(I) = dyn1%array(I) ** dyn2%array(I)
     END DO
     !
     call set_ptr(dyn)
@@ -1609,12 +1628,13 @@ MODULE DYNAMIC_ARRAY_INT32_INSTRUCTION!, ONLY: SIZE, DYNAMIC_ARRAY_INT32
     CLASS(DYNAMIC_ARRAY_INT32), intent(in):: dyn1
     INTEGER(INT32),             intent(in):: val
     TYPE(DYNAMIC_ARRAY_INT32):: dyn
+    INTEGER:: I
     !
     IF( dyn%dim < dyn1%siz ) CALL GROW_DIM_INT32(dyn, dyn1%siz)
     !
     dyn%siz = dyn1%siz
-    DO CONCURRENT( INTEGER:: I=1:dyn%siz )
-                                 dyn%array(I) = dyn1%array(I) ** val
+    DO CONCURRENT( I=1:dyn%siz )
+                       dyn%array(I) = dyn1%array(I) ** val
     END DO
     !
     call set_ptr(dyn)
@@ -1625,12 +1645,13 @@ MODULE DYNAMIC_ARRAY_INT32_INSTRUCTION!, ONLY: SIZE, DYNAMIC_ARRAY_INT32
     CLASS(DYNAMIC_ARRAY_INT32), intent(in):: dyn1
     INTEGER(INT32),             intent(in):: val
     TYPE(DYNAMIC_ARRAY_INT32):: dyn
+    INTEGER:: I
     !
     IF( dyn%dim < dyn1%siz ) CALL GROW_DIM_INT32(dyn, dyn1%siz)
     !
     dyn%siz = dyn1%siz
-    DO CONCURRENT( INTEGER:: I=1:dyn%siz )
-                                 dyn%array(I) =  val ** dyn1%array(I)
+    DO CONCURRENT( I=1:dyn%siz )
+                       dyn%array(I) =  val ** dyn1%array(I)
     END DO
     !
     call set_ptr(dyn)
@@ -1641,14 +1662,14 @@ MODULE DYNAMIC_ARRAY_INT32_INSTRUCTION!, ONLY: SIZE, DYNAMIC_ARRAY_INT32
     CLASS(DYNAMIC_ARRAY_INT32),   intent(in):: dyn1
     INTEGER(INT32), dimension(:), intent(in):: vec
     TYPE(DYNAMIC_ARRAY_INT32):: dyn
-    INTEGER:: siz
+    INTEGER:: siz, I
     siz = min( dyn1%siz, SIZE(vec) )
     !
     IF( dyn%dim < siz ) CALL GROW_DIM_INT32(dyn, siz)
     !
     dyn%siz = siz
-    DO CONCURRENT( INTEGER:: I=1:siz )
-                                 dyn%array(I) = dyn1%array(I) ** vec(I)
+    DO CONCURRENT( I=1:siz )
+                       dyn%array(I) = dyn1%array(I) ** vec(I)
     END DO
     !
     call set_ptr(dyn)
@@ -1659,14 +1680,14 @@ MODULE DYNAMIC_ARRAY_INT32_INSTRUCTION!, ONLY: SIZE, DYNAMIC_ARRAY_INT32
     CLASS(DYNAMIC_ARRAY_INT32),   intent(in):: dyn1
     INTEGER(INT32), dimension(:), intent(in):: vec
     TYPE(DYNAMIC_ARRAY_INT32):: dyn
-    INTEGER:: siz
+    INTEGER:: siz, I
     siz = min( dyn1%siz, SIZE(vec) )
     !
     IF( dyn%dim < siz ) CALL GROW_DIM_INT32(dyn, siz)
     !
     dyn%siz = siz
-    DO CONCURRENT( INTEGER:: I=1:siz )
-                                 dyn%array(I) =  vec(I) ** dyn1%array(I)
+    DO CONCURRENT( I=1:siz )
+                       dyn%array(I) =  vec(I) ** dyn1%array(I)
     END DO
     !
     call set_ptr(dyn)
@@ -2173,7 +2194,7 @@ MODULE DYNAMIC_ARRAY_INT32_INSTRUCTION!, ONLY: SIZE, DYNAMIC_ARRAY_INT32
     INTEGER(INT32), DIMENSION(DIM),INTENT(INOUT):: A
     INTEGER:: I
     DO CONCURRENT (I=1:DIM)
-                           A(I) = NEG * A(I)
+                       A(I) = NEG * A(I)
     END DO
   END SUBROUTINE
   !
