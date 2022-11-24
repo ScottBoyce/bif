@@ -1,5 +1,5 @@
 !
-! Convert from/to binary to decimal, octal, hexidecimal
+! Convert from/to binary to decimal, octal, hexadecimal
 !
 !   - Note you can also use the Fortran READ/WRITE statements to do the same.
 !     However, it may not work with a Prefix, such as 0xFF or U+FFFF 
@@ -58,9 +58,15 @@ MODULE NUMBER_CONVERSION_INTERFACE
   CHARACTER(21),  PARAMETER:: HEX_LIST = '123456789ABCDEFabcdef'
   CHARACTER( 7),  PARAMETER:: OCT_LIST = '1234567'
   !
-  INTEGER(INT32), PARAMETER:: Z    = 0_INT32
-  INTEGER(INT32), PARAMETER:: ONE  = 1_INT32
-  INTEGER(INT64), PARAMETER:: LONG = 1_INT64
+  INTEGER(INT8 ), PARAMETER:: ZER8   = 0_int8
+  INTEGER(INT16), PARAMETER:: ZER16  = 0_int16
+  INTEGER(INT32), PARAMETER:: ZER32  = 0_int32
+  INTEGER(INT64), PARAMETER:: ZER64  = 0_int64
+  !
+  INTEGER(INT8 ), PARAMETER:: ONE8   = 1_int8
+  INTEGER(INT16), PARAMETER:: ONE16  = 1_int16
+  INTEGER(INT32), PARAMETER:: ONE32  = 1_int32
+  INTEGER(INT64), PARAMETER:: ONE64  = 1_int64
   !
   LOGICAL,  PARAMETER:: Little_Endian = IACHAR( TRANSFER( 1_INT16, ' ' ) ) == 1 ! Transfer b' 00000000 00000001' to CHAR(1), which will drop either then 1st or 2nd byte. If 2nd byte is kept, then CPU is Little-Endian. -> Note Itel/AMD x86 CPUs are Little-Endian
   !
@@ -77,12 +83,12 @@ MODULE NUMBER_CONVERSION_INTERFACE
     INTEGER:: I, J, N
     !
     N    = LEN_TRIM(HEX)
-    base = ONE   ! powers of 16
-    VAL  = Z
+    base = ONE32   ! powers of 16
+    VAL  = ZER32
     !
     J = 1
     DO WHILE (J <= N)
-       IF( INDEX(HEX_LIST, HEX(J:J)) > Z ) EXIT 
+       IF( INDEX(HEX_LIST, HEX(J:J)) > 0 ) EXIT 
        J = J + 1
     END DO
     !
@@ -90,11 +96,11 @@ MODULE NUMBER_CONVERSION_INTERFACE
         !
         IF(HEX(I:I) == " ") CYCLE
         !
-        M = INDEX(HEX_LIST, HEX(I:I))
+        M = INDEX(HEX_LIST, HEX(I:I), KIND=INT32)
         !
         IF(M > 15_INT32) M = M - 6_INT32
         !
-        IF(M > Z) VAL = VAL + M*base
+        IF(M > ZER32) VAL = VAL + M*base
         !
         base = SHIFTL(base, 4)  ! Multiply by 2^4
         !
@@ -113,8 +119,8 @@ MODULE NUMBER_CONVERSION_INTERFACE
     INTEGER:: I, J, N
     !
     N    = LEN_TRIM(OCT)
-    base = ONE   ! powers of 8
-    VAL  = Z
+    base = ONE32   ! powers of 8
+    VAL  = ZER32
     !
     J = 1
     DO WHILE (J <= N)
@@ -126,9 +132,9 @@ MODULE NUMBER_CONVERSION_INTERFACE
         !
         IF(OCT(I:I) == " ") CYCLE
         !
-        M = INDEX(OCT_LIST, OCT(I:I))
+        M = INDEX(OCT_LIST, OCT(I:I), KIND=INT32)
         !
-        IF(M > Z) VAL = VAL + M*base
+        IF(M > ZER32) VAL = VAL + M*base
         !
         base = SHIFTL(base, 3)  ! Multiply by 2^3
         !
@@ -147,8 +153,8 @@ MODULE NUMBER_CONVERSION_INTERFACE
     INTEGER:: I, J, N
     !
     N    = LEN_TRIM(BIN)
-    base = ONE   ! powers of 2
-    VAL  = Z
+    base = ONE32   ! powers of 2
+    VAL  = ZER32
     !
     J = 1
     DO WHILE (J <= N)
@@ -182,11 +188,11 @@ MODULE NUMBER_CONVERSION_INTERFACE
     !
     VAL = VAL32
     I = 16
-    DO WHILE( VAL > Z .AND. I > Z)
+    DO WHILE( VAL > ZER32 .AND. I > 0)
         !
         N = IAND(VAL, 15_INT32)     ! Get remainder of VAL/16
         !
-        IF(N == Z) THEN
+        IF(N == 0) THEN
                      TMP(I:I) = "0"
         ELSE
                      TMP(I:I) = HEX_LIST(N:N)
@@ -197,7 +203,7 @@ MODULE NUMBER_CONVERSION_INTERFACE
         !
     END DO
     !
-    IF( VAL < 1 .AND. I < 16 ) THEN
+    IF( VAL < ONE32 .AND. I < 16 ) THEN
                   HEX = TMP(I+1:16)
     ELSE
                   HEX = 'ERROR - HEX'
@@ -209,16 +215,17 @@ MODULE NUMBER_CONVERSION_INTERFACE
     INTEGER(INT64), intent(in):: VAL64
     CHARACTER(:),  allocatable:: HEX
     CHARACTER(16):: TMP
-    INTEGER:: I, N
+    INTEGER:: I
+    INTEGER(INT32):: N
     INTEGER(INT64):: VAL
     !
     VAL = VAL64  ! SHIFTR seems to fail when using VALUE on INTEL OneAPI
     I = 16
-    DO WHILE( VAL > Z .AND. I > Z)
+    DO WHILE( VAL > ZER64 .AND. I > 0)
         !
         N = INT( IAND(VAL, 15_INT64), INT32)     ! Get remainder of VAL/16
         !
-        IF(N == Z) THEN
+        IF(N == ZER32) THEN
                      TMP(I:I) = "0"
         ELSE
                      TMP(I:I) = HEX_LIST(N:N)
@@ -250,11 +257,11 @@ MODULE NUMBER_CONVERSION_INTERFACE
     !
     VAL = VAL32
     I = 32
-    DO WHILE( VAL > Z .AND. I > Z)
+    DO WHILE( VAL > ZER32 .AND. I > 0)
         !
         N = IAND(VAL, 7_INT32)   ! Get remainder of VAL/8
         !
-        IF(N == Z) THEN
+        IF(N == 0) THEN
                      TMP(I:I) = "0"
         ELSE
                      TMP(I:I) = OCT_LIST(N:N)
@@ -265,7 +272,7 @@ MODULE NUMBER_CONVERSION_INTERFACE
         !
     END DO
     !
-    IF( VAL < 1 .AND. I < 32 ) THEN
+    IF( VAL < ONE32 .AND. I < 32 ) THEN
                   OCT = TMP(I+1:32)
     ELSE
                   OCT = 'ERROR - OCT'
@@ -277,16 +284,17 @@ MODULE NUMBER_CONVERSION_INTERFACE
     INTEGER(INT64), intent(in):: VAL64
     CHARACTER(:),  allocatable:: OCT
     CHARACTER(32):: TMP
-    INTEGER:: I, N
+    INTEGER:: I
+    INTEGER(INT32):: N
     INTEGER(INT64):: VAL
     !
     VAL = VAL64  ! SHIFTR seems to fail when using VALUE on INTEL OneAPI
     I = 32
-    DO WHILE( VAL > Z .AND. I > Z)
+    DO WHILE( VAL > ZER64 .AND. I > 0)
         !
         N = INT( IAND(VAL, 7_INT64), INT32)     ! Get remainder of VAL/8
         !
-        IF(N == Z) THEN
+        IF(N == ZER32) THEN
                      TMP(I:I) = "0"
         ELSE
                      TMP(I:I) = OCT_LIST(N:N)
@@ -297,7 +305,7 @@ MODULE NUMBER_CONVERSION_INTERFACE
         !
     END DO
     !
-    IF( VAL < 1 .AND. I < 32 ) THEN
+    IF( VAL < ONE64 .AND. I < 32 ) THEN
                   OCT = TMP(I+1:32)
     ELSE
                   OCT = 'ERROR - OCT'
@@ -329,14 +337,14 @@ MODULE NUMBER_CONVERSION_INTERFACE
     VAL = VAL32
     I = 16
     J = GP
-    DO WHILE( VAL > Z .AND. I > Z)
+    DO WHILE( VAL > ZER8 .AND. I > 0)
         !
-        IF(J == Z) THEN
+        IF(J == 0) THEN
            J = GP
         ELSE
            J = J - 1
            !
-           IF(IAND(VAL,1) == 1) THEN   ! Odd number, so its 2^1
+           IF(BTEST(VAL, 0)) THEN   ! Odd number if least sig bit is set  -- Old Method: IF(IAND(VAL,ONE8) == ONE8) THEN
                         TMP(I:I) = "1"
            ELSE
                         TMP(I:I) = "0"
@@ -347,8 +355,8 @@ MODULE NUMBER_CONVERSION_INTERFACE
         I = I - 1
     END DO
     !
-    IF( VAL < 1 .AND. I < 16 ) THEN
-        IF( J > Z ) THEN
+    IF( VAL < ONE8 .AND. I < 16 ) THEN
+        IF( J > 0 ) THEN
                   BIN = REPEAT('0',J) // TMP(I+1:16)
         ELSE
                   BIN = TMP(I+1:16)
@@ -379,14 +387,14 @@ MODULE NUMBER_CONVERSION_INTERFACE
     VAL = VAL32
     I = 32
     J = GP
-    DO WHILE( VAL > Z .AND. I > Z)
+    DO WHILE( VAL > ZER16 .AND. I > 0)
         !
-        IF(J == Z) THEN
+        IF(J == 0) THEN
            J = GP
         ELSE
            J = J - 1
            !
-           IF(IAND(VAL,1) == 1) THEN   ! Odd number, so its 2^1
+           IF(BTEST(VAL, 0)) THEN   ! Odd number if least sig bit is set  -- Old Method: IF(IAND(VAL,ONE16) == ONE16) THEN 
                         TMP(I:I) = "1"
            ELSE
                         TMP(I:I) = "0"
@@ -397,8 +405,8 @@ MODULE NUMBER_CONVERSION_INTERFACE
         I = I - 1
     END DO
     !
-    IF( VAL < 1 .AND. I < 32 ) THEN
-        IF( J > Z ) THEN
+    IF( VAL < ONE16 .AND. I < 32 ) THEN
+        IF( J > 0 ) THEN
                   BIN = REPEAT('0',J) // TMP(I+1:32)
         ELSE
                   BIN = TMP(I+1:32)
@@ -429,14 +437,14 @@ MODULE NUMBER_CONVERSION_INTERFACE
     VAL = VAL32
     I = 64
     J = GP
-    DO WHILE( VAL > Z .AND. I > Z)
+    DO WHILE( VAL > ZER32 .AND. I > 0)
         !
-        IF(J == Z) THEN
+        IF(J == 0) THEN
            J = GP
         ELSE
            J = J - 1
            !
-           IF(IAND(VAL,1) == 1) THEN   ! Odd number, so its 2^1
+           IF(BTEST(VAL, 0)) THEN   ! Odd number if least sig bit is set  -- Old Method: IF(IAND(VAL,1) == 1) THEN
                         TMP(I:I) = "1"
            ELSE
                         TMP(I:I) = "0"
@@ -447,8 +455,8 @@ MODULE NUMBER_CONVERSION_INTERFACE
         I = I - 1
     END DO
     !
-    IF( VAL < 1 .AND. I < 64 ) THEN
-        IF( J > Z ) THEN
+    IF( VAL < ONE32 .AND. I < 64 ) THEN
+        IF( J > 0 ) THEN
                   BIN = REPEAT('0',J) // TMP(I+1:64)
         ELSE
                   BIN = TMP(I+1:64)
@@ -479,14 +487,14 @@ MODULE NUMBER_CONVERSION_INTERFACE
     VAL = VAL32
     I = 96
     J = GP
-    DO WHILE( VAL > Z .AND. I > Z)
+    DO WHILE( VAL > ZER64 .AND. I > 0)
         !
-        IF(J == Z) THEN
+        IF(J == 0) THEN
            J = GP
         ELSE
            J = J - 1
            !
-           IF(IAND(VAL,1) == 1) THEN   ! Odd number, so its 2^1
+           IF(BTEST(VAL, 0)) THEN   ! Odd number if least sig bit is set  -- Old Method: IF(IAND(VAL,1) == 1) THEN
                         TMP(I:I) = "1"
            ELSE
                         TMP(I:I) = "0"
@@ -497,8 +505,8 @@ MODULE NUMBER_CONVERSION_INTERFACE
         I = I - 1
     END DO
     !
-    IF( VAL < 1 .AND. I < 96 ) THEN
-        IF( J > Z ) THEN
+    IF( VAL < ONE64 .AND. I < 96 ) THEN
+        IF( J > 0 ) THEN
                   BIN = REPEAT('0',J) // TMP(I+1:96)
         ELSE
                   BIN = TMP(I+1:96)
@@ -519,9 +527,9 @@ MODULE NUMBER_CONVERSION_INTERFACE
     !
     VAL = VAL8
     I = 8
-    DO WHILE( VAL > Z .AND. I > Z)
+    DO WHILE( VAL > ZER8 .AND. I > 0)
         !
-        IF(IAND(VAL,1) == 1) THEN   ! Odd number, so its 2^1
+        IF(BTEST(VAL, 0)) THEN   ! Odd number if least sig bit is set  -- Old Method: IF(IAND(VAL,1) == 1) THEN
                      TMP(I:I) = "1"
         ELSE
                      TMP(I:I) = "0"
@@ -553,9 +561,9 @@ MODULE NUMBER_CONVERSION_INTERFACE
     !
     VAL = VAL16
     I = 16
-    DO WHILE( VAL > Z .AND. I > Z)
+    DO WHILE( VAL > ZER16 .AND. I > 0)
         !
-        IF(IAND(VAL,1) == 1) THEN   ! Odd number, so its 2^1
+        IF(BTEST(VAL, 0)) THEN   ! Odd number if least sig bit is set  -- Old Method: IF(IAND(VAL,1) == 1) THEN
                      TMP(I:I) = "1"
         ELSE
                      TMP(I:I) = "0"
@@ -566,7 +574,7 @@ MODULE NUMBER_CONVERSION_INTERFACE
         !
     END DO
     !
-    IF( VAL < 1 .AND. I < 16 ) THEN
+    IF( VAL < ONE16 .AND. I < 16 ) THEN
                   if(present(pad)) then
                       if(pad) CALL ZeroPad(16, TMP, I)
                   end if
@@ -587,9 +595,9 @@ MODULE NUMBER_CONVERSION_INTERFACE
     !
     VAL = VAL32
     I = 32
-    DO WHILE( VAL > Z .AND. I > Z)
+    DO WHILE( VAL > ZER32 .AND. I > 0)
         !
-        IF(IAND(VAL,1) == 1) THEN   ! Odd number, so its 2^1
+        IF(BTEST(VAL, 0)) THEN   ! Odd number if least sig bit is set  -- Old Method: IF(IAND(VAL,1) == 1) THEN
                      TMP(I:I) = "1"
         ELSE
                      TMP(I:I) = "0"
@@ -600,7 +608,7 @@ MODULE NUMBER_CONVERSION_INTERFACE
         !
     END DO
     !
-    IF( VAL < 1 .AND. I < 32 ) THEN
+    IF( VAL < ONE32 .AND. I < 32 ) THEN
                   if(present(pad)) then
                       if(pad) CALL ZeroPad(32, TMP, I)
                   end if
@@ -621,9 +629,9 @@ MODULE NUMBER_CONVERSION_INTERFACE
     !
     VAL = VAL64  ! SHIFTR seems to fail when using VALUE on INTEL OneAPI
     I = 64
-    DO WHILE( VAL > Z .AND. I > Z)
+    DO WHILE( VAL > ZER64 .AND. I > 0)
         !
-        IF(IAND(VAL,LONG) == LONG) THEN   ! Odd number
+        IF(BTEST(VAL, 0)) THEN   ! Odd number if least sig bit is set  -- Old Method: IF(IAND(VAL,ONE64) == ONE64) THEN
                      TMP(I:I) = "1"
         ELSE
                      TMP(I:I) = "0"
@@ -634,7 +642,7 @@ MODULE NUMBER_CONVERSION_INTERFACE
         !
     END DO
     !
-    IF( VAL < 1 .AND. I < 64 ) THEN
+    IF( VAL < ONE64 .AND. I < 64 ) THEN
                   if(present(pad)) then
                       if(pad) CALL ZeroPad(64, TMP, I)
                   end if
@@ -654,7 +662,7 @@ MODULE NUMBER_CONVERSION_INTERFACE
     DO I=1, pnt
             txt(I:I) = '0'
     END DO
-    pnt = Z
+    pnt = 0
     !
   END SUBROUTINE
   !
@@ -678,14 +686,14 @@ MODULE NUMBER_CONVERSION_INTERFACE
         VAL = TRANSFER(STR(K:K), VAL)
         !
         N   = IAND(VAL, 15_INT32)     ! Get remainder of VAL/16
-        IF(N == Z) THEN
+        IF(N == 0) THEN
              TMP(J:J) = "0"
         ELSE
              TMP(J:J) = HEX_LIST(N:N)
         END IF
         !
         N = SHIFTR(VAL, 4)  ! Divide by 16 via bit shift operation
-        IF(N == Z) THEN
+        IF(N == 0) THEN
              TMP(I:I) = "0"
         ELSE
              TMP(I:I) = HEX_LIST(N:N)
@@ -705,14 +713,14 @@ MODULE NUMBER_CONVERSION_INTERFACE
     INTEGER:: N
     !
     N = IAND(VAL, 15_INT8)     ! Get remainder of VAL/16
-    IF(N == Z) THEN
+    IF(N == 0) THEN
          HEX(2:2) = "0"
     ELSE
          HEX(2:2) = HEX_LIST(N:N)
     END IF
     !
     N = SHIFTR(VAL, 4)  ! Divide by 16 via bit shift operation
-    IF(N == Z) THEN
+    IF(N == 0) THEN
          HEX(1:1) = "0"
     ELSE
          HEX(1:1) = HEX_LIST(N:N)
