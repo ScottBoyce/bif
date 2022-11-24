@@ -457,7 +457,7 @@ MODULE DESCRIPTIVE_STATISTICS
     !
     if(present(median)) then
       i = SHIFTR(dim, 1)
-      IF( IAND(dim,1) == 1 ) THEN ! its odd
+      IF( BTEST(dim, 0) ) THEN ! its odd  -- old method:  IAND(dim,1) == 1
           median   = dat(i)
       else
           median = (dat(i) + dat(i+1)) * 0.5_rel64

@@ -81,7 +81,7 @@ MODULE IS_ROUTINES
   PURE FUNCTION IS_ODD(NUM)
     INTEGER, INTENT(IN):: NUM
     LOGICAL:: IS_ODD
-    IS_ODD = IAND(NUM,1) == 1
+    IS_ODD = BTEST(NUM, 0)   ! Odd number if least significant bit is set  -- Old Method: IAND(NUM,1) == 1
   END FUNCTION
   !
   !################################################################################
@@ -89,7 +89,7 @@ MODULE IS_ROUTINES
   PURE FUNCTION IS_EVEN(NUM)
     INTEGER, INTENT(IN):: NUM
     LOGICAL:: IS_EVEN
-    IS_EVEN = IAND(NUM,1) == 0
+    IS_EVEN = .NOT. BTEST(NUM, 0)   ! -- Old Method: IAND(NUM,1) == 0
   END FUNCTION
   !
   !@@@@@@@@@@@@@@@@@@@@@@@@@@@@@@@@@@@@@@@@@@@@@@@@@@@@@@@@@@@@@@@@@@@@@@@@@@@@@@@@@@@@@@@@@@@@@@@@@@@@@@@@@@@@@@@@@@@@@@@@@
@@ -571,7 +571,7 @@ MODULE IS_ROUTINES
     CHARACTER(*),DIMENSION(:),CONTIGUOUS, INTENT(IN):: VEC
     LOGICAL,                              INTENT(IN):: UPCASE
     LOGICAL:: UNI
-    INTEGER:: I, K, N, M, DIM
+    INTEGER:: I, N, M, DIM
     !
     IF(.NOT. UPCASE) THEN
                          UNI = ALL(VAL /= VEC)
