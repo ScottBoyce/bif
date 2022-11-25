@@ -154,8 +154,8 @@ MODULE PARSE_WORD_INTERFACE!, ONLY: PARSE_WORD, PARSE_WORD_UP, FIND_NONBLANK
         IF(PRESENT(FIND_NEXT)) THEN  !LOC MOVE TO NEXT WORD
         IF        (FIND_NEXT)  THEN
                                    DO WHILE( LOC < LINE_TRIM )
-                                                             IF(LN(LOC:LOC).NE.TAB .AND. LN(LOC:LOC).NE.' ' .AND. LN(LOC:LOC).NE.',') EXIT
-                                                             LOC = LOC+1
+                                                   IF(LN(LOC:LOC).NE.TAB .AND. LN(LOC:LOC).NE.' ' .AND. LN(LOC:LOC).NE.',') EXIT
+                                                   LOC = LOC+1
                                    END DO
         END IF
         END IF

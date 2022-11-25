@@ -237,7 +237,9 @@ MODULE DESCRIPTIVE_STATISTICS
   !@@@@@@@@@@@@@@@@@@@@@@@@@@@@@@@@@@@@@@@@@@@@@@@@@@@@@@@@@@@@@@@@@@@@@@@@@@@@@@@@@@@@@@@@@@@@@@@@@@@@@@@@@@@@@@@@@@@@@@@@@
   ! Stats Driver Routine
   !
-  PURE SUBROUTINE stats(dat, av, var, skew, kurt, median, P1, P5, P10, P25, P50, P75, P90, P95, P99, P, var_sample, skew_sample, kurt_sample, protect)
+  PURE SUBROUTINE stats(dat, av, var, skew, kurt, median, &
+                        P1, P5, P10, P25, P50, P75, P90, P95, P99, P, &
+                        var_sample, skew_sample, kurt_sample, protect)
     REAL(REL64), dimension(:), contiguous,           intent(inout):: dat        ! dat array to describe
     REAL(REL64),                           optional, intent(  out):: av         ! Arithmetic Mean         <=| 
     REAL(REL64),                           optional, intent(  out):: var        ! Variance - population   <=|

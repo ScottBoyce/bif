@@ -752,7 +752,8 @@ MODULE ALLOC_INTERFACE!, ONLY: ALLOC, GROW, RESIZE
                   IF(PRESENT(EXACT)) EXACT_DIM = EXACT
                   !
                   IF( ALLOCATED(VEC) ) THEN
-                                       IF((EXACT_DIM .AND. (SIZE(VEC).NE.N .OR. LEN(VEC).NE.DIM)) .OR. SIZE(VEC) < N  .OR. LEN(VEC) < DIM) THEN
+                                       IF((EXACT_DIM .AND. (SIZE(VEC).NE.N .OR. LEN(VEC).NE.DIM)) .OR. &
+                                          SIZE(VEC) < N  .OR. LEN(VEC) < DIM) THEN
                                                                                NEW_ALLOCATION = TRUE
                                                                                DEALLOCATE(VEC)
                                                                                ALLOCATE(CHARACTER(DIM):: VEC(N))
@@ -793,7 +794,8 @@ MODULE ALLOC_INTERFACE!, ONLY: ALLOC, GROW, RESIZE
                   IF(PRESENT(EXACT)) EXACT_DIM = EXACT
                   !
                   IF( ALLOCATED(VEC) ) THEN
-                                       IF((EXACT_DIM .AND. (SIZE(VEC).NE.N .OR. LEN(VEC).NE.DIM)) .OR. SIZE(VEC) < N  .OR. LEN(VEC) < DIM) THEN
+                                       IF((EXACT_DIM .AND. (SIZE(VEC).NE.N .OR. LEN(VEC).NE.DIM)) .OR. &
+                                          SIZE(VEC) < N  .OR. LEN(VEC) < DIM) THEN
                                                                                NEW_ALLOCATION = TRUE
                                                                                DEALLOCATE(VEC)
                                                                                ALLOCATE(CHARACTER(DIM):: VEC(N))
