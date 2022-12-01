@@ -230,7 +230,7 @@ MODULE ARRAY_DATA_TYPES!, ONLY: INTEGER_VECTOR, DOUBLE_VECTOR, INTEGER_MATRIX, D
       INTEGER:: N=Z
       INTEGER, DIMENSION(:),ALLOCATABLE:: VEC
       !
-  CONTAINS
+      CONTAINS
       !
       GENERIC::             INIT         =>INIT_INTEGER_VECTOR, DEALLOCATE_INTEGER_VECTOR !([VEC])
       PROCEDURE, PASS(IT):: ALLOC        =>ALLOCATE_INTEGER_VECTOR         !(DIM [IVAL])  --IVAL IS A SCALER THAT WHEN PRESENT IS WHAT THE VECTOR IS SET TOO
@@ -250,7 +250,7 @@ MODULE ARRAY_DATA_TYPES!, ONLY: INTEGER_VECTOR, DOUBLE_VECTOR, INTEGER_MATRIX, D
       PROCEDURE,           PRIVATE:: SET_INTEGER_VECTOR_OPERATOR
       PROCEDURE, PASS(IT), PRIVATE:: INIT_INTEGER_VECTOR
       PROCEDURE, PASS(IT), PRIVATE:: DEALLOCATE_INTEGER_VECTOR
-      !FINAL::FINAL_DEALLOCATE_INTEGER_VECTOR !-- gfortran compiler bug on windows
+      FINAL::FINAL_DEALLOCATE_INTEGER_VECTOR
   END TYPE
   !
   TYPE INTEGER_MATRIX
@@ -499,10 +499,9 @@ MODULE ARRAY_DATA_TYPES!, ONLY: INTEGER_VECTOR, DOUBLE_VECTOR, INTEGER_MATRIX, D
   !@@@@@@@@@@@@@@@@@@@@@@@@@@@@@@@@@@@@@@@@@@@@@@@@@@@@@@@@@@@@@@@@@@@@@@@@@@@@@@@@@@@@@@@@@@@@@@@@@@@@@@@@@@@@@@@@@@@@@@@@@
   !@@@@@@@@@@@@@@@@@@@@@@@@@@@@@@@@@@@@@@@@@@@@@@@@@@@@@@@@@@@@@@@@@@@@@@@@@@@@@@@@@@@@@@@@@@@@@@@@@@@@@@@@@@@@@@@@@@@@@@@@@
   !@@@@@@@@@@@@@@@@@@@@@@@@@@@@@@@@@@@@@@@@@@@@@@@@@@@@@@@@@@@@@@@@@@@@@@@@@@@@@@@@@@@@@@@@@@@@@@@@@@@@@@@@@@@@@@@@@@@@@@@@@
-  ! 
   !
   ! Stand alone functions
-  !
+  ! 
   PURE FUNCTION JOIN_TXT_CHAR(TXT,JOIN,ENDING) RESULT(LN)
     CHARACTER(*),DIMENSION(:),CONTIGUOUS,INTENT(IN):: TXT
     CHARACTER(*),                        INTENT(IN):: JOIN
@@ -556,27 +555,11 @@ MODULE ARRAY_DATA_TYPES!, ONLY: INTEGER_VECTOR, DOUBLE_VECTOR, INTEGER_MATRIX, D
     !
   END FUNCTION
   !
-  !
   !@@@@@@@@@@@@@@@@@@@@@@@@@@@@@@@@@@@@@@@@@@@@@@@@@@@@@@@@@@@@@@@@@@@@@@@@@@@@@@@@@@@@@@@@@@@@@@@@@@@@@@@@@@@@@@@@@@@@@@@@@
   !@@@@@@@@@@@@@@@@@@@@@@@@@@@@@@@@@@@@@@@@@@@@@@@@@@@@@@@@@@@@@@@@@@@@@@@@@@@@@@@@@@@@@@@@@@@@@@@@@@@@@@@@@@@@@@@@@@@@@@@@@
   !@@@@@@@@@@@@@@@@@@@@@@@@@@@@@@@@@@@@@@@@@@@@@@@@@@@@@@@@@@@@@@@@@@@@@@@@@@@@@@@@@@@@@@@@@@@@@@@@@@@@@@@@@@@@@@@@@@@@@@@@@
-  ! 
-  !
-  ! Utility Subroutines -- They help with compiler bugs with gfortran
-  !
-  PURE SUBROUTINE MOVE_ALLOC_CHARACTER_ARRAY(FROM, TOO)
-     CHARACTER(:), DIMENSION(:), ALLOCATABLE, INTENT(INOUT):: FROM
-     CHARACTER(:), DIMENSION(:), ALLOCATABLE, INTENT(INOUT):: TOO
-     CALL MOVE_ALLOC(FROM, TOO)
-  END SUBROUTINE
-  !
-  !@@@@@@@@@@@@@@@@@@@@@@@@@@@@@@@@@@@@@@@@@@@@@@@@@@@@@@@@@@@@@@@@@@@@@@@@@@@@@@@@@@@@@@@@@@@@@@@@@@@@@@@@@@@@@@@@@@@@@@@@@
-  !@@@@@@@@@@@@@@@@@@@@@@@@@@@@@@@@@@@@@@@@@@@@@@@@@@@@@@@@@@@@@@@@@@@@@@@@@@@@@@@@@@@@@@@@@@@@@@@@@@@@@@@@@@@@@@@@@@@@@@@@@
-  !@@@@@@@@@@@@@@@@@@@@@@@@@@@@@@@@@@@@@@@@@@@@@@@@@@@@@@@@@@@@@@@@@@@@@@@@@@@@@@@@@@@@@@@@@@@@@@@@@@@@@@@@@@@@@@@@@@@@@@@@@
-  ! 
   !
   ! CHARACTER_TYPE Routines
-  !
   !
   PURE ELEMENTAL SUBROUTINE ALLOCATE_CHARACTER_TYPE(CH,LINE)
      CLASS(CHARACTER_TYPE), INTENT(INOUT):: CH
@@ -862,7 +845,7 @@ MODULE ARRAY_DATA_TYPES!, ONLY: INTEGER_VECTOR, DOUBLE_VECTOR, INTEGER_MATRIX, D
      CHARACTER(*),          INTENT(IN):: STR
      CHARACTER( MAX(LEN(STR)+LEN(CH), 1) ):: STR_OUT
      !
-     IF(ALLOCATED(CH%STR) > Z) THEN
+     IF(ALLOCATED(CH%STR)) THEN
                   STR_OUT = STR // CH%STR
      ELSE
                   STR_OUT = STR
@@ -875,7 +858,7 @@ MODULE ARRAY_DATA_TYPES!, ONLY: INTEGER_VECTOR, DOUBLE_VECTOR, INTEGER_MATRIX, D
      CHARACTER(*),          INTENT(IN):: STR
      CHARACTER( MAX(LEN(STR)+LEN(CH), 1) ):: STR_OUT
      !
-     IF(ALLOCATED(CH%STR) > Z) THEN
+     IF(ALLOCATED(CH%STR)) THEN
                   STR_OUT = CH%STR // STR
      ELSE
                   STR_OUT = STR
@@ -969,6 +952,8 @@ MODULE ARRAY_DATA_TYPES!, ONLY: INTEGER_VECTOR, DOUBLE_VECTOR, INTEGER_MATRIX, D
   !@@@@@@@@@@@@@@@@@@@@@@@@@@@@@@@@@@@@@@@@@@@@@@@@@@@@@@@@@@@@@@@@@@@@@@@@@@@@@@@@@@@@@@@@@@@@@@@@@@@@@@@@@@@@@@@@@@@@@@@@@
   !@@@@@@@@@@@@@@@@@@@@@@@@@@@@@@@@@@@@@@@@@@@@@@@@@@@@@@@@@@@@@@@@@@@@@@@@@@@@@@@@@@@@@@@@@@@@@@@@@@@@@@@@@@@@@@@@@@@@@@@@@
   !@@@@@@@@@@@@@@@@@@@@@@@@@@@@@@@@@@@@@@@@@@@@@@@@@@@@@@@@@@@@@@@@@@@@@@@@@@@@@@@@@@@@@@@@@@@@@@@@@@@@@@@@@@@@@@@@@@@@@@@@@
+  !
+  ! CHARACTER_TYPE_ARRAY Routines
   !
   PURE SUBROUTINE INITIALIZE_CHARACTER_TYPE_ARRAY(CH,DIM)
      CLASS(CHARACTER_TYPE_ARRAY), INTENT(INOUT):: CH
@@ -1352,22 +1337,27 @@ MODULE ARRAY_DATA_TYPES!, ONLY: INTEGER_VECTOR, DOUBLE_VECTOR, INTEGER_MATRIX, D
      CLASS(CHARACTER_TYPE_ARRAY), INTENT(IN):: CH
      CHARACTER(*),                INTENT(IN):: STR
      LOGICAL,                     INTENT(IN):: IGNORE_CASE
-     CHARACTER(    LEN(STR)):: UP
-     CHARACTER(CH%MAX_LEN()):: WORD
+     CHARACTER(LEN(STR)):: UP
+     ! CHARACTER(CH%MAX_LEN()):: WORD -> gfortran does not like this
+     INTEGER:: MAX_LEN
      INTEGER:: CNT, J
      !
      IF(IGNORE_CASE) THEN
-         UP = STR
-         CALL UPPER(UP)
-         !
-         CNT = Z
-         DO J=ONE, CH%N
-             WORD = CH%VEC(J)%STR
-             !
-             CALL UPPER(WORD)
-             !
-             IF(WORD == UP) CNT = CNT + ONE
-         END DO
+         MAX_LEN = CH%MAX_LEN()
+         BLOCK
+            CHARACTER(MAX_LEN):: WORD
+            UP = STR
+            CALL UPPER(UP)
+            !
+            CNT = Z
+            DO J=ONE, CH%N
+                WORD = CH%VEC(J)%STR
+                !
+                CALL UPPER(WORD)
+                !
+                IF(WORD == UP) CNT = CNT + ONE
+            END DO
+         END BLOCK
      ELSE
          CNT = COUNT_CHARACTER_TYPE_ARRAY(CH, STR)
      END IF
@@ -1450,6 +1440,8 @@ MODULE ARRAY_DATA_TYPES!, ONLY: INTEGER_VECTOR, DOUBLE_VECTOR, INTEGER_MATRIX, D
   !@@@@@@@@@@@@@@@@@@@@@@@@@@@@@@@@@@@@@@@@@@@@@@@@@@@@@@@@@@@@@@@@@@@@@@@@@@@@@@@@@@@@@@@@@@@@@@@@@@@@@@@@@@@@@@@@@@@@@@@@@
   !@@@@@@@@@@@@@@@@@@@@@@@@@@@@@@@@@@@@@@@@@@@@@@@@@@@@@@@@@@@@@@@@@@@@@@@@@@@@@@@@@@@@@@@@@@@@@@@@@@@@@@@@@@@@@@@@@@@@@@@@@
   !@@@@@@@@@@@@@@@@@@@@@@@@@@@@@@@@@@@@@@@@@@@@@@@@@@@@@@@@@@@@@@@@@@@@@@@@@@@@@@@@@@@@@@@@@@@@@@@@@@@@@@@@@@@@@@@@@@@@@@@@@
+  !
+  ! CHARACTER_BUF_TYPE Routines
   !
   ELEMENTAL PURE FUNCTION COMPARE_CHAR_BUF_TYPE_STR(CH, STR) RESULT(CMP)
      CLASS(CHARACTER_BUF_TYPE),INTENT(IN):: CH
@@ -1682,6 +1674,8 @@ MODULE ARRAY_DATA_TYPES!, ONLY: INTEGER_VECTOR, DOUBLE_VECTOR, INTEGER_MATRIX, D
   !@@@@@@@@@@@@@@@@@@@@@@@@@@@@@@@@@@@@@@@@@@@@@@@@@@@@@@@@@@@@@@@@@@@@@@@@@@@@@@@@@@@@@@@@@@@@@@@@@@@@@@@@@@@@@@@@@@@@@@@@@
   !@@@@@@@@@@@@@@@@@@@@@@@@@@@@@@@@@@@@@@@@@@@@@@@@@@@@@@@@@@@@@@@@@@@@@@@@@@@@@@@@@@@@@@@@@@@@@@@@@@@@@@@@@@@@@@@@@@@@@@@@@
   ! 
+  ! CHARACTER_ARRAY Routines
+  ! 
   PURE ELEMENTAL SUBROUTINE ALLOCATE_CHARACTER_ARRAY(CH,MAX_LEN,DIM)
      CLASS(CHARACTER_ARRAY),INTENT(INOUT):: CH
      INTEGER,               INTENT(IN   ):: MAX_LEN, DIM
@@ -1718,8 +1712,7 @@ MODULE ARRAY_DATA_TYPES!, ONLY: INTEGER_VECTOR, DOUBLE_VECTOR, INTEGER_MATRIX, D
      IF (CH%N > 0) THEN
          CH_OUT%N = CH%N
          CH%N     = Z
-         !CALL MOVE_ALLOC(CH%STR,CH_OUT%STR)
-         CALL MOVE_ALLOC_CHARACTER_ARRAY(CH%STR,CH_OUT%STR)
+         CALL MOVE_ALLOC(CH%STR,CH_OUT%STR)
      ELSE
          CH_OUT%N = Z
          IF(ALLOCATED(CH_OUT%STR)) DEALLOCATE(CH_OUT%STR)
@@ -1765,8 +1758,8 @@ MODULE ARRAY_DATA_TYPES!, ONLY: INTEGER_VECTOR, DOUBLE_VECTOR, INTEGER_MATRIX, D
          TMP(:DIM) = CH%STR
          TMP(DIM+ONE) = STR
          !
-         !CALL MOVE_ALLOC(TMP,CH%STR)
-         CALL MOVE_ALLOC_CHARACTER_ARRAY(TMP,CH%STR)
+         CALL MOVE_ALLOC(TMP,CH%STR)
+         !CALL MOVE_ALLOC_CHARACTER_ARRAY(TMP,CH%STR)
      ELSE
          CALL ALLOCATE_CHARACTER_ARRAY_STR(CH,STR)
      END IF
@@ -1842,6 +1835,8 @@ MODULE ARRAY_DATA_TYPES!, ONLY: INTEGER_VECTOR, DOUBLE_VECTOR, INTEGER_MATRIX, D
   !@@@@@@@@@@@@@@@@@@@@@@@@@@@@@@@@@@@@@@@@@@@@@@@@@@@@@@@@@@@@@@@@@@@@@@@@@@@@@@@@@@@@@@@@@@@@@@@@@@@@@@@@@@@@@@@@@@@@@@@@@
   !@@@@@@@@@@@@@@@@@@@@@@@@@@@@@@@@@@@@@@@@@@@@@@@@@@@@@@@@@@@@@@@@@@@@@@@@@@@@@@@@@@@@@@@@@@@@@@@@@@@@@@@@@@@@@@@@@@@@@@@@@
   !@@@@@@@@@@@@@@@@@@@@@@@@@@@@@@@@@@@@@@@@@@@@@@@@@@@@@@@@@@@@@@@@@@@@@@@@@@@@@@@@@@@@@@@@@@@@@@@@@@@@@@@@@@@@@@@@@@@@@@@@@
+  ! 
+  ! DOUBLE_VECTOR Routines
   ! 
   PURE ELEMENTAL SUBROUTINE ALLOCATE_DOUBLE_VECTOR(DB,DIM,VAL)
      CLASS(DOUBLE_VECTOR),       INTENT(INOUT):: DB
@@ -1945,6 +1940,8 @@ MODULE ARRAY_DATA_TYPES!, ONLY: INTEGER_VECTOR, DOUBLE_VECTOR, INTEGER_MATRIX, D
   !@@@@@@@@@@@@@@@@@@@@@@@@@@@@@@@@@@@@@@@@@@@@@@@@@@@@@@@@@@@@@@@@@@@@@@@@@@@@@@@@@@@@@@@@@@@@@@@@@@@@@@@@@@@@@@@@@@@@@@@@@
   !@@@@@@@@@@@@@@@@@@@@@@@@@@@@@@@@@@@@@@@@@@@@@@@@@@@@@@@@@@@@@@@@@@@@@@@@@@@@@@@@@@@@@@@@@@@@@@@@@@@@@@@@@@@@@@@@@@@@@@@@@
   !@@@@@@@@@@@@@@@@@@@@@@@@@@@@@@@@@@@@@@@@@@@@@@@@@@@@@@@@@@@@@@@@@@@@@@@@@@@@@@@@@@@@@@@@@@@@@@@@@@@@@@@@@@@@@@@@@@@@@@@@@
+  ! 
+  ! DOUBLE_MATRIX Routines
   ! 
   PURE SUBROUTINE INIT_DOUBLE_MATRIX_OPERATOR(DB,MAT)
      CLASS(DOUBLE_MATRIX),             INTENT(INOUT):: DB
@@ -2110,6 +2107,8 @@ MODULE ARRAY_DATA_TYPES!, ONLY: INTEGER_VECTOR, DOUBLE_VECTOR, INTEGER_MATRIX, D
   !@@@@@@@@@@@@@@@@@@@@@@@@@@@@@@@@@@@@@@@@@@@@@@@@@@@@@@@@@@@@@@@@@@@@@@@@@@@@@@@@@@@@@@@@@@@@@@@@@@@@@@@@@@@@@@@@@@@@@@@@@
   !@@@@@@@@@@@@@@@@@@@@@@@@@@@@@@@@@@@@@@@@@@@@@@@@@@@@@@@@@@@@@@@@@@@@@@@@@@@@@@@@@@@@@@@@@@@@@@@@@@@@@@@@@@@@@@@@@@@@@@@@@
   !@@@@@@@@@@@@@@@@@@@@@@@@@@@@@@@@@@@@@@@@@@@@@@@@@@@@@@@@@@@@@@@@@@@@@@@@@@@@@@@@@@@@@@@@@@@@@@@@@@@@@@@@@@@@@@@@@@@@@@@@@
+  ! 
+  ! INTEGER_VECTOR Routines
   ! 
   PURE SUBROUTINE INIT_INTEGER_VECTOR(IT,VEC)
      CLASS(INTEGER_VECTOR),INTENT(INOUT):: IT
@@ -2386,6 +2385,8 @@ MODULE ARRAY_DATA_TYPES!, ONLY: INTEGER_VECTOR, DOUBLE_VECTOR, INTEGER_MATRIX, D
   !@@@@@@@@@@@@@@@@@@@@@@@@@@@@@@@@@@@@@@@@@@@@@@@@@@@@@@@@@@@@@@@@@@@@@@@@@@@@@@@@@@@@@@@@@@@@@@@@@@@@@@@@@@@@@@@@@@@@@@@@@
   !@@@@@@@@@@@@@@@@@@@@@@@@@@@@@@@@@@@@@@@@@@@@@@@@@@@@@@@@@@@@@@@@@@@@@@@@@@@@@@@@@@@@@@@@@@@@@@@@@@@@@@@@@@@@@@@@@@@@@@@@@
   ! 
+  ! INTEGER_MATRIX Routines
+  ! 
   PURE SUBROUTINE INIT_INTEGER_MATRIX_OPERATOR(IT,MAT)
      CLASS(INTEGER_MATRIX),   INTENT(INOUT):: IT
      INTEGER, DIMENSION(:,:), INTENT(IN   ):: MAT
@@ -2550,6 +2551,8 @@ MODULE ARRAY_DATA_TYPES!, ONLY: INTEGER_VECTOR, DOUBLE_VECTOR, INTEGER_MATRIX, D
   !@@@@@@@@@@@@@@@@@@@@@@@@@@@@@@@@@@@@@@@@@@@@@@@@@@@@@@@@@@@@@@@@@@@@@@@@@@@@@@@@@@@@@@@@@@@@@@@@@@@@@@@@@@@@@@@@@@@@@@@@@
   !@@@@@@@@@@@@@@@@@@@@@@@@@@@@@@@@@@@@@@@@@@@@@@@@@@@@@@@@@@@@@@@@@@@@@@@@@@@@@@@@@@@@@@@@@@@@@@@@@@@@@@@@@@@@@@@@@@@@@@@@@
   ! 
+  ! LOGICAL_VECTOR Routines
+  ! 
   PURE ELEMENTAL SUBROUTINE ALLOCATE_LOGICAL_VECTOR(TF,DIM,LVAL)
      CLASS(LOGICAL_VECTOR),INTENT(INOUT):: TF
      INTEGER,              INTENT(IN   ):: DIM
@@ -2667,6 +2670,7 @@ MODULE ARRAY_DATA_TYPES!, ONLY: INTEGER_VECTOR, DOUBLE_VECTOR, INTEGER_MATRIX, D
   !@@@@@@@@@@@@@@@@@@@@@@@@@@@@@@@@@@@@@@@@@@@@@@@@@@@@@@@@@@@@@@@@@@@@@@@@@@@@@@@@@@@@@@@@@@@@@@@@@@@@@@@@@@@@@@@@@@@@@@@@@
   !@@@@@@@@@@@@@@@@@@@@@@@@@@@@@@@@@@@@@@@@@@@@@@@@@@@@@@@@@@@@@@@@@@@@@@@@@@@@@@@@@@@@@@@@@@@@@@@@@@@@@@@@@@@@@@@@@@@@@@@@@
   ! 
+  ! COMPRESSED_VALUE_STORAGE Routines
   !
   PURE SUBROUTINE ALLOCATE_CVS(CVS, N, NDIM, NEW_ALLOC)
     !VEC IS VECTOR TO ALLOCATE
@@ -2792,6 +2796,8 @@ MODULE ARRAY_DATA_TYPES!, ONLY: INTEGER_VECTOR, DOUBLE_VECTOR, INTEGER_MATRIX, D
   !@@@@@@@@@@@@@@@@@@@@@@@@@@@@@@@@@@@@@@@@@@@@@@@@@@@@@@@@@@@@@@@@@@@@@@@@@@@@@@@@@@@@@@@@@@@@@@@@@@@@@@@@@@@@@@@@@@@@@@@@@
   !@@@@@@@@@@@@@@@@@@@@@@@@@@@@@@@@@@@@@@@@@@@@@@@@@@@@@@@@@@@@@@@@@@@@@@@@@@@@@@@@@@@@@@@@@@@@@@@@@@@@@@@@@@@@@@@@@@@@@@@@@
   !@@@@@@@@@@@@@@@@@@@@@@@@@@@@@@@@@@@@@@@@@@@@@@@@@@@@@@@@@@@@@@@@@@@@@@@@@@@@@@@@@@@@@@@@@@@@@@@@@@@@@@@@@@@@@@@@@@@@@@@@@
+  ! 
+  ! COMPRESSED_LOCATION_STORAGE Routines
   ! 
   PURE SUBROUTINE ALLOCATE_LAC(LAC, N, NDIM, NEW_ALLOC)
     CLASS (COMPRESSED_LOCATION_STORAGE), INTENT(INOUT):: LAC
@@ -3063,6 +3069,8 @@ MODULE ARRAY_DATA_TYPES!, ONLY: INTEGER_VECTOR, DOUBLE_VECTOR, INTEGER_MATRIX, D
   !@@@@@@@@@@@@@@@@@@@@@@@@@@@@@@@@@@@@@@@@@@@@@@@@@@@@@@@@@@@@@@@@@@@@@@@@@@@@@@@@@@@@@@@@@@@@@@@@@@@@@@@@@@@@@@@@@@@@@@@@@
   !@@@@@@@@@@@@@@@@@@@@@@@@@@@@@@@@@@@@@@@@@@@@@@@@@@@@@@@@@@@@@@@@@@@@@@@@@@@@@@@@@@@@@@@@@@@@@@@@@@@@@@@@@@@@@@@@@@@@@@@@@
   ! 
+  ! ID1_ID2_RAT_VOL_TYPE Routines
+  ! 
   PURE SUBROUTINE ALLOC_ID1_ID2_RAT_VOL_TYPE(TYP, DIM)
     CLASS(ID1_ID2_RAT_VOL_TYPE), INTENT(INOUT):: TYP
     INTEGER,            INTENT(IN   ):: DIM
@@ -3207,6 +3215,8 @@ MODULE ARRAY_DATA_TYPES!, ONLY: INTEGER_VECTOR, DOUBLE_VECTOR, INTEGER_MATRIX, D
   !@@@@@@@@@@@@@@@@@@@@@@@@@@@@@@@@@@@@@@@@@@@@@@@@@@@@@@@@@@@@@@@@@@@@@@@@@@@@@@@@@@@@@@@@@@@@@@@@@@@@@@@@@@@@@@@@@@@@@@@@@
   !@@@@@@@@@@@@@@@@@@@@@@@@@@@@@@@@@@@@@@@@@@@@@@@@@@@@@@@@@@@@@@@@@@@@@@@@@@@@@@@@@@@@@@@@@@@@@@@@@@@@@@@@@@@@@@@@@@@@@@@@@
   !@@@@@@@@@@@@@@@@@@@@@@@@@@@@@@@@@@@@@@@@@@@@@@@@@@@@@@@@@@@@@@@@@@@@@@@@@@@@@@@@@@@@@@@@@@@@@@@@@@@@@@@@@@@@@@@@@@@@@@@@@
+  ! 
+  ! ID_RAT_VOL_TYPE
   ! 
   PURE SUBROUTINE ALLOC_ID_RAT_VOL_TYPE(TYP, DIM)
     CLASS(ID_RAT_VOL_TYPE),     INTENT(INOUT):: TYP
@@ -3381,6 +3391,8 @@ MODULE ARRAY_DATA_TYPES!, ONLY: INTEGER_VECTOR, DOUBLE_VECTOR, INTEGER_MATRIX, D
   !@@@@@@@@@@@@@@@@@@@@@@@@@@@@@@@@@@@@@@@@@@@@@@@@@@@@@@@@@@@@@@@@@@@@@@@@@@@@@@@@@@@@@@@@@@@@@@@@@@@@@@@@@@@@@@@@@@@@@@@@@
   !@@@@@@@@@@@@@@@@@@@@@@@@@@@@@@@@@@@@@@@@@@@@@@@@@@@@@@@@@@@@@@@@@@@@@@@@@@@@@@@@@@@@@@@@@@@@@@@@@@@@@@@@@@@@@@@@@@@@@@@@@
   ! 
+  ! ID_VAL_TYPE
+  ! 
   PURE SUBROUTINE ALLOC_ID_VAL_TYPE(TYP, DIM)
     CLASS(ID_VAL_TYPE),         INTENT(INOUT):: TYP
     INTEGER,                    INTENT(IN   ):: DIM
@@ -3542,6 +3554,8 @@ MODULE ARRAY_DATA_TYPES!, ONLY: INTEGER_VECTOR, DOUBLE_VECTOR, INTEGER_MATRIX, D
   !@@@@@@@@@@@@@@@@@@@@@@@@@@@@@@@@@@@@@@@@@@@@@@@@@@@@@@@@@@@@@@@@@@@@@@@@@@@@@@@@@@@@@@@@@@@@@@@@@@@@@@@@@@@@@@@@@@@@@@@@@
   !@@@@@@@@@@@@@@@@@@@@@@@@@@@@@@@@@@@@@@@@@@@@@@@@@@@@@@@@@@@@@@@@@@@@@@@@@@@@@@@@@@@@@@@@@@@@@@@@@@@@@@@@@@@@@@@@@@@@@@@@@
   ! 
+  ! RAT_VOL_TYPE
+  ! 
   PURE SUBROUTINE ALLOC_RAT_VOL_TYPE(TYP, DIM)
     CLASS(RAT_VOL_TYPE),     INTENT(INOUT):: TYP
     INTEGER,                 INTENT(IN   ):: DIM
@@ -3688,6 +3702,8 @@ MODULE ARRAY_DATA_TYPES!, ONLY: INTEGER_VECTOR, DOUBLE_VECTOR, INTEGER_MATRIX, D
   !@@@@@@@@@@@@@@@@@@@@@@@@@@@@@@@@@@@@@@@@@@@@@@@@@@@@@@@@@@@@@@@@@@@@@@@@@@@@@@@@@@@@@@@@@@@@@@@@@@@@@@@@@@@@@@@@@@@@@@@@@
   !@@@@@@@@@@@@@@@@@@@@@@@@@@@@@@@@@@@@@@@@@@@@@@@@@@@@@@@@@@@@@@@@@@@@@@@@@@@@@@@@@@@@@@@@@@@@@@@@@@@@@@@@@@@@@@@@@@@@@@@@@
   ! 
+  ! RAT_VOL_BASE Routines
+  ! 
   PURE ELEMENTAL SUBROUTINE COPY_RAT_VOL_BASE(OTYP, ITYP)
     CLASS(RAT_VOL_BASE), INTENT(IN   ):: ITYP
     CLASS(RAT_VOL_BASE), INTENT(INOUT):: OTYP
@@ -3791,7 +3807,6 @@ MODULE ARRAY_DATA_TYPES!, ONLY: INTEGER_VECTOR, DOUBLE_VECTOR, INTEGER_MATRIX, D
   !@@@@@@@@@@@@@@@@@@@@@@@@@@@@@@@@@@@@@@@@@@@@@@@@@@@@@@@@@@@@@@@@@@@@@@@@@@@@@@@@@@@@@@@@@@@@@@@@@@@@@@@@@@@@@@@@@@@@@@@@@
   !@@@@@@@@@@@@@@@@@@@@@@@@@@@@@@@@@@@@@@@@@@@@@@@@@@@@@@@@@@@@@@@@@@@@@@@@@@@@@@@@@@@@@@@@@@@@@@@@@@@@@@@@@@@@@@@@@@@@@@@@@
   ! 
-  ! 
   PURE SUBROUTINE UPPER(LN)
     CHARACTER(*), INTENT(INOUT):: LN
     INTEGER:: I, N
@@ -3804,61 +3819,3 @@ MODULE ARRAY_DATA_TYPES!, ONLY: INTEGER_VECTOR, DOUBLE_VECTOR, INTEGER_MATRIX, D
   END SUBROUTINE
   !
 END MODULE
-!
-!##############################################################
-!##############################################################
-!##############################################################
-    
-!!!  !
-!!!  IMPURE ELEMENTAL SUBROUTINE SET_REAL_NAN(NaN)
-!!!     REAL, INTENT(OUT):: NaN
-!!!     REAL,        SAVE:: NaN_REL=0.0
-!!!     LOGICAL,     SAVE:: SET_REL=TRUE
-!!!     CHARACTER(3):: CNAN
-!!!     !
-!!!     IF(SET_REL) THEN
-!!!        SET_REL = FALSE
-!!!        CNAN = 'NaN'
-!!!        READ(CNAN,*) NaN_REL
-!!!     END IF
-!!!     !
-!!!     NaN = NaN_REL
-!!!     !
-!!!  END SUBROUTINE  
-!!!  !
-!!!  IMPURE ELEMENTAL SUBROUTINE SET_DBLE_NAN(NaN)
-!!!     DOUBLE PRECISION, INTENT(OUT):: NaN
-!!!     DOUBLE PRECISION,        SAVE:: NaN_DBL = DZ
-!!!     LOGICAL,                 SAVE:: SET_DBL  = TRUE
-!!!     CHARACTER(3):: CNAN
-!!!     !
-!!!     IF(SET_DBL) THEN
-!!!        SET_DBL = FALSE
-!!!        CNAN = 'NaN'
-!!!        READ(CNAN,*) NaN_DBL
-!!!     END IF
-!!!     !
-!!!     NaN = NaN_DBL
-!!!     !
-!!!  END SUBROUTINE  
-    
-    
-
-!!!!
-!!!!##############################################################
-!!!!##############################################################
-!!!!##############################################################
-!!!!
-!!!MODULE MOVE_ALLOC_SUBS ! Utility Subroutines -- They help with compiler bugs with gfortran
-!!!  !
-!!!  IMPLICIT NONE
-!!!  CONTAINS
-!!!  !
-!!!  PURE SUBROUTINE MOVE_ALLOC_CHARACTER_ARRAY(FROM, TOO)
-!!!     CHARACTER(:),DIMENSION(:), ALLOCATABLE, INTENT(INOUT):: FROM
-!!!     CHARACTER(:),DIMENSION(:), ALLOCATABLE, INTENT(INOUT):: TOO
-!!!     CALL MOVE_ALLOC(FROM, TOO)
-!!!  END SUBROUTINE
-!!!  !
-!!!END MODULE
-!
