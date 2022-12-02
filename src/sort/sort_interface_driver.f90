@@ -432,7 +432,7 @@
 !##########################################################################################################################
 !
 MODULE SORT_INTERFACE
-  USE, INTRINSIC:: ISO_FORTRAN_ENV, ONLY: INT32, INT64, REL32 => REAL32, REL64 => REAL64
+  USE, INTRINSIC:: ISO_FORTRAN_ENV, ONLY: INT8, INT32, INT64, REL32 => REAL32, REL64 => REAL64
   IMPLICIT NONE
   !
   PUBLIC:: SORT, SORTED

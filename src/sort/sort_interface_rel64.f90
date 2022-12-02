@@ -35,7 +35,7 @@
 !-----------------------------------------------------------------------------------------------------------
 !
 SUBMODULE (SORT_INTERFACE) SORT_INTERFACE_REL64
-  USE, INTRINSIC:: ISO_FORTRAN_ENV, ONLY: INT8, REL64 => REAL64
+  !\!USE, INTRINSIC:: ISO_FORTRAN_ENV, ONLY: INT8, INT32, INT64, REL32 => REAL32, REL64 => REAL64
   !
   IMPLICIT NONE
   !

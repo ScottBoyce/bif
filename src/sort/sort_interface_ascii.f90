@@ -38,7 +38,7 @@
 !-----------------------------------------------------------------------------------------------------------
 !
 SUBMODULE (SORT_INTERFACE) SORT_INTERFACE_CHAR 
-  USE, INTRINSIC:: ISO_FORTRAN_ENV, ONLY: INT8, INT16
+  !\!USE, INTRINSIC:: ISO_FORTRAN_ENV, ONLY: INT8, INT32, INT64, REL32=>REAL32, REL64=>REAL64
   IMPLICIT NONE
   !
   INTEGER, PARAMETER:: QSORT_PARTITION_MIN    = 24   ! If (R - L + 1 <= SIZ), then stop QSORT partitioning and use ISORT on partition
