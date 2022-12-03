@@ -165,42 +165,42 @@ MODULE UNICODE_INTERFACE
   !
   !-----------------------------------------------------------------------------------------------------------
   !
-  LOGICAL,  PARAMETER:: Little_Endian = IACHAR( TRANSFER( 1_INT16, ' ' ) ) == 1 ! Transfer b' 00000000 00000001' to CHAR(1), which will drop either then 1st or 2nd byte. If 2nd byte is kept, then CPU is Little-Endian. -> Note Itel/AMD x86 CPUs are Little-Endian
+  LOGICAL,  PARAMETER:: Little_Endian = IACHAR( TRANSFER( 1_int16, ' ' ) ) == 1 ! Transfer b' 00000000 00000001' to CHAR(1), which will drop either then 1st or 2nd byte. If 2nd byte is kept, then CPU is Little-Endian. -> Note Itel/AMD x86 CPUs are Little-Endian
   !
   CHARACTER(21),  PARAMETER:: HEX_LIST = '123456789ABCDEFabcdef'
-  CHARACTER,      PARAMETER:: NUL     = TRANSFER(0_INT8, ' ')
+  CHARACTER,      PARAMETER:: NUL     = TRANSFER(0_int8, ' ')
   !
-  INTEGER(INT32), PARAMETER:: NEG = -1_INT32
-  INTEGER(INT32), PARAMETER:: Z   =  0_INT32
-  INTEGER(INT32), PARAMETER:: ONE =  1_INT32
-  INTEGER(INT64), PARAMETER:: ZER =  0_INT64
+  INTEGER(INT32), PARAMETER:: NEG = -1_int32
+  INTEGER(INT32), PARAMETER:: Z   =  0_int32
+  INTEGER(INT32), PARAMETER:: ONE =  1_int32
+  INTEGER(INT64), PARAMETER:: ZER =  0_int64
   !
   LOGICAL, PARAMETER:: TRUE  = .TRUE.
   LOGICAL, PARAMETER:: FALSE = .FALSE.
   !
   !-----------------------------------------------------------------------------------------------------------
   !
-  INTEGER(INT32), PARAMETER::                               &
-    UTF8_Mask_2B     =                 b'1100000010000000' ,&!  2 byte UTF8 Mask: 110xxxxx 10xxxxxx                   -> I32 Decimal:      49280
-    UTF8_Mask_3B     =         b'111000001000000010000000' ,&!  3 byte UTF8 Mask: 1110xxxx 10xxxxxx 10xxxxxx          -> I32 Decimal:   14712960
-    UTF8_Mask_4B     = b'11110000100000001000000010000000'   !  4 byte UTF8 Mask: 11110xxx 10xxxxxx 10xxxxxx 10xxxxxx -> I32 Decimal: -260013952 (note negative bit is set)
+  INTEGER(INT32), PARAMETER::                                           &
+    UTF8_Mask_2B     = int(                b'1100000010000000', int32) ,&!  2 byte UTF8 Mask: 110xxxxx 10xxxxxx                   -> I32 Decimal:      49280
+    UTF8_Mask_3B     = int(        b'111000001000000010000000', int32) ,&!  3 byte UTF8 Mask: 1110xxxx 10xxxxxx 10xxxxxx          -> I32 Decimal:   14712960
+    UTF8_Mask_4B     = int(b'11110000100000001000000010000000', int32)   !  4 byte UTF8 Mask: 11110xxx 10xxxxxx 10xxxxxx 10xxxxxx -> I32 Decimal: -260013952 (note negative bit is set)
   !
-  INTEGER(INT64), PARAMETER::                               &
-    UTF8_Mask_2B_I64 =                 b'1100000010000000' ,&!  2 byte UTF8 Mask: 110xxxxx 10xxxxxx                   -> I64 Decimal:      49280
-    UTF8_Mask_3B_I64 =         b'111000001000000010000000' ,&!  3 byte UTF8 Mask: 1110xxxx 10xxxxxx 10xxxxxx          -> I64 Decimal:   14712960
-    UTF8_Mask_4B_I64 = b'11110000100000001000000010000000'   !  4 byte UTF8 Mask: 11110xxx 10xxxxxx 10xxxxxx 10xxxxxx -> I64 Decimal: 4034953344
+  INTEGER(INT64), PARAMETER::                                          &
+    UTF8_Mask_2B_I64 = int(                b'1100000010000000', int64) ,&!  2 byte UTF8 Mask: 110xxxxx 10xxxxxx                   -> I64 Decimal:      49280
+    UTF8_Mask_3B_I64 = int(        b'111000001000000010000000', int64) ,&!  3 byte UTF8 Mask: 1110xxxx 10xxxxxx 10xxxxxx          -> I64 Decimal:   14712960
+    UTF8_Mask_4B_I64 = int(b'11110000100000001000000010000000', int64)   !  4 byte UTF8 Mask: 11110xxx 10xxxxxx 10xxxxxx 10xxxxxx -> I64 Decimal: 4034953344
   !
   !-----------------------------------------------------------------------------------------------------------
   !
   INTEGER(INT32), PARAMETER::& ! Size of UTF8 Code Point is:
-    UTF8_1B =   128_INT32   ,& !      <   128 is 1 byte
-    UTF8_2B =  2048_INT32   ,& ! else <  2048 is 2 byte
-    UTF8_3B = 65536_INT32      ! else < 65536 is 3 byte
+    UTF8_1B =   128_int32   ,& !      <   128 is 1 byte
+    UTF8_2B =  2048_int32   ,& ! else <  2048 is 2 byte
+    UTF8_3B = 65536_int32      ! else < 65536 is 3 byte
   !
   INTEGER(INT64), PARAMETER::& ! Size of UTF8 Code Point is:
-    UTF8_1B_I64 =   128_INT64   ,& !      <   128 is 1 byte
-    UTF8_2B_I64 =  2048_INT64   ,& ! else <  2048 is 2 byte
-    UTF8_3B_I64 = 65536_INT64      ! else < 65536 is 3 byte
+    UTF8_1B_I64 =   128_int64   ,& !      <   128 is 1 byte
+    UTF8_2B_I64 =  2048_int64   ,& ! else <  2048 is 2 byte
+    UTF8_3B_I64 = 65536_int64      ! else < 65536 is 3 byte
   !
   !-----------------------------------------------------------------------------------------------------------
   !
@@ -286,7 +286,7 @@ MODULE UNICODE_INTERFACE
   !#####################################################################################################
   !~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~
   !
-   FUNCTION UTF8_TO_INT(CH) RESULT(IPNT)  ! Assumes valid UTF8 character
+   PURE FUNCTION UTF8_TO_INT(CH) RESULT(IPNT)  ! Assumes valid UTF8 character
     USE NUMBER_CONVERSION_INTERFACE
     CHARACTER(*), INTENT(IN):: CH
     INTEGER(INT32):: IPNT, ITMP
@@ -366,12 +366,12 @@ MODULE UNICODE_INTERFACE
        J = J + 1
     END DO
     !
-    base = 1_INT32   ! powers of 16
-    DO I=K, J, -1_INT32            ! --> Loop converts Hex to Int
+    base = 1_int32   ! powers of 16
+    DO I=K, J, -1_int32            ! --> Loop converts Hex to Int
         IF(HEX(I:I) == " ") CYCLE
         !
         M = INDEX(HEX_LIST, HEX(I:I))
-        IF(M > 15_INT32) M = M - 6_INT32
+        IF(M > 15_int32) M = M - 6_int32
         IF(M > ZER) IPNT = IPNT + M*base
         !
         base = SHIFTL(base, 4)  ! Multiply by 2^4
@@ -485,8 +485,9 @@ MODULE UNICODE_INTERFACE
   !
   PURE SUBROUTINE SET_CHAR_TO_NULL(STR)
     CHARACTER(*), INTENT(INOUT):: STR
-    DO CONCURRENT ( INTEGER:: I=1:LEN(STR) )
-                                      STR(I:I) = NUL
+    INTEGER:: I
+    DO CONCURRENT (I=1:LEN(STR) )
+                           STR(I:I) = NUL
     END DO
   END SUBROUTINE
   ! 
@@ -524,7 +525,7 @@ MODULE UNICODE_INTERFACE
     I = 16
     DO WHILE( VAL > Z .AND. I > Z)
         !
-        N = IAND(VAL, 15_INT32)     ! Get remainder of VAL/16
+        N = IAND(VAL, 15_int32)     ! Get remainder of VAL/16
         !
         IF(N == Z) THEN
                      TMP(I:I) = "0"
