@@ -185,6 +185,7 @@ main_src:= \
            $(src_dir)/types_and_containers/array_data_types_instruction.f90    \
            $(src_dir)/types_and_containers/binary_heap_instruction.f90         \
            $(src_dir)/types_and_containers/integer_array_builder.f90           \
+           $(src_dir)/types_and_containers/circular_queue_instruction.f90      \
            $(src_dir)/types_and_containers/integer_queue_instruction.f90       \
            $(src_dir)/types_and_containers/linked_list_instruction.f90         \
            $(src_dir)/types_and_containers/name_id_interface.f90               \
