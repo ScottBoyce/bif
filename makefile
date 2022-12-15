@@ -133,17 +133,17 @@ CONFIG := debug
 #
 # Compilation Software                        --> Indicates the compiler collection used for setting compiler flags
 #   ===> Accepted Answers: INTEL, GCC, LLVM       --> LLVM not fully-supported yet
-COMPILER := INTEL
+COMPILER := GCC
 #
 #
 # Define the Fortran Compiler
 #                    ===> For example: gfortran, gfortran-9, gfortran-10, ifort
 #                         ****Note that the version of your Fortran compiler may not support all of the Fortran Standards (viz 2003, 2008, 2015)
-F90 := ifort
+F90 := gfortran
 #
 # Define the C Compiler
 #   ===> Accepted Answers: gcc, icc
-CC  := icc
+CC  := gcc
 #
 # Program Name - Do not include extension (eg .exe). Also _debug will automatically be added if CONFIG = debug. Use bin_out= to specify exact location and name for binary.
 #
