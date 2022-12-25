@@ -18,15 +18,15 @@
 #~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~
 #
 # This makefile contains the options for compiling using Intel, GFortran, and LLVM.  
-#   There are a set of known compiler bugs that have been submited to Intel and GCC that prevent compilation.
-#   If you recieve "internal compiler error" when running this makefile, it is because the compiler version does not work.
+#   There are a set of known compiler bugs that have been summitted to Intel and GCC that prevent compilation.
+#   If you receive "internal compiler error" when running this makefile, it is because the compiler version does not work.
 #   
 #   The Intel Fortran compiler is now part of Intel oneAPI and has two different versions:
 #     Intel Fortran Compiler Classic (ifort) and Intel Fortran (ifx).
-#        ifx is not recommeneded and will raise lots of "internal compiler error"s
+#        ifx is not recommended and will raise lots of "internal compiler error"s
 #        ifort can have issues depending on the compiler version.
 #     oneAPI versioning is based on YYYY.m.p, where YYYY is year, m is major version, p and patch version.
-#     oneAPI versions may not match its subcomponets,
+#     oneAPI versions may not match its subcomponents,
 #        for example, oneAPI version 2023.0.0, has ifx version 2023.0.0, and ifort version 2021.8.0
 #      
 #   Gfortran many versions that are identified by their major versioning. The current versions in use are 10.x.y, 11.x.y, and 12.x.y
@@ -35,9 +35,9 @@
 #    
 #   The LLVM compilers, FLANG and CLANG, are still experimental and not yet fully supported.
 #
-#   ifx                        WILL NOT compile this project (feature not implimented errors)
+#   ifx                        WILL NOT compile this project (feature not implemented errors)
 #   ifort 2021.8.0             WILL NOT compile this project (oneAPI 2023.0.0)
-#   ifort 2021.7.0 and earliar WILL compile this project     (oneAPI 2022.2.1)
+#   ifort 2021.7.0 and earlier WILL compile this project     (oneAPI 2022.2.1)
 #   gfortran 11.3.0 and 12.1.0 WILL compile this project (others have not been tested)
 # 
 #   The initial setup has the compiler type variables set to the 
@@ -681,7 +681,7 @@ reset:
 	${echo2}
 #
 # The following target allows for printing a specific variable.  old method: @echo $*=$($*)
-#  make print-CC  --> will print out hte value of $(CC)
+#  make print-CC  --> will print out the value of $(CC)
 #
 print-%:
 	@echo '$*=$($*)'
