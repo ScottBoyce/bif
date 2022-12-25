@@ -1138,7 +1138,7 @@ MODULE ULOAD_AND_SFAC_INTERFACE
                        TYPE IS (CHARACTER_TYPE);   VAR = BLNK
                        TYPE IS (GENERIC_INPUT_FILE)
                                                    CALL VAR%CLOSE() ! CALL STOP_ERROR( LINE=LN, INFILE=ERROR_IU, OUTPUT=IOUT, MSG= 'ULOAD ERROR: THIS INPUT READ UTILITY DOES NOT ALLOW FOR THE KEYWORD "SKIP". PLEASE USE A KEYWORD TO INDICATE WHERE DATA IS LOCATED (e.g INTERNAL|EXTERNAL|OPEN/CLOSE)', MSG2=MSG)
-                                                   VAR%SKIP = TRUE
+                                                   VAR%NULL_FILE = TRUE
                        TYPE IS (TIME_SERIES_FILE);  CALL VAR%INIT('SKIP')
                        TYPE IS (LOOKUP_TABLE_TYPE); CALL VAR%DESTROY()
                        TYPE IS (DATE_OPERATOR);     CALL VAR%DESTROY()
@@ -1146,7 +1146,7 @@ MODULE ULOAD_AND_SFAC_INTERFACE
                        TYPE IS (REAL(REAL128));     VAR = 0.0_REAL128 ! QUAD PRECISION
                        END SELECT
                        LLOC = ONE
-                       LN = EXT//BLNK//LN
+                       LN = "NULL"//BLNK//LN
                        RETURN
     CASE( 'CONSTANT' ) !-----------------------------------------------------------------------------------------------------------------------
                        N = LLOC
@@ -1321,9 +1321,11 @@ MODULE ULOAD_AND_SFAC_INTERFACE
               IF(IU==Z) THEN
                     N = LLOC
                     !
-                    CALL VAR%OPEN(LN, LLOC, IOUT, IN, REQKEY=TRUE, NOSTOP=TRUE, BINARY=BIN, KEY = EXT)
+                    CALL VAR%OPEN(LN, LLOC, IOUT, IN, REQKEY=TRUE, NOSTOP=TRUE, KEY_FAIL_STOP=TRUE, INTERNAL_IU=INFILE, KEY_FOUND=NEG_LLOC, BINARY=BIN, KEY = EXT)
                     !
-                    NEG_LLOC = EXT=='NOKEY'
+                    IF(VAR%IS_INTERNAL .AND. NO_INTERN) CALL STOP_ERROR( LINE=LN, INFILE=ERROR_IU, OUTPUT=IOUT, MSG= 'ULOAD ERROR: THIS SPECIFIC INPUT LINE DOES NOT ALLOW FOR THE "INTERNAL" KEYWORD OR IMPLIED INTERNAL. PLEASE MOVE INTERNAL INPUT TO SEPARATE FILE AND CHANGE KEYWORD TO "OPEN/CLOSE" OR "EXTERNAL".', MSG2=MSG)
+                    !
+                    NEG_LLOC = .not. NEG_LLOC .or. VAR%ERROR    ! Set to true if no key is found
               ELSE
                   VAR%IU = IU
                   VAR%OPENCLOSE = FALSE
@@ -1332,11 +1334,12 @@ MODULE ULOAD_AND_SFAC_INTERFACE
               !BIN = VAR%BINARY
               IF(.NOT. VAR%ERROR) THEN
                                         IU = VAR%IU
-                                        IF(IU /= Z .AND. .NOT. VAR%OPENCLOSE) KEEP_IU = TRUE  !FONUD EXTERNAL KEYWORD, SO PASS BACK WHAT WAS LOADED
                                         IF(IU /= Z) ERROR_IU = IU
-                                        IF(IU == Z .AND. NO_INTERN) CALL STOP_ERROR( LINE=LN, INFILE=ERROR_IU, OUTPUT=IOUT, MSG= 'ULOAD ERROR: THIS SPECIFIC INPUT LINE DOES NOT ALLOW FOR THE "INTERNAL" KEYWORD OR IMPLIED INTERNAL. PLEASE MOVE INTERNAL INPUT TO SEPARATE FILE AND CHANGE KEYWORD TO "OPEN/CLOSE" OR "EXTERNAL".', MSG2=MSG)
-                                        IF(IU == Z) THEN
-                                            IU = INFILE  !FOUND INTERNAL
+                                        !
+                                        IF(.NOT. VAR%OPENCLOSE .AND. .NOT. VAR%IS_INTERNAL) KEEP_IU = TRUE  !FOUND EXTERNAL KEYWORD, SO PASS BACK WHAT WAS LOADED
+                                        !
+                                        IF(VAR%IS_INTERNAL) THEN
+                                            IU = INFILE 
                                             VAR%IU = INFILE
                                             VAR%OPENCLOSE=FALSE
                                             KEEP_IU = TRUE
@@ -1361,23 +1364,24 @@ MODULE ULOAD_AND_SFAC_INTERFACE
                       N = LLOC
                       ALLOCATE(FL)
                       !
-                      CALL FL%OPEN(LN, LLOC, IOUT, IN, REQKEY=TRUE, NOSTOP=TRUE, BINARY=BIN)
+                      CALL FL%OPEN(LN, LLOC, IOUT, IN, REQKEY=TRUE, NOSTOP=TRUE, KEY_FAIL_STOP=TRUE, INTERNAL_IU=INFILE, BINARY=BIN)
+                      !
+                      IF(FL%IS_INTERNAL .AND. NO_INTERN) CALL STOP_ERROR( LINE=LN, INFILE=ERROR_IU, OUTPUT=IOUT, MSG= 'ULOAD ERROR: THIS SPECIFIC INPUT LINE DOES NOT ALLOW FOR THE "INTERNAL" KEYWORD. PLEASE MOVE INTERNAL INPUT TO SEPARATE FILE AND CHANGE KEYWORD TO "OPEN/CLOSE" OR "EXTERNAL" OR INSTEAD USE AN IMPLIED INTERNAL BY HAVING THE INPUT DATA ITEM ON THE SAME LINE.', MSG2=MSG)
                       !
                       SFAC_FILE = FL%SCALE
                       FL%SCALE = UNO
                       !
                       BIN = FL%BINARY
-                      IF(.NOT. FL%ERROR) THEN
-                                             IU = FL%IU
-                                             IF(IU /= Z .AND. .NOT. FL%OPENCLOSE) KEEP_IU = TRUE  !FONUD EXTERNAL KEYWORD, SO PASS BACK WHAT WAS LOADED
-                                             IF(IU /= Z) ERROR_IU = IU
-                                             IF(IU == Z .AND. NO_INTERN) CALL STOP_ERROR( LINE=LN, INFILE=ERROR_IU, OUTPUT=IOUT, MSG= 'ULOAD ERROR: THIS SPECIFIC INPUT LINE DOES NOT ALLOW FOR THE "INTERNAL" KEYWORD. PLEASE MOVE INTERNAL INPUT TO SEPARATE FILE AND CHANGE KEYWORD TO "OPEN/CLOSE" OR "EXTERNAL" OR INSTEAD USE AN IMPLIED INTERNAL BY HAVING THE INPUT DATA ITEM ON THE SAME LINE.', MSG2=MSG)
-                                             IF(IU == Z) IU = INFILE  !FOUND INTERNAL
-                                             LLOC = ONE
-                                             IF(.NOT. BIN) CALL READ_TO_DATA(LN,IU,IOUT)
-                      ELSE !NO KEYWORD FOUND SO DATA IS WITHIN LINE
+                      IF(FL%ERROR) THEN ! NO KEYWORD FOUND SO DATA IS WITHIN LINE
                           LLOC = N
-                          IU = Z
+                          IU   = Z
+                      ELSE
+                          LLOC = ONE
+                          IU   = FL%IU
+                          !
+                          IF(.NOT. FL%OPENCLOSE .AND. .NOT. FL%IS_INTERNAL) KEEP_IU = TRUE  !FOUND EXTERNAL KEYWORD, SO PASS BACK WHAT WAS LOADED
+                          IF(IU /= Z) ERROR_IU = IU
+                          IF(.NOT. BIN) CALL READ_TO_DATA(LN,IU,IOUT)
                       END IF
                 END IF
                 !
@@ -1506,7 +1510,7 @@ MODULE ULOAD_AND_SFAC_INTERFACE
                 IF(ALLOCATED(FL))  DEALLOCATE(FL)
     END SELECT
     !
-    IF(NEG_LLOC) LLOC = NEG  !SET TO NEG IF CHARACTER VAR IS NOT LARGE ENOUGH OR IF GENERIC_INPUT HAS IMPLIED INTERNAL
+    IF(NEG_LLOC) LLOC = NEG  ! SET TO NEG IF CHARACTER VAR IS NOT LARGE ENOUGH OR IF GENERIC_INPUT IS MISSING KEYWORD
     !
     IF(PRESENT(OLD_IU))  OLD_IU = IU
     !
@@ -1670,7 +1674,7 @@ MODULE ULOAD_AND_SFAC_INTERFACE
                        TYPE IS (CHARACTER_TYPE);   VAR = BLNK
                        TYPE IS (GENERIC_INPUT_FILE);
                                                     CALL VAR%CLOSE() ! CALL STOP_ERROR( LINE=LN, INFILE=ERROR_IU, OUTPUT=IOUT, MSG= 'ULOAD ERROR: THIS INPUT READ UTILITY DOES NOT ALLOW FOR THE KEYWORD "SKIP". PLEASE USE A KEYWORD TO INDICATE WHERE DATA IS LOCATED (e.g INTERNAL|EXTERNAL|OPEN/CLOSE)', MSG2=MSG)
-                                                    VAR%SKIP = TRUE
+                                                    VAR%NULL_FILE = TRUE
                        TYPE IS (TIME_SERIES_FILE);  CALL VAR%INIT('SKIP')
                        TYPE IS (LOOKUP_TABLE_TYPE); CALL VAR%DESTROY()
                        TYPE IS (DATE_OPERATOR);     CALL VAR%DESTROY()
@@ -1869,10 +1873,13 @@ MODULE ULOAD_AND_SFAC_INTERFACE
           BIN = FL%BINARY
           IF(.NOT. FL%ERROR) THEN
                                  IU = FL%IU
-                                 IF(IU /= Z .AND. .NOT. FL%OPENCLOSE) KEEP_IU = TRUE  !FONUD EXTERNAL KEYWORD, SO PASS BACK WHAT WAS LOADED
                                  IF(IU /= Z) ERROR_IU = IU
-                                 IF(IU == Z .AND. NO_INTERN) CALL STOP_ERROR( LINE=LN, INFILE=ERROR_IU, OUTPUT=IOUT, MSG= 'ULOAD ERROR: THIS SPECIFIC INPUT LINE DOES NOT ALLOW FOR THE "INTERNAL" KEYWORD. PLEASE MOVE INTERNAL INPUT TO SEPARATE FILE AND CHANGE KEYWORD TO "OPEN/CLOSE" OR "EXTERNAL" OR INSTEAD USE AN IMPLIED INTERNAL BY HAVING ALL THE INPUT DATA ON THE SAME LINE.', MSG2=MSG)
-                                 IF(IU == Z) IU = INFILE  !FOUND INTERNAL
+                                 !
+                                 IF(.NOT. FL%IS_INTERNAL .AND. .NOT. FL%OPENCLOSE) KEEP_IU = TRUE  !FOUND EXTERNAL KEYWORD, SO PASS BACK WHAT WAS LOADED
+                                 !
+                                 IF(FL%IS_INTERNAL .AND. NO_INTERN) CALL STOP_ERROR( LINE=LN, INFILE=ERROR_IU, OUTPUT=IOUT, MSG= 'ULOAD ERROR: THIS SPECIFIC INPUT LINE DOES NOT ALLOW FOR THE "INTERNAL" KEYWORD. PLEASE MOVE INTERNAL INPUT TO SEPARATE FILE AND CHANGE KEYWORD TO "OPEN/CLOSE" OR "EXTERNAL" OR INSTEAD USE AN IMPLIED INTERNAL BY HAVING ALL THE INPUT DATA ON THE SAME LINE.', MSG2=MSG)
+                                 IF(FL%IS_INTERNAL) IU = INFILE
+                                 !
                                  LLOC = ONE
                                  IF(.NOT. BIN) CALL READ_TO_DATA(LN,IU,IOUT)
           ELSE !NO KEYWORD FOUND SO DATA IS WITHIN LINE
@@ -1969,7 +1976,7 @@ MODULE ULOAD_AND_SFAC_INTERFACE
                                        END IF
               TYPE IS (GENERIC_INPUT_FILE)
                                    DO I=1, DIM1
-                                                  CALL VAR(I)%OPEN(LN,LLOC,IOUT,IN,NOSTOP=TRUE,NOPOSTKEY=TRUE)
+                                                  CALL VAR(I)%OPEN(LN,LLOC,IOUT,IN,NOSTOP=TRUE,NO_POSTKEY_CHECK=TRUE)
                                                   !
                                                   IF(VAR(I)%ERROR) THEN
                                                       IERR = 222
@@ -2050,9 +2057,9 @@ MODULE ULOAD_AND_SFAC_INTERFACE
                                               VAR(I) = LN(ISTART:N)
                   TYPE IS (GENERIC_INPUT_FILE)
                                               LLOC = ISTART
-                                              CALL VAR(I)%OPEN(LN,LLOC,IOUT,IN,NOSTOP=TRUE,KEY=EXT)
+                                              CALL VAR(I)%OPEN(LN,LLOC,IOUT,IN,NOSTOP=TRUE,NO_INTERNAL=TRUE,KEY=EXT)
                                               !
-                                              IF(VAR(I)%SKIP) THEN
+                                              IF(VAR(I)%NULL_FILE) THEN
                                                   VAR(I)%ERROR = FALSE
                                               ELSEIF(VAR(I)%ERROR) THEN
                                                   IERR = 222
@@ -2449,10 +2456,13 @@ MODULE ULOAD_AND_SFAC_INTERFACE
           BIN = FL%BINARY
           IF(.NOT. FL%ERROR) THEN
                                  IU = FL%IU
-                                 IF(IU /= Z .AND. .NOT. FL%OPENCLOSE) KEEP_IU = TRUE  !FONUD EXTERNAL KEYWORD, SO PASS BACK WHAT WAS LOADED
                                  IF(IU /= Z) ERROR_IU = IU
-                                 IF(IU == Z .AND. NO_INTERN) CALL STOP_ERROR( LINE=LN, INFILE=ERROR_IU, OUTPUT=IOUT, MSG= 'ULOAD ERROR: THIS SPECIFIC INPUT LINE DOES NOT ALLOW FOR THE "INTERNAL" KEYWORD. PLEASE MOVE INTERNAL INPUT TO SEPARATE FILE AND CHANGE KEYWORD TO "OPEN/CLOSE" OR "EXTERNAL".', MSG2=MSG)
-                                 IF(IU == Z) IU = INFILE  !FOUND INTERNAL
+                                 !
+                                 IF(.NOT. FL%IS_INTERNAL .AND. .NOT. FL%OPENCLOSE) KEEP_IU = TRUE  !FOUND EXTERNAL KEYWORD, SO PASS BACK WHAT WAS LOADED
+                                 !
+                                 IF(FL%IS_INTERNAL .AND. NO_INTERN) CALL STOP_ERROR( LINE=LN, INFILE=ERROR_IU, OUTPUT=IOUT, MSG= 'ULOAD ERROR: THIS SPECIFIC INPUT LINE DOES NOT ALLOW FOR THE "INTERNAL" KEYWORD. PLEASE MOVE INTERNAL INPUT TO SEPARATE FILE AND CHANGE KEYWORD TO "OPEN/CLOSE" OR "EXTERNAL".', MSG2=MSG)
+                                 IF(FL%IS_INTERNAL) IU = INFILE
+                                 !
                                  LLOC = ONE
                                  IF(.NOT. BIN) CALL READ_TO_DATA(LN,IU,IOUT)
           ELSE !NO KEYWORD FOUND, BUT THIS IS REQUIRED FOR 2D

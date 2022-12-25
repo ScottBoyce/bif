@@ -28,8 +28,9 @@ MODULE GENERIC_OUTPUT_FILE_INSTRUCTION!, ONLY: GENERIC_OUTPUT_FILE
   USE GENERIC_OPEN_INTERFACE, ONLY: GENERIC_OPEN, NULL_FILE
   USE FILE_IO_INTERFACE,      ONLY: DATAFILE_UNIT_NUMBER, GET_FILE_NAME
   USE STRINGS,                ONLY: UPPER, GET_INTEGER
-  USE FILE_INCREMENTER_INTERFACE, ONLY: FILE_INCREMENTER
   USE PATH_INTERFACE,         ONLY: GET_CWD
+  !
+  USE FILE_INCREMENTER_INTERFACE, ONLY: FILE_INCREMENTER
   !
   IMPLICIT NONE
   !
@@ -43,7 +44,10 @@ MODULE GENERIC_OUTPUT_FILE_INSTRUCTION!, ONLY: GENERIC_OUTPUT_FILE
       LOGICAL:: OPENCLOSE   = FALSE
       LOGICAL:: ERROR       = FALSE
       LOGICAL:: BINARY      = FALSE
+      LOGICAL:: STREAM      = FALSE
       LOGICAL:: NULL_FILE   = FALSE
+      LOGICAL:: IS_INTERNAL = FALSE
+      !
       CHARACTER(:),ALLOCATABLE:: FNAME
       CHARACTER(:),ALLOCATABLE:: EXTRA
       CHARACTER(:),ALLOCATABLE:: FMT
@@ -87,17 +91,18 @@ MODULE GENERIC_OUTPUT_FILE_INSTRUCTION!, ONLY: GENERIC_OUTPUT_FILE
     FL%OPENCLOSE   = FALSE
     FL%ERROR       = FALSE
     FL%BINARY      = FALSE
+    FL%STREAM      = FALSE
     FL%NULL_FILE   = FALSE
+    FL%IS_INTERNAL = FALSE
     !
     IF(ALLOCATED(FL%FNAME)) DEALLOCATE(FL%FNAME)
     IF(ALLOCATED(FL%EXTRA)) DEALLOCATE(FL%EXTRA)
-    IF(ALLOCATED(FL%FI   )) DEALLOCATE(FL%FI   )
-    !
     IF(ALLOCATED(FL%FMT  )) DEALLOCATE(FL%FMT  )
+    IF(ALLOCATED(FL%FI   )) DEALLOCATE(FL%FI   )
     !
   END SUBROUTINE
   !
-  SUBROUTINE OPEN_GENERIC_OUTPUT_FILE(FL, LN, LLOC, OUTPUT, INFILE, NOSTOP, REQKEY, IU, BINARY, BUFFER, SPLIT_SIZE, NOBINARY, SPLITMAXCOUNT, NO_WARN, NO_INTERNAL, NO_ONLY_UNIT, SAVE_FNAME, KEY, DIM, PREPOST, STREAM_TEXT, NOPOSTKEY, FORCE_DATAFILE, MSG)
+  SUBROUTINE OPEN_GENERIC_OUTPUT_FILE(FL, LN, LLOC, OUTPUT, INFILE, REQKEY, NOSTOP, KEY_FAIL_STOP, KEY, KEY_FOUND, FORCE_DATAFILE, ALLOW_ONLY_UNIT, NO_POSTKEY_CHECK, NO_WARN, NO_INTERNAL, NO_CONSTANT, NO_BINARY, SAVE_FNAME, STREAM_TEXT, IU, INTERNAL_IU, DIM, PREPOST, BINARY, BUFFER, REWIND, APPEND, SPLIT_SIZE, SPLITMAXCOUNT, MSG)
     ! ATTEMPTS TO READ KEYWORDS AND CREATE A FILE FOR WRITTING TO. IF IT EXISTS IT IS REPLACED
     ! SETS ERROR=TRUE IF FILE FAILED TO IDENTIFY OR OPEN A FILE/UNIT.
     !
@@ -109,45 +114,42 @@ MODULE GENERIC_OUTPUT_FILE_INSTRUCTION!, ONLY: GENERIC_OUTPUT_FILE
     ! 6) CHECK FOR KEYWORD OPEN/CLOSE AND THEN OPENS FILE SPECIFIED
     ! 7) CHEKS IF THE LINE CONTAINS A FILE THAT CAN BE OPENED (SAME AS IF OPEN/CLOSE WAS NOT PRESENT)
     !
-    ! LLOC   is the starting location of the line to look for KEYWORD/NAME
-    ! LN     is the line to process the KEYWORDS/UNIT/NAME
-    ! OUTPUT is where to write error messages too
-    ! INFILE is the input file that LN originated from
-    ! NOSTOP optional, when present and is true will prevent the program from stopping if the file fails to open. ERROR will be set to TRUE
-    ! REQKEY optional, when present and is true indicates that a keyword is required to open file (viz. no reading a single number or just a file name)
-    ! IU     optional, when present is the unit number used when a file is opened by OPEN/CLOSE or by NAME
-    ! BINARY optional, when present sets file to be opened as a binary file or formatted.
-    ! BUFFER optional, when present sets the buffer size in KB. --131072 = 128KB is the default and 1048576 = 1MB  --BUFFER USES TWO THREADS SO ACTUAL BUFFER IS TWICE THE VALUE (eg. 256KB)
-    ! SPLIT_SIZE  optional, when present turns on the bility to split the file every SPLIT_SIZE megabytes into a new file
-    ! NOBINARY    optional, when present and set to true idicates an error is raised when file is opened as a binary file.
-    ! 
     CLASS(GENERIC_OUTPUT_FILE), INTENT(INOUT):: FL
-    CHARACTER(*),               INTENT(IN   ):: LN
-    INTEGER,      OPTIONAL,     INTENT(INOUT):: LLOC
-    INTEGER,      OPTIONAL,     INTENT(IN   ):: OUTPUT, INFILE
-    LOGICAL,      OPTIONAL,     INTENT(IN   ):: NOSTOP
-    LOGICAL,      OPTIONAL,     INTENT(IN   ):: REQKEY
-    INTEGER,      OPTIONAL,     INTENT(IN   ):: IU
-    LOGICAL,      OPTIONAL,     INTENT(IN   ):: BINARY
-    INTEGER,      OPTIONAL,     INTENT(IN   ):: BUFFER
-    INTEGER,      OPTIONAL,     INTENT(IN   ):: SPLIT_SIZE
-    LOGICAL,      OPTIONAL,     INTENT(IN   ):: NOBINARY
-    INTEGER,      OPTIONAL,     INTENT(IN   ):: SPLITMAXCOUNT
+    CHARACTER(*),               INTENT(IN   ):: LN              ! Optional Directive plus either file name or unit plus optional post keywords.
+    INTEGER,      OPTIONAL,     INTENT(INOUT):: LLOC            ! Position to start parsing line, set to 1 if not present
+    INTEGER,      OPTIONAL,     INTENT(IN   ):: OUTPUT, INFILE  ! Output file to write error msg too, infile to report error from.
+    LOGICAL,      OPTIONAL,     INTENT(IN   ):: REQKEY          ! If true, then requires specifying a directive keyword (viz OPEN/CLOSE, EXTERNAL, DATAFILE, DATAUNIT, CONSTANT, NULL)
+    LOGICAL,      OPTIONAL,     INTENT(IN   ):: NOSTOP          ! If true, then indicates the subroutine wil return if an error occurs, otherwise the program terminates with an error message
+    LOGICAL,      OPTIONAL,     INTENT(IN   ):: KEY_FAIL_STOP   ! If true, then always raises an error if a directive keyword is found but there was an error perfomating what it requested, this supercedes NOSTOP=TRUE
+    CHARACTER(*), OPTIONAL,     INTENT(INOUT):: KEY             ! Set to the directive that is used.
+    LOGICAL,      OPTIONAL,     INTENT(INOUT):: KEY_FOUND       ! Set to true if a directive is found
+    LOGICAL,      OPTIONAL,     INTENT(IN   ):: FORCE_DATAFILE  ! If true, then the file is always opened as a DATAFILE (ie its unit number does not close till program ends)
+    LOGICAL,      OPTIONAL,     INTENT(IN   ):: ALLOW_ONLY_UNIT ! If true and REQKEY=FALSE, then the allows checking for a unit number without the EXTERNAL or DATAUNIT directives (ie, a single integer is not assumed to be a unit number)
+    LOGICAL,      OPTIONAL,     INTENT(IN   ):: NO_POSTKEY_CHECK !If true, then no post keywords are checked for.
     LOGICAL,      OPTIONAL,     INTENT(IN   ):: NO_WARN         ! If true, warnings are supressed
-    LOGICAL,      OPTIONAL,     INTENT(IN   ):: NO_INTERNAL
-    LOGICAL,      OPTIONAL,     INTENT(IN   ):: NO_ONLY_UNIT
-    LOGICAL,      OPTIONAL,     INTENT(IN   ):: SAVE_FNAME
-    CHARACTER(*), OPTIONAL,     INTENT(  OUT):: KEY               ! SHOULD BE CHARACTER(10)
-    INTEGER,      OPTIONAL,     INTENT(INOUT):: DIM
-    INTEGER,      OPTIONAL,     INTENT(  OUT):: PREPOST           ! Holds location before running post-keycheck
-    LOGICAL,      OPTIONAL,     INTENT(IN   ):: STREAM_TEXT
-    LOGICAL,      OPTIONAL,     INTENT(IN   ):: NOPOSTKEY
-    LOGICAL,      OPTIONAL,     INTENT(IN   ):: FORCE_DATAFILE
-    CHARACTER(*), OPTIONAL,     INTENT(IN   ):: MSG
+    LOGICAL,      OPTIONAL,     INTENT(IN   ):: NO_INTERNAL     ! If true, the INTERNAL directive is not allowed
+    LOGICAL,      OPTIONAL,     INTENT(IN   ):: NO_CONSTANT     ! If true, the CONSTANT directive is not allowed
+    LOGICAL,      OPTIONAL,     INTENT(IN   ):: NO_BINARY       ! If true, the BINARY keyword     is not allowed
+    LOGICAL,      OPTIONAL,     INTENT(IN   ):: SAVE_FNAME      ! If true, then store the file name under FL%FNAME
+    LOGICAL,      OPTIONAL,     INTENT(IN   ):: STREAM_TEXT     ! If true, then the file is always opend with ACCESS = "STREAM"
+    INTEGER,      OPTIONAL,     INTENT(IN   ):: IU              ! When present is the unit number used when a file is opened by OPEN/CLOSE or by NAME
+    INTEGER,      OPTIONAL,     INTENT(IN   ):: INTERNAL_IU     ! Is the unit to write to if INTERNAL directive is found, otherwise uses FL%IOUT
+    INTEGER,      OPTIONAL,     INTENT(INOUT):: DIM             ! Value set by post-keyword DIM or DIMENSION followed by an INT.
+    INTEGER,      OPTIONAL,     INTENT(INOUT):: PREPOST         ! Holds location before running post-keycheck
+    LOGICAL,      OPTIONAL,     INTENT(IN   ):: BINARY          ! If true, then the file is opened as unformated binary.
+    INTEGER,      OPTIONAL,     INTENT(IN   ):: BUFFER          ! Sets the file buffer in Kilobyes
+    LOGICAL,      OPTIONAL,     INTENT(IN   ):: REWIND          ! Rewind file before exiting routing
+    LOGICAL,      OPTIONAL,     INTENT(IN   ):: APPEND          ! If true, then file is opened with append (at end of file)
+    INTEGER,      OPTIONAL,     INTENT(IN   ):: SPLIT_SIZE      ! Specifies the size, in MB, of when a file is spit into a new file (default is 0, or never split)
+    INTEGER,      OPTIONAL,     INTENT(IN   ):: SPLITMAXCOUNT   ! Specifies the interval that the split size is checked (default is 10)
+    CHARACTER(*), OPTIONAL,     INTENT(IN   ):: MSG             ! Message to pass to stop routing if progarm terminates.
+    !
     LOGICAL:: ISOPEN, ALLOW_ERROR, NOREQKEY, FOUND_KEY, DATAFILE
     LOGICAL:: GO_TO_TOP, SAVE_FN, CHECK_POST, CHECK_ONLY_UNIT, NOT_UNIQUE
+    LOGICAL:: IS_EXTERNAL, NO_BINARY_FLAG
     !
-    CHARACTER(12):: EXT, FORM_CHK, ACCESS_TXT
+    CHARACTER(12):: STAT_TXT
+    CHARACTER(12):: EXT, FORM_CHK, ACCESS_TXT, POS_TXT
     CHARACTER(:), ALLOCATABLE:: FNAME, ERR_MSG
     !
     INTEGER:: I, IIN, LL, ISTART, ISTOP, LLOC_BAK
@@ -163,6 +165,7 @@ MODULE GENERIC_OUTPUT_FILE_INSTRUCTION!, ONLY: GENERIC_OUTPUT_FILE
     FOUND_KEY    = FALSE
     NOT_UNIQUE   = FALSE
     GO_TO_TOP    = FALSE
+    IS_EXTERNAL  = FALSE
     IF(ALLOCATED(ERR_MSG)) DEALLOCATE(ERR_MSG)
     IF(ALLOCATED(FNAME  )) DEALLOCATE(FNAME)
     !
@@ -197,16 +200,22 @@ MODULE GENERIC_OUTPUT_FILE_INSTRUCTION!, ONLY: GENERIC_OUTPUT_FILE
         ALLOW_ERROR = TRUE
     END IF
     !
-    IF(PRESENT(NOPOSTKEY)) THEN
-        CHECK_POST = .NOT. NOPOSTKEY
+    IF(PRESENT(ALLOW_ONLY_UNIT)) THEN
+        CHECK_ONLY_UNIT = ALLOW_ONLY_UNIT .and. NOREQKEY
+    ELSE
+        CHECK_ONLY_UNIT = FALSE
+    END IF
+    !
+    IF(PRESENT(NO_POSTKEY_CHECK)) THEN
+        CHECK_POST = .NOT. NO_POSTKEY_CHECK
     ELSE
         CHECK_POST = TRUE
     END IF
     !
-    IF(PRESENT(NO_ONLY_UNIT)) THEN
-        CHECK_ONLY_UNIT = .not. NO_ONLY_UNIT
+    IF(PRESENT(NO_BINARY)) THEN
+        NO_BINARY_FLAG = NO_BINARY
     ELSE
-        CHECK_ONLY_UNIT = TRUE
+        NO_BINARY_FLAG = FALSE
     END IF
     !
     IF(PRESENT(SAVE_FNAME)) THEN
@@ -225,296 +234,368 @@ MODULE GENERIC_OUTPUT_FILE_INSTRUCTION!, ONLY: GENERIC_OUTPUT_FILE
     !
     IF(PRESENT(BINARY)) FL%BINARY = BINARY
     !
-    BUF = 16384 != 16KB x2 = 32KB  --1048576 = 1MB   --NOTE THAT TWO THREADS ARE USED PER BUFFER SO ACTUAL SPACE IS TWICE AS BIG
-    IF(PRESENT(BUFFER)) BUF = BUFFER
+    BUF = 16384 ! 16KB x2 = 32KB  --1048576 = 1MB   --Note that two threads are used per buffer so actual space is twice as big
+    IF(PRESENT(BUFFER)) THEN
+        BUF = BUFFER
+        IF( BUF > SEV   ) THEN
+            BUF = 4096*(BUF/EIGHT)  !Make sure it is a multiple of 8  -- 4096=512*8
+        ELSEIF( BUF > Z ) THEN
+            BUF = 512*BUF  ! Multiply by 0.5KB
+        END IF
+    END IF
+    !
+    STAT_TXT= 'REPLACE'
+    POS_TXT = 'REWIND'
+    IF(PRESENT(APPEND)) THEN
+            IF(APPEND) THEN
+                       POS_TXT = 'APPEND'
+                       STAT_TXT= 'UNKNOWN'
+            END IF
+    END IF
     !
     MXCNT = 10
     IF(PRESENT(SPLITMAXCOUNT)) MXCNT = SPLITMAXCOUNT
     !
     IF(PRESENT(SPLIT_SIZE)) SPLIT = SPLIT_SIZE
     !
-    ISOPEN = FALSE
-    IF(PRESENT(IU)) THEN
-        IF(IU /= Z) THEN
-                        INQUIRE(IU, OPENED=ISOPEN)
-                        IF(ISOPEN) FL%IU = IU
-        END IF
+    I = LL
+    CALL GET_WORD(LN,LL,ISTART,ISTOP,EXT)
+    !
+    IF (ISTART > ISTOP) THEN
+        IERR     = ONE
+        FL%ERROR = TRUE
+        CALL ADD_MSG(ERR_MSG, &
+                'Failed to successfully parse the line to find a directive keyword or file to open.'//NL// &
+                'The line may be empty, or is empty at the starting point of parsing.'//NL// &
+                'The line passed to the routine is:'//NL// &
+                '"'//TRIM(LN)//'"'//NL// &
+                'And the portion of the line that is being parsed is:'//NL// &
+                '"'//TRIM(LN(I:))//'"')
+    ELSE IF (CHECK_ONLY_UNIT .AND. LN(ISTART:ISTOP) /= BLNK) THEN
+                      READ(LN(ISTART:ISTOP),*,IOSTAT=IERR) IU_READ
+    ELSE
+        IERR=69
     END IF
     !
-    IF(.NOT. ISOPEN) THEN
-            I = LL
-            CALL GET_WORD(LN,LL,ISTART,ISTOP,EXT)
-            !
-            IF (ISTART > ISTOP) THEN
-                IERR     = ONE
-                FL%ERROR = TRUE
-                CALL ADD_MSG(ERR_MSG, &
-                        'Failed to successfully parse the line to find a directive keyword or file to open.'//NL// &
-                        'The line may be empty, or is empty at the starting point of parsing.'//NL// &
-                        'The line passed to the routine is:'//NL// &
-                        '"'//TRIM(LN)//'"'//NL// &
-                        'And the portion of the line that is being parsed is:'//NL// &
-                        '"'//TRIM(LN(I:))//'"')
-            ELSEIF (NOREQKEY .AND. CHECK_ONLY_UNIT .AND. LN(ISTART:ISTOP) /= BLNK) THEN
-                              READ(LN(ISTART:ISTOP),*,IOSTAT=IERR) IU_READ
-            ELSE
-                IERR=69
-            END IF
-            !
-            IF (IERR .EQ. Z) THEN
-                !
-                FL%IU = IU_READ 
-                IF(CHECK_POST) CALL CHECK_FOR_POST_KEY(LL, LN, IIN, FL%IOUT, BUF, SPLIT, DIM=DIM, FMT=FL%FMT, OLDLOC=PREPOST, NO_WARN=NO_WARN, MSG=MSG)
-                !
-                IF (FL%IU == Z) THEN
-                    CALL CLOSE_GENERIC_OUTPUT_FILE(FL)
-                    CALL WARNING_MESSAGE(LN,IIN,FL%IOUT,MSG='GENERIC_OUTPUT_FILE_INSTRUCTION: SUCESSFULLY LOADED A UNIT NUMBER ON LINE,'//NL//'BUT THE UNIT NUMBER WAS ZERO, SO IT IS ASSUMED THAT NO OUTPUT IS MEANT TO BE WRITTEN.')
-                    IF(PRESENT(KEY)) KEY = 'NOKEY'
-                    IF(SAVE_FN) FL%FNAME = 'ERROR - ¿¿¿UNKOWN FILE???'
-                    RETURN
-                END IF
-            ELSE
-                IERR= Z
-                !
-                EXT = LN(ISTART:ISTOP)
-                CALL UPPER(EXT)
-                !
-                IF(EXT == 'BINARY') THEN
-                                        FL%BINARY = TRUE
-                                        CALL PARSE_WORD(LN,LL,ISTART,ISTOP)
-                                        EXT = LN(ISTART:ISTOP)
-                                        CALL UPPER(EXT)
-                END IF
-                !
-                IF    (EXT == 'NOPRINT' .OR. EXT == 'SKIP' .OR. EXT == 'NUL' .OR. EXT == 'NULL') THEN
-                                                 IF(CHECK_POST) CALL CHECK_FOR_POST_KEY(LL, LN, IIN, FL%IOUT, BUF, SPLIT, DIM=DIM, FMT=FL%FMT, OLDLOC=PREPOST, NO_WARN=NO_WARN, MSG=MSG)
-                                                 CALL CLOSE_GENERIC_OUTPUT_FILE(FL)
-                                                 FL%IU = NULL_FILE%GET(LN,IIN,FL%IOUT)
-                                                 FL%NULL_FILE = TRUE
-                                                 IF(PRESENT(KEY)) KEY = ADJUSTL(EXT)
-                                                 IF(SAVE_FN) FL%FNAME = TRIM(EXT)
-                                                 RETURN
-                ELSEIF(EXT == 'INTERNAL'.OR. EXT == 'LIST' .OR. EXT==BLNK) THEN
-                                                 FL%IU = FL%IOUT
-                                                 IF(EXT /= BLNK) FOUND_KEY=TRUE
-                ELSEIF(EXT == 'EXTERNAL' .OR. EXT=='DATAUNIT') THEN
-                                                 CALL GET_INTEGER(LN,LL,ISTART,ISTOP,FL%IOUT,IIN,FL%IU,HAS_ERROR=FL%ERROR)
-                                                 !
-                                                 IF(FL%ERROR) THEN
-                                                     FNAME = LN(ISTART:ISTOP)
-                                                     CALL DATAFILE_UNIT_NUMBER%CHECK_BASE(FNAME,FL%IU,NOT_UNIQUE)
-                                                     FL%ERROR = FL%IU /= Z .AND. NOT_UNIQUE                 !Found IU and its basename is Unique
-                                                 END IF
-                                                 !CALL GET_INTEGER(LN,LL,ISTART,ISTOP,FL%IOUT,IIN,FL%IU,MSG='GENERIC_OUTPUT_FILE_INSTRUCTION ERROR: FROUND KEYWORD "'//TRIM(EXT)//'" WHICH SHOULD BE FOLLOWED BY AN INTEGER REPRESENTING THE UNIT NUMBER TO USE.')
-                                                 IF(.NOT. FL%ERROR .AND. CHECK_POST) CALL CHECK_FOR_POST_KEY(LL, LN, IIN, FL%IOUT, BUF, SPLIT, DIM=DIM, FMT=FL%FMT, OLDLOC=PREPOST, NO_WARN=NO_WARN, MSG=MSG)
-                                                 FOUND_KEY=TRUE
-                                                 !
-                                                 IF(FL%ERROR) THEN
-                                                     FL%IU = Z
-                                                     CALL ADD_MSG(ERR_MSG, &
-                                                             'Found '//TRIM(EXT)//' directive, but failed to read the unit number or file base name after the directive.'//NL// &
-                                                             'The following is what found: "'//FNAME//'"'//BLN//                                                                &
-                                                             'Typically, the external unit input is defined as:'//NL//                                                          &
-                                                             ' EXTERNAL  56        # for a file that is already opened using unit 56'//NL//                                     &
-                                                             ' EXTERNAL  base.txt  # for a file that is already opened and located at some/path/to/base.txt'//BLN//             &
-                                                             ' DATAUNIT  56        # for a file that is already opened using unit 56'//NL//                                     &
-                                                             ' DATAUNIT  base.txt  # for a file that is already opened and located at some/path/to/base.txt'//BLN//             &
-                                                             'Note a base name must match exactly to one file that is already opened and the match is case sensitive.'//BLN//   &
-                                                             'The following are a list of unit numbers that were registered with the program'//NL//                             &
-                                                             '  and can be used to look up by basename.'//NL//                                                                  &
-                                                             'Other unit numbers may be opened, but these are what was registered '//NL//                                       &
-                                                             '  and can be looked with a base name.'//BLN//DATAFILE_UNIT_NUMBER%PRINT_STR())
-                                                 END IF
-                                                 IF(ALLOCATED(FNAME)) DEALLOCATE(FNAME)
+    IF (IERR == Z) THEN               ! FOUND UNIT NUMBER--CHECK FOR POST KEYS
+          FL%IU       = IU_READ
+          EXT         ='IMPLIED_UNIT'
+          IS_EXTERNAL = TRUE
+          IF(CHECK_POST) CALL CHECK_FOR_POST_KEY(LL, LN, IIN, FL%IOUT, BUF, SPLIT, BINARY=FL%BINARY, GO_TO_TOP=GO_TO_TOP, DIM=DIM, FMT=FL%FMT, OLDLOC=PREPOST, NO_WARN=NO_WARN, MSG=MSG)
+    ELSE IF(.not. FL%ERROR) THEN
+          IERR = Z
+          !
+          IF(EXT == 'BINARY') THEN
+                              FL%BINARY = TRUE
+                              CALL GET_WORD(LN,LL,ISTART,ISTOP,EXT)
+          END IF
+          !
+          IF(EXT == 'EXTERNAL' .OR. EXT =='DATAUNIT') THEN  ! Quick grab of unit number if directive found.
+                                           FOUND_KEY   = TRUE
+                                           IS_EXTERNAL = TRUE
+                                           CALL GET_INTEGER(LN,LL,ISTART,ISTOP,FL%IOUT,IIN,FL%IU,HAS_ERROR=FL%ERROR)
+                                           !
+                                           IF(FL%ERROR) THEN
+                                               FNAME = LN(ISTART:ISTOP)
+                                               CALL DATAFILE_UNIT_NUMBER%CHECK_BASE(FNAME,FL%IU,NOT_UNIQUE)
+                                               FL%ERROR = FL%IU /= Z .AND. NOT_UNIQUE                 ! Found IU and its basename is Unique
+                                           END IF
+                                           IF(CHECK_POST) CALL CHECK_FOR_POST_KEY(LL, LN, IIN, FL%IOUT, BUF, SPLIT, BINARY=FL%BINARY, GO_TO_TOP=GO_TO_TOP, DIM=DIM, FMT=FL%FMT, OLDLOC=PREPOST, NO_WARN=NO_WARN, MSG=MSG)
+                                           !
+                                           IF(FL%ERROR) THEN
+                                               FL%IU = Z
+                                               CALL ADD_MSG(ERR_MSG, &
+                                                       'Found '//TRIM(EXT)//' directive, but failed to read the unit number or file base name after the directive.'//NL// &
+                                                       'The following is what found: "'//FNAME//'"'//BLN//                                                                &
+                                                       'Typically, the external unit input is defined as:'//NL//                                                          &
+                                                       ' EXTERNAL  56        # for a file that is already opened using unit 56'//NL//                                     &
+                                                       ' EXTERNAL  base.txt  # for a file that is already opened and located at some/path/to/base.txt'//BLN//             &
+                                                       ' DATAUNIT  56        # for a file that is already opened using unit 56'//NL//                                     &
+                                                       ' DATAUNIT  base.txt  # for a file that is already opened and located at some/path/to/base.txt'//BLN//             &
+                                                       'Note a base name must match exactly to one file that is already opened and the match is case sensitive.'//BLN//   &
+                                                       'The following are a list of unit numbers that were registered with the program'//NL//                             &
+                                                       '  and can be used to look up by basename.'//NL//                                                                  &
+                                                       'Other unit numbers may be opened, but these are what was registered '//NL//                                       &
+                                                       '  and can be looked with a base name.'//BLN//DATAFILE_UNIT_NUMBER%PRINT_STR())
+                                           END IF
+                                           IF(ALLOCATED(FNAME)) DEALLOCATE(FNAME)
+          END IF
+          !
+          IF(EXT == 'LIST')  EXT = 'INTERNAL'
+          !
+          IF(EXT == 'INTERNAL') THEN
+                                           FOUND_KEY      = TRUE
+                                           FL%IS_INTERNAL = TRUE
+                                           FL%IU = FL%IOUT
+                                           !
+                                           IF( PRESENT(INTERNAL_IU) ) THEN
+                                                    IF(INTERNAL_IU /= Z) FL%IU = INTERNAL_IU
+                                           END IF
+                                           !
+                                           IF(CHECK_POST) CALL CHECK_FOR_POST_KEY(LL, LN, IIN, FL%IOUT, BUF, SPLIT, BINARY=FL%BINARY, GO_TO_TOP=GO_TO_TOP, DIM=DIM, FMT=FL%FMT, OLDLOC=PREPOST, NO_WARN=NO_WARN, MSG=MSG)
+                                           !
+                                           IF(FL%IU == Z) CALL ADD_MSG(ERR_MSG, 'Found INTERNAL directive keyword, but the code does not know what the internal unit number is.'//NL//'That is, the code is not setup to handel the INTERNAL directive'//NL//' This is either a code bug or there will be another message stating INTERNAL is not supported.')
+                                           !
+                                           IF( PRESENT(NO_INTERNAL) ) THEN
+                                                    IF(NO_INTERNAL) THEN
+                                                        FL%ERROR = TRUE
+                                                        CALL ADD_MSG(ERR_MSG, 'Found INTERNAL directive keyword, but this input data item does not allow it.'//NL//'Please change input to specify a separate file with the OPEN/CLOSE, DATAFILE, or EXTERNAL directives.')
+                                                    END IF
+                                           END IF
+                                           !
+          ELSEIF(EXT == 'EXTERNAL' .OR. EXT =='DATAUNIT') THEN  ! Already read unit number
+                                           CONTINUE
+          ELSEIF(EXT =='NULL' .OR. EXT =='NUL' .OR. EXT == 'SKIP' .OR. EXT == 'NOPRINT') THEN
+                                           FOUND_KEY = TRUE
+                                           IF(CHECK_POST) CALL CHECK_FOR_POST_KEY(LL, LN, IIN, FL%IOUT, BUF, SPLIT, BINARY=FL%BINARY, GO_TO_TOP=GO_TO_TOP, DIM=DIM, FMT=FL%FMT, OLDLOC=PREPOST, NO_WARN=NO_WARN, MSG=MSG)
+                                           CALL FL%CLOSE()
+                                           FL%NULL_FILE = TRUE
+                                           FNAME = "NULL"
+                                           !
+                                           FL%IU = NULL_FILE%GET(LN,IIN,FL%IOUT)
+                                           !
+                                           IF(PRESENT(LLOC)) LLOC = LL
+                                           IF(PRESENT(KEY_FOUND)) KEY_FOUND = TRUE
+                                           IF(PRESENT(KEY)) KEY = FNAME
+                                           IF(SAVE_FN) FL%FNAME = FNAME
+          ELSEIF(.not. FL%ERROR) THEN
+                IF (EXT == 'OPEN/CLOSE' .OR. EXT == 'OPENCLOSE' .OR. EXT == 'DATAFILE') THEN  !OPEN/CLOSE FILE
+                                           FOUND_KEY    = TRUE
+                                           FL%OPENCLOSE = TRUE
+                                           !
+                                           DATAFILE  = EXT == 'DATAFILE'
+                                           !
+                                           CALL PARSE_WORD(LN,LL,ISTART,ISTOP)   ! MOVE TO NEXT WORD WHICH IS THE FILE NAME
+                ELSEIF(NOREQKEY) THEN
+                                           FL%OPENCLOSE = TRUE
+                                           EXT='IMPLIED_FILE'
                 ELSE
-                      IF (EXT == 'OPEN/CLOSE' .OR. EXT=='DATAFILE') THEN  ! OPEN/CLOSE KEYWORD
-                                                 DATAFILE = EXT=='DATAFILE'
-                                                 CALL PARSE_WORD(LN,LL,ISTART,ISTOP)   !MOVE TO NEXT WORD WHICH IS THE FILE NAME
-                                                 FL%OPENCLOSE = TRUE
-                                                 FOUND_KEY    = TRUE
-                      ELSEIF(NOREQKEY) THEN
-                                                 FL%OPENCLOSE = TRUE
-                      END IF
-                      !
-                      IF(PRESENT(FORCE_DATAFILE) .AND. FL%OPENCLOSE .AND. .NOT. DATAFILE)  DATAFILE = FORCE_DATAFILE
-                      !
-                      ALLOCATE( FNAME, SOURCE = LN(ISTART:ISTOP) )
-                      !
-                      IF(CHECK_POST) CALL CHECK_FOR_POST_KEY(LL, LN, IIN, FL%IOUT, BUF, SPLIT, BINARY=FL%BINARY, DIM=DIM, FMT=FL%FMT, OLDLOC=PREPOST, NO_WARN=NO_WARN, MSG=MSG)  !FL%BINARY IS ONLY SET TO TRUE IF BINARY FLAG FOUND, OTHERWISE IGNORED
-                      !
-                      INQUIRE(FILE=FNAME, NUMBER=I, OPENED=ISOPEN)
-                      !
-                      IF(ISOPEN .AND. PRESENT(IU)) THEN
-                                     IF (I /= IU) ISOPEN = FALSE
-                      END IF
-                      !
-                      ! OVERKILL CHECK
-                      !IF( DATAFILE .AND. .NOT.ISOPEN .AND. .NOT. PRESENT(IU)) CALL DATAFILE_UNIT_NUMBER%CHECK_NAME(FNAME,I,ISOPEN)
-                      !
-                      IF( DATAFILE .AND. ISOPEN) THEN
-                                                 FL%IU = I
-                                                 FL%OPENCLOSE = FALSE
-                      ELSEIF(FL%OPENCLOSE) THEN
-                                                 INQUIRE(FILE=FNAME,NUMBER=FL%IU,OPENED=ISOPEN)
-                                                 IF(ISOPEN) THEN
-                                                     CALL WARNING_MESSAGE(LN,IIN,FL%IOUT,MSG='GENERIC_OUTPUT FILE OPEN: OPEN/CLOSE FILE WITH FILENAME:'//NL//TRIM(FNAME)//NL//'HAS ALREADY BEEN OPENED/ASSOCIATED WITH A FORTRAN UNIT NUMBER.'//NL//'OUTPUT TO THIS FILE MAY CONTAIN INFORMATION FROM MULTIPLE SOURCES.'//NL//'(THIS IS JUST A WARNING AS YOU MAY BE INTENTIONALY DOING THIS.)')
-                                                     FL%OPENCLOSE = FALSE
-                                                 ELSE
-                                                     FL%IU = Z
-                                                     IF(PRESENT(IU)) FL%IU = IU
-                                                     !
-                                                     IF(FL%BINARY) THEN
-                                                          CALL GENERIC_OPEN(FNAME, FL%IU, FL%IOUT, ACTION='WRITE', FORM='UNFORMATTED', ACCESS='STREAM',   STATUS='REPLACE', ASYNC='NO', BUFFER_BLOCKSIZE=BUF, BUFFER_COUNT=2, LINE=LN, INFILE=IIN, ERROR=FL%ERROR)
-                                                     ELSE
-                                                          CALL GENERIC_OPEN(FNAME, FL%IU, FL%IOUT, ACTION='WRITE', FORM=  'FORMATTED', ACCESS=ACCESS_TXT, STATUS='REPLACE', ASYNC='NO', BUFFER_BLOCKSIZE=BUF, BUFFER_COUNT=2, LINE=LN, INFILE=IIN, ERROR=FL%ERROR)
-                                                     END IF
-                                                     !
-                                                     IF     (FL%ERROR) THEN
-                                                                           FL%OPENCLOSE = FALSE
-                                                     ELSEIF (DATAFILE) THEN
-                                                                           FL%OPENCLOSE = FALSE
-                                                                           CALL DATAFILE_UNIT_NUMBER%ADD(FL%IU)
-                                                     END IF
-                                                 END IF
-                      ELSE
-                                                 FL%ERROR = TRUE  !DID NOT FIND OPEN/CLOSE KEYWORD AND REQKEY=TRUE
-                      END IF
+                                           EXT='IMPLIED_LINE' ! Failed to open a file, set flag to indicate that input is either bad or located along line (Implied Internal)
+                                           FL%IU = Z
+                                           FL%ERROR = TRUE
                 END IF
-            END IF
-    END IF
-    !
-    IF(.NOT. FL%ERROR) THEN
-                           IF( FL%IU /= Z) THEN
-                                                 INQUIRE(FL%IU,FORM=FORM_CHK, OPENED=ISOPEN) 
-                                                 FL%BINARY = FORM_CHK /= 'FORMATTED'
-                           ELSE
-                                                 ISOPEN = FALSE
-                           END IF
-                           !
-                           IF(.NOT. ISOPEN) FL%ERROR =TRUE !FILE IS NOT INTERNAL, NOR UNIT WAS ASSOCIATED WITH A FILE, NOR WAS IT SUCCESFULLY OPENED.
-    END IF
-    !
-    IF(SPLIT>Z) THEN
-                    ALLOCATE(FL%FI)
-                    CALL FL%FI%INIT(SPLIT, FL%IU, BUF, MAXCOUNT=MXCNT)
-    END IF
-    !
-    IF(PRESENT(NOBINARY) .AND. FL%BINARY) THEN
-        IF(NOBINARY) THEN
-            ERR_MSG = 'GENERIC_OUTPUT_FILE_INSTRUCTION ERROR: CONNECTED FILE IS SELECTED FOR BINARY OUTPUT, BUT ONLY FORMATTED OUTPUT IS ALLOWED. PLEASE REMOVE "BINARY" KEYWORD OR MAKE SURE TO USE IN THE NAME FILE THE KEYWORD "DATA" INSTEAD OF DATA(BINARY) FOR THIS FILE.'
-            IF(PRESENT(MSG))  ERR_MSG = ERR_MSG//BLN//'THE FOLLOWING MESSAGE WAS PASSED TO GENERIC_OUTPUT:'//BLN//MSG
-            CALL FILE_IO_ERROR(Z,IIN,LINE=LN,OUTPUT=FL%IOUT,MSG=ERR_MSG)
-        END IF
-    END IF
-    !
-    IF(PRESENT(NO_INTERNAL) .AND. (FL%IU == Z .OR. FL%IU == FL%IOUT).AND. .NOT. FL%ERROR) THEN
-            !
-            IF(NO_INTERNAL) FL%ERROR = TRUE
-            !
-            IF(NO_INTERNAL .AND. ALLOW_ERROR) THEN
-                  !
-                  IF(PRESENT(MSG))  THEN
-                                    ERR_MSG = BLN//'THE FOLLOWING MESSAGE WAS PASSED TO GENERIC_OUTPUT:'//BLN//MSG
-                  ELSE
-                                    ERR_MSG = ""
-                  END IF
-                  IF( EXT=='INTERNAL') CALL FILE_IO_ERROR(Z,IIN,LINE=LN,OUTPUT=FL%IOUT,MSG='GENERIC_INPUT_FILE ERROR: FOUND KEYWORD "INTERNAL" BUT THIS OUTPUT DATA ITEM DOES NOT ALLOW FOR INTERNAL KEYWORD.'//BLN//'PLEASE WRITE OUTPUT TO SEPARATE FILE AND USE EITHER OPEN/CLOSE, DATAFILE, DATAUNIT, OR EXTERNAL.'//ERR_MSG)
-                  IF( EXT=='LIST')     CALL FILE_IO_ERROR(Z,IIN,LINE=LN,OUTPUT=FL%IOUT,MSG='GENERIC_INPUT_FILE ERROR: FOUND KEYWORD "LIST" BUT THIS OUTPUT DATA ITEM DOES NOT ALLOW FOR INTERNAL KEYWORD.'//BLN//'PLEASE WRITE OUTPUT TO SEPARATE FILE AND USE EITHER OPEN/CLOSE, DATAFILE, DATAUNIT, OR EXTERNAL.'//ERR_MSG)
-                  IF( FL%IU == Z .OR. EXT==BLNK) CALL FILE_IO_ERROR(Z,IIN,LINE=LN,OUTPUT=FL%IOUT,MSG='GENERIC_INPUT_FILE ERROR: THIS OUTPUT DATA ITEM DOES NOT ALLOW WRITING TO LIST FILE (NO KEYWORD FOUND, SO ASSUMING YOU MEANT THE LIST FILE).'//NL//'PLEASE WRITE OUTPUT TO SEPARATE FILE AND USE EITHER OPEN/CLOSE, DATAFILE, DATAUNIT, OR EXTERNAL.'//ERR_MSG)
-            END IF
-    END IF
-    !
-    IF (FL%ERROR .AND. ALLOW_ERROR) THEN
-        IF(EXT == 'INTERNAL'.OR. EXT == 'LIST' .OR. EXT==BLNK) THEN
-            IF(EXT == 'INTERNAL') THEN
-                ERR_MSG = NL//'FOUND KEYWORD "INTERNAL",'
-            ELSEIF( EXT == 'LIST') THEN
-                ERR_MSG = NL//'FOUND KEYWORD "LIST",'
-            ELSE
-                ERR_MSG = NL//'NO KEYWORD FOUND, ASSUMING THAT OUTPUT IS WRITTEN TO LIST.'
-            END IF
-            ERR_MSG = ERR_MSG//NL//'HOWEVER THE LIST FILE UNIT WAS NOT PASSED TO SUBROUTINE. THIS INDICATES THAT LIST WRITING IS NOT SUPPORTED FOR THIS OneWater OUTPUT OPTION.'//NL//'PLEASE CHOSE A DIFFERENT OUTPUT LOCATION (eg OPEN/CLOSE OR EXTERNAL).'
-        ELSEIF( ALLOCATED(FNAME) .AND. EXT /= 'EXTERNAL' .AND. EXT /= 'DATAUNIT' ) THEN
-            IF(EXT == 'OPEN/CLOSE') THEN
-                ERR_MSG = NL//'FOUND KEYWORD "OPEN/CLOSE",'
-            ELSEIF( EXT == 'DATAFILE') THEN
-                ERR_MSG = NL//'FOUND KEYWORD "DATAFILE",'
-            ELSE
-                ERR_MSG = NL//'NO KEYWORD FOUND, ASSUMING FILE NAME IS JUST SPECIFIED ON CURRENT LINE,'
-            END IF
-            ERR_MSG = ERR_MSG//NL//'BUT FAILED TO OPEN THE FOLLOWING FILE FOR WRITING:'//BLN//'"'//FNAME//'"'//BLN// &
-                                   'PLEASE CHECK TO SEE IF THE PATH AND FILE NAME CORRECT.'//BLN//                   &
-                                   ' ***NOTE THAT THE "/" WORKS FOR BOTH WINDOWS AND LINUX,' //NL//                  &
-                                   '    BUT THE "\" ONLY WORKS ON WINDOWS.'
-        ELSE
-            IF(EXT == 'EXTERNAL') THEN
-                ERR_MSG = NL//'FOUND KEYWORD "EXTERNAL",'
-            ELSEIF( EXT == 'DATAUNIT') THEN
-                ERR_MSG = NL//'FOUND KEYWORD "DATAUNIT",'
-            ELSE
-                ERR_MSG = NL//'NO KEYWORD FOUND AND A UNIT NUMBER WAS SUCCESSFULLY READ,'//NL//'SO IT WAS ASSUMED TO BE A UNIT SPECIFIED IN THE NAME FILE OR ALREADY OPEN,'
-            END IF
-            ERR_MSG = ERR_MSG//BLN//'BUT UNIT NUMBER WAS NOT ASSOCIATED WITH ANY FILE (NOT OPEN) FOR WRITING.'//NL// &
-                                    'THIS PROBABLY IS BECAUSE IT WAS NOT SPECIFIED IN THE NAME FILE,'//NL//          &
-                                    'FILE WAS CLOSED AT SOME POINT,'//NL//                                           &
-                                    'OR EVEN NEVER SUCESSFULLY OPENED.'//BLN
-            IF( ALLOCATED(FNAME) ) THEN 
-                ERR_MSG = ERR_MSG//'THE FOLLOWING IS THE UNIT NUMBER OR BASENAME OF A FILE THAT WAS SEARCHED FOR: "'//FNAME//'"'//BLN
                 !
-                IF(NOT_UNIQUE) ERR_MSG = ERR_MSG//'-> BUT THE BASENAME WAS NOT UNIQUE WITHIN THE LIST OF CURRENTLY OPENED FILES.'//BLN
+                IF(PRESENT(FORCE_DATAFILE) .AND. FL%OPENCLOSE .AND. .NOT. DATAFILE) DATAFILE = FORCE_DATAFILE
                 !
-                ERR_MSG = ERR_MSG//                                                                                      &
-                                   'NOTE THAT A BASENAME MUST MATCH EXACTLY TO ONE FILE THAT IS ALREADY OPENED.'//NL//   &
-                                   '                                             --That is, its Case Sensitive.'//NL//   &
-                                   'FOR EXAMPLE, IF THE NAME FILE HAS:'//BLN//                                           &
-                                   'DATA   23    ./Dir1/Dir2/MyFile.txt'//BLN//                                          &
-                                   'THEN ONLY ONE OF THE FOLLOWING WILL FIND THE FILE:'//BLN//                           &
-                                   TRIM(EXT)//' 23'//NL//                                                                &
-                                   TRIM(EXT)//' MyFile.txt'//BLN
-            ELSE
-                ERR_MSG = ERR_MSG//'THE FOLLOWING IS THE UNIT NUMBER SEARCHED FOR: "'//NUM2STR(FL%IU)//'"'//BLN
-            END IF
-            !
-            ERR_MSG = ERR_MSG//'PLEASE CHECK TO SEE IF UNIT IS SPECIFIED IN THE NAME FILE WITH DATA OR DATA(BINARY) KEYWORDS.'//BLN// &
-                               'SEE ABOVE--IN THE LIST/WARN FILE--FOR A TRANSCRIPT OF ALL THE CURRENTLY OPEN DATAFILES AND THEIR UNIT NUMBERS.'//BLN
-            !
-            CALL DATAFILE_UNIT_NUMBER%PRINT(FL%IOUT)
-            CALL DATAFILE_UNIT_NUMBER%PRINT(GET_WARN())
-            !    
-        END IF
-        !
-        ERR_MSG = 'FAILED TO OPEN FILE WITH GENERIC_OUTPUT_FILE_INSTRUCTION.'//BLN//ERR_MSG
-        !
-        IF(PRESENT(MSG))  ERR_MSG = ERR_MSG//BLN//'THE FOLLOWING MESSAGE WAS PASSED TO GENERIC_OUTPUT:'//BLN//MSG
-        !
-        CALL FILE_IO_ERROR(IERR,IIN,LINE=LN,OUTPUT=FL%IOUT,MSG=ERR_MSG)
-    END IF
-    IF (FL%ERROR) FL%IU = Z
-    !
-    IF(PRESENT(KEY)) THEN
-          IF(FOUND_KEY) THEN
-                             KEY = ADJUSTL(EXT)
-          ELSE
-                             KEY = 'NOKEY'
+                IF(ISTART > ISTOP) THEN               ! Error parsing file name (can only be true if OPEN/CLOSE does not have a file after it)
+                    FL%ERROR = TRUE
+                    CALL ADD_MSG(ERR_MSG, &
+                            'Found '//TRIM(EXT)//' directive,'//NL// &
+                            '  which should be followed by a file name to open,'//NL// &
+                            '  but nothing was found after it.')
+                ELSE IF ( .not. FL%ERROR) THEN
+                    ALLOCATE( FNAME, SOURCE = LN(ISTART:ISTOP) )
+                    !
+                    INQUIRE(FILE=FNAME, NUMBER=I, OPENED=ISOPEN)
+                    !
+                    IF(.not. ISOPEN .and. DATAFILE) THEN  ! Check for BaseName
+                       CALL DATAFILE_UNIT_NUMBER%CHECK_BASE(FNAME,I,NOT_UNIQUE)
+                       ISOPEN = I /= Z .and. .not. NOT_UNIQUE                 ! Found IU and its basename is Unique
+                       IF(ISOPEN) THEN
+                           BLOCK
+                               CHARACTER(12):: ACTION_TXT
+                               INQUIRE(UNIT=I, ACTION=ACTION_TXT, OPENED=ISOPEN)
+                               IF( ACTION_TXT /= 'WRITE' .and. ACTION_TXT /= 'READWRITE' ) ISOPEN = FALSE
+                           END BLOCK
+                       END IF
+                    END IF
+                    !
+                END IF
+                !
+                IF(FL%ERROR) THEN
+                    FL%IU    = Z
+                    FL%ERROR = TRUE
+                ELSE
+                    IF(CHECK_POST) CALL CHECK_FOR_POST_KEY(LL, LN, IIN, FL%IOUT, BUF, SPLIT, BINARY=FL%BINARY, GO_TO_TOP=GO_TO_TOP, DIM=DIM, FMT=FL%FMT, OLDLOC=PREPOST, NO_WARN=NO_WARN, MSG=MSG)
+                    !
+                    IF( DATAFILE .AND. ISOPEN) THEN
+                                               FL%IU = I
+                                               FL%OPENCLOSE = FALSE
+                    ELSEIF(FL%OPENCLOSE .AND. ISOPEN) THEN
+                                               FL%IU = I
+                                               FL%OPENCLOSE = FALSE
+                                               CALL WARNING_MESSAGE(LN,IIN,FL%IOUT,MSG='GENERIC_OUTPUT_FILE: OPEN/CLOSE directive attempted to open the file:'//NL//TRIM(FNAME)//NL//'Has already been opened/associated with a fortran unit number.'//NL//'That is, it has been opened somewhere else for writing, so now two or more different code features will attempt to write to the same file.'//NL//'If you want to supress this warning, just change the directive keyword from OPEN/CLOSE to DATAFILE to indicate you do mean to reuse the same file.')
+                    ELSEIF(FL%OPENCLOSE) THEN
+                                               FL%IU = Z
+                                               IF(PRESENT(IU)) FL%IU = IU
+                                               !
+                                               IF(FL%BINARY) THEN
+                                                    CALL GENERIC_OPEN(FNAME, FL%IU, FL%IOUT, ACTION='WRITE', FORM='UNFORMATTED', ACCESS='STREAM',   POSITION=POS_TXT, STATUS=STAT_TXT, ASYNC='NO', BUFFER_BLOCKSIZE=BUF, BUFFER_COUNT=2, LINE=LN, INFILE=IIN, ERROR=FL%ERROR)
+                                               ELSE
+                                                    CALL GENERIC_OPEN(FNAME, FL%IU, FL%IOUT, ACTION='WRITE', FORM=  'FORMATTED', ACCESS=ACCESS_TXT, POSITION=POS_TXT, STATUS=STAT_TXT, ASYNC='NO', BUFFER_BLOCKSIZE=BUF, BUFFER_COUNT=2, LINE=LN, INFILE=IIN, ERROR=FL%ERROR)
+                                               END IF
+                                               !
+                                               IF     (FL%ERROR) THEN
+                                                                     FL%OPENCLOSE = FALSE
+                                                                     CALL ADD_MSG(ERR_MSG, &
+                                                                             'Found '//TRIM(EXT)//' directive,'//NL//        &
+                                                                             '  but failed to open the file:'//NL//          &
+                                                                             '     "'//FNAME//'"'//NL//                      &
+                                                                             'The reason for the failure is unknown.'//NL//  &
+                                                                             'Perhaps the path to the file is bad or '//NL// &
+                                                                             '  the file is locked by another program'//NL// &
+                                                                             '  preventing the write only file from being created or appended to.'//BLN// &
+                                                                             'Please check to see if the path and file name are correct'//NL// &
+                                                                             '  and that either the file does not exist (so it can be created)'//NL// &
+                                                                             '  or is editable so that it can be overwritten or appended to).'//NL// &
+                                                                             'If you are are using a relative path to specify the file (such as: ../dir/file.txt),'//NL// &
+                                                                             '  then the current working director (point for relative paths) is:'//NL// &
+                                                                             '     "'//GET_CWD()//'"'//BLN//                                    &
+                                                                             '  ***Note: in a path to a file'//NL//                             &
+                                                                             '     the the "/" works for both Windows and Linux,' //NL//        &
+                                                                             '     but the "\" only works on Windows.')
+                                                                     IF(EXT == 'IMPLIED_FILE') &
+                                                                         CALL ADD_MSG(ERR_MSG, &
+                                                                             'The IMPLIED_FILE directive is a place holder for when no directive is found.'//NL//  &
+                                                                             'The given input line assumes that it contains a file name that should be opened.'//NL//  &
+                                                                             'That is: "path/to/myFile.txt" is marked as an IMPLIED_FILE and'//NL//  &
+                                                                             '         treated as equivalent to "OPEN/CLOSE  path/to/myFile.txt"')
+                                               ELSEIF (DATAFILE) THEN
+                                                                     FL%OPENCLOSE = FALSE
+                                                                     CALL DATAFILE_UNIT_NUMBER%ADD(FL%IU, FALSE)
+                                               END IF
+                    ELSE
+                                               FL%ERROR = TRUE  ! Did not find OPEN/CLOSE keyword and REQKEY=TRUE - Error message written later if not "IMPLIED_LINE"
+                    END IF
+                END IF
           END IF
     END IF
     !
+    IF(PRESENT(KEY_FAIL_STOP)) ALLOW_ERROR = ALLOW_ERROR .or. ( KEY_FAIL_STOP .and. FOUND_KEY )
+    !
+    IF(ALLOW_ERROR .AND. FL%IU /= Z) THEN
+      IF( EXT == 'EXTERNAL' .or. EXT == 'DATAUNIT' .or. EXT == 'IMPLIED_UNIT' ) THEN
+        I = FL%IU
+        BLOCK 
+            CHARACTER(12):: ACTION_TXT
+            INQUIRE(UNIT=I, ACTION=ACTION_TXT, OPENED=ISOPEN)
+            IF( ACTION_TXT /= 'WRITE' .and. ACTION_TXT /= 'READWRITE' ) ISOPEN = FALSE
+        END BLOCK
+        !
+        IF(.NOT. ISOPEN) FL%ERROR = TRUE ! Unit associated with no file or not opened with correct permissions
+        !
+        IF(FL%ERROR) THEN
+           CALL ADD_MSG(ERR_MSG, &
+                   'Found '//TRIM(EXT)//' directive,'//NL//                         &
+                   '  but the unit number specified, '//NUM2STR(FL%IU)//','//NL//   &
+                   ' is not associated with an opened file or'//NL//                &
+                   ' is not associated with a file opened with a "WRITE" permission.')
+           IF(EXT == 'IMPLIED_UNIT') &
+               CALL ADD_MSG(ERR_MSG, &
+                   'The IMPLIED_UNIT directive is a place holder for when no directive is found'//NL// &
+                   '  but a unit number was sucessfully read in.'//BLN//                               &
+                   'This input line assumes that if it contains an integer,'//NL//                     &
+                   '  then it is a unit number associated with a file.'//NL//                          &
+                   'That is: "56" is marked as an IMPLIED_UNIT and'//NL//                              &
+                   '         treated as equivalent to "EXTERNAL  56"'//NL//                            &
+                   'Note, IMPLIED_UNIT is typically not allowed unless'//NL//                          &
+                   '  the code is set up to handle it.'//NL//  &
+                   '  (in this case this input does allow for it).')
+           
+        END IF
+      END IF
+    END IF
+    !
+    IF(FL%ERROR) THEN
+            FL%IU     = Z
+            FL%BINARY = FALSE
+            FL%STREAM = FALSE
+    ELSE
+        I = FL%IU
+        IF( I /= Z) THEN
+            INQUIRE(UNIT=I, FORM=FORM_CHK, ACCESS=ACCESS_TXT, OPENED=ISOPEN)
+            !
+            IF(FL%BINARY .and. .not. FORM_CHK /= 'FORMATTED') THEN  ! BINARY keyword found, but file was not opened as a binary file.  FORM_CHK /= 'FORMATTED' -> Binary
+                 FL%ERROR = TRUE
+                 CALL ADD_MSG(ERR_MSG, &
+                         'Found BINARY keyword,'//NL// &
+                         '  but the file was not opened as a stream unformatted (BINARY) file.'//NL// &
+                         'This typically occurs if the file was opened elsewhere, but without the BINARY flag.')
+            END IF
+            !
+            FL%BINARY = FORM_CHK /= 'FORMATTED'
+            FL%STREAM = ACCESS_TXT == 'STREAM'
+            IF(.NOT. ISOPEN) FL%ERROR = TRUE ! File unit was not successifully connected to a file.
+        END IF
+    END IF
+    !
+    IF(.NOT. FL%ERROR .and. PRESENT(IU)) THEN
+       IF (FL%IU /= IU .and. FL%IU /= Z .and. IU /= Z) THEN
+          FL%ERROR = TRUE
+          IF(IS_EXTERNAL) THEN
+              CALL ADD_MSG(ERR_MSG, 'Possible Code issues because OPEN method was told to use a specific unit number, "'//NUM2STR(IU)//'", but instead the input read requested a different unit number, "'//NUM2STR(FL%IU)//'"')
+          ELSE IF(.not. FL%IS_INTERNAL .AND. .not. FL%NULL_FILE) THEN
+              CALL ADD_MSG(ERR_MSG, 'Possible Code issues because OPEN method was told to use a specific unit number, "'//NUM2STR(IU)//'", but the input specified a file that is already opened under a differnet unit number "'//NUM2STR(FL%IU)//'"'//NL//'That is, the file was opened or in use somewhere else and not closed.')
+          END IF
+       END IF
+    END IF
+    !
+    IF(FL%BINARY .and. PRESENT(NO_BINARY)) THEN
+      IF(NO_BINARY) THEN
+          FL%ERROR = TRUE
+         CALL ADD_MSG(ERR_MSG, 'For the given input the file opened is a stream unformatted (BINARY) file,'//NL//'but the file open method (this input specifying the file to open) is set to only allow for a formatted text (ASCII) file.'//NL//'Please remove the "BINARY" keyword or check input to ensure it is setup for binary output.')
+      END IF
+    END IF
+    !
+    IF(.NOT. FL%ERROR .AND. SPLIT > Z) THEN
+                           ALLOCATE(FL%FI)
+                           CALL FL%FI%INIT(SPLIT, FL%IU, BUF, MAXCOUNT=MXCNT)
+    END IF
+    !
+    ! Check if ERROR occured and either stopping is allowed or that a keyword was found so it can not be an implied internal
+    !
+    IF(ALLOW_ERROR .and. FL%ERROR .and. .not. FL%NULL_FILE) THEN
+      IF(.not. NOREQKEY .AND.  .not. FOUND_KEY) THEN  ! Require keword, but none found
+          CALL HED_MSG(ERR_MSG, &
+                  'Failed to identify a directive keyword while processing the'//NL//    &
+                  '   line that specified the input file to make a connection to (ie open the file).'//NL// &
+                  'However, the input for opening this file requires that the directive keyword'//NL//      &
+                  '   be specified (no implied opening of a file by name).'//BLN//                          &
+                  'This input expects one of the following directive keywords:'//NL//                       &
+                  '   INTERNAL'  //NL//                                                                     &
+                  '   OPEN/CLOSE'//NL//                                                                     &
+                  '   OPENCLOSE' //NL//                                                                     &
+                  '   DATAFILE'  //NL//                                                                     &
+                  '   DATAUNIT'  //NL//                                                                     &
+                  '   EXTERNAL'  //NL//                                                                     &
+                  '   NULL'      //NL//                                                                     &
+                  '   and SKIP')
+      END IF
+      !
+      CALL HED_MSG(ERR_MSG,'FAILED TO OPEN FILE WITH GENERIC_OUTPUT_FILE.')
+      !
+      CALL FILE_IO_ERROR(LINE=LN, INFILE=IIN, OUTPUT=FL%IOUT, MSG=ERR_MSG, MSG2=MSG)
+      !
+    END IF
+    !
+    IF (FL%ERROR) THEN
+                       FL%IU = Z
+                       LL = LLOC_BAK
+    END IF
+    !
+    FL%IS_OPEN = FL%IU /= Z
+    !
+    IF(PRESENT(KEY)) KEY = ADJUSTL(EXT)
+    IF(PRESENT(KEY_FOUND)) KEY_FOUND = FOUND_KEY
+    !
+    IF(PRESENT(REWIND) .AND. .NOT. GO_TO_TOP) GO_TO_TOP = REWIND
+    !
+    IF(GO_TO_TOP) CALL REWIND_GENERIC_OUTPUT_FILE(FL)
+    !
     IF(PRESENT(LLOC)) LLOC = LL
     !
-    IF(FL%IU /= Z) FL%IS_OPEN = TRUE
-    !
     IF(SAVE_FN) THEN
-       IF(ALLOCATED(FNAME)) THEN
-                 IF(FNAME == BLNK) DEALLOCATE(FNAME)
-       END IF
-       !
-       IF(ALLOCATED(FNAME)) THEN
-                 FL%FNAME = FNAME
-       ELSEIF(FL%IS_OPEN) THEN
-                 CALL SET_FILE_NAME_GENERIC_OUTPUT_FILE(FL)
-       ELSE
-                 FL%FNAME = 'ERROR - ¿¿¿UNKOWN FILE???'
-       END IF
+        IF(ALLOCATED(FNAME)) THEN
+            IF(FNAME == BLNK) DEALLOCATE(FNAME)
+        END IF
+        !
+        IF(ALLOCATED(FNAME)) THEN
+            FL%FNAME = FNAME
+        ELSEIF(FL%IS_OPEN) THEN
+            CALL SET_FILE_NAME_GENERIC_OUTPUT_FILE(FL)
+        ELSE
+            FL%FNAME = 'ERROR - ¿¿¿UNKOWN FILE???'
+        END IF
     END IF
     !
     CONTAINS
@@ -576,97 +657,96 @@ MODULE GENERIC_OUTPUT_FILE_INSTRUCTION!, ONLY: GENERIC_OUTPUT_FILE
     CLASS(GENERIC_OUTPUT_FILE),  INTENT(INOUT):: FL
     CLASS(GENERIC_OUTPUT_FILE),  INTENT(INOUT):: FL_NEW
     !
-    IF( ALLOCATED(FL%FI)) CALL MOVE_ALLOC(FL%FI, FL_NEW%FI)
-    FL_NEW%IU         =  FL%IU
-    FL_NEW%OPENCLOSE  =  FL%OPENCLOSE
-    FL_NEW%ERROR      =  FL%ERROR
-    FL_NEW%IOUT       =  FL%IOUT
-    FL_NEW%BINARY     =  FL%BINARY
-    FL_NEW%IS_OPEN    =  FL%IS_OPEN
+    FL_NEW%IU          = FL%IU
+    FL_NEW%IOUT        = FL%IOUT
+    FL_NEW%IS_OPEN     = FL%IS_OPEN
+    FL_NEW%OPENCLOSE   = FL%OPENCLOSE
+    FL_NEW%ERROR       = FL%ERROR
+    FL_NEW%BINARY      = FL%BINARY
+    FL_NEW%STREAM      = FL%STREAM
+    FL_NEW%NULL_FILE   = FL%NULL_FILE  
+    FL_NEW%IS_INTERNAL = FL%IS_INTERNAL
     !
-    FL%OPENCLOSE  =FALSE
-    FL%IS_OPEN    =FALSE
+    IF(ALLOCATED(FL%FNAME)) CALL MOVE_ALLOC(FL%FNAME,FL_NEW%FNAME)
+    IF(ALLOCATED(FL%EXTRA)) CALL MOVE_ALLOC(FL%EXTRA,FL_NEW%EXTRA)
+    IF(ALLOCATED(FL%FMT))   CALL MOVE_ALLOC(FL%FMT,  FL_NEW%FMT)
+    IF( ALLOCATED(FL%FI))   CALL MOVE_ALLOC(FL%FI,   FL_NEW%FI)
     !
-    IF(ALLOCATED(FL%FNAME)) THEN
-        CALL MOVE_ALLOC(FL%FNAME,FL_NEW%FNAME)
-    END IF
-    !
-    IF(ALLOCATED(FL%EXTRA)) THEN
-        CALL MOVE_ALLOC(FL%EXTRA,FL_NEW%EXTRA)
-    END IF
+    FL%OPENCLOSE = FALSE
+    FL%IS_OPEN   = FALSE
     !
   END SUBROUTINE
   !
   IMPURE ELEMENTAL SUBROUTINE REWIND_GENERIC_OUTPUT_FILE(FL)
     CLASS(GENERIC_OUTPUT_FILE), INTENT(INOUT):: FL
     !
-    IF(FL%IU /= Z) REWIND(FL%IU)
+    IF(FL%IS_OPEN) REWIND(FL%IU)
     !
   END SUBROUTINE
-    !
-    !    CLASS(GENERIC_OUTPUT_FILE), INTENT(INOUT):: FL
-    !    INTEGER,                    INTENT(INOUT):: LLOC
-    !    CHARACTER(*),               INTENT(IN   ):: LN
-    !    INTEGER,                    INTENT(IN   ):: IOUT, IN
-    !    INTEGER, OPTIONAL,          INTENT(IN   ):: IU
-    !    LOGICAL, OPTIONAL,          INTENT(IN   ):: BINARY
-    !    INTEGER, OPTIONAL,          INTENT(IN   ):: BUFFER
-    !    CHARACTER(8):: EXT
-    !    INTEGER:: I,Z,ISTART,ISTOP,IERR, BUF
-    !    REAL:: R
-    !    !
-    !    Z = 0
-    !    FL%IN  = IN
-    !    FL%IOUT= IOUT
-    !    FL%BINARY = FALSE
-    !    !
-    !    IF(FL%OPENCLOSE) CLOSE(FL%IU)
-    !    FL%OPENCLOSE = FALSE
-    !    !
-    !    FL%IU = Z
-    !    IF(PRESENT(IU)) FL%IU = IU
-    !    !
-    !    IF(PRESENT(BINARY)) FL%BINARY = BINARY
-    !    BUF = 131072 != 128KB  --1048576 = 1MB   --NOTE THAT TWO THREADS ARE USED PER BUFFER SO ACTUAL SPACE IS TWICE AS BIG
-    !    IF(PRESENT(BUFFER)) BUF = BUFFER
-    !    !
-    !    IF (FL%IU == Z) THEN
-    !       CALL URWORD(LN,LLOC,ISTART,ISTOP,Z,I,R,Z,Z)
-    !       READ(LN(ISTART:ISTOP),*,IOSTAT=IERR) FL%IU
-    !       !
-    !       IF (IERR /= Z) THEN
-    !             !
-    !             EXT = LN(ISTART:ISTOP)
-    !             CALL UPPER(EXT)
-    !             !
-    !             IF    (EXT == 'EXTERNAL') THEN
-    !                   CALL URWORD(LN,LLOC,ISTART,ISTOP,2,FL%IU,R,FL%IOUT,FL%IN)
-    !             ELSEIF(EXT == 'LIST' .OR. EXT=='') THEN
-    !                   FL%IU = IOUT
-    !             ELSE
-    !                   IF(EXT == 'OPEN/CLO' ) CALL URWORD(LN,LLOC,ISTART,ISTOP,Z,I,R,Z,Z)   !MOVE TO NEXT WORD WHICH IS THE FILE NAME
-    !                   !
-    !                   FL%OPENCLOSE = TRUE
-    !                   FL%IU = Z
-    !                   !
-    !                   IF(FL%BINARY) THEN
-    !                        CALL GENERIC_OPEN(LN(ISTART:ISTOP), FL%IU, FL%IOUT, ACTION='WRITE', FORM=FORM, ACCESS=ACCESS, STATUS='REPLACE', ASYNC='NO', BUFFER_BLOCKSIZE=BUF, BUFFER_COUNT=2, LINE=LN, INFILE=IN)
-    !                   ELSE
-    !                        CALL GENERIC_OPEN(LN(ISTART:ISTOP), FL%IU, FL%IOUT, ACTION='WRITE', FORM='FORMATTED', ACCESS='SEQUENTIAL', STATUS='REPLACE', ASYNC='NO', BUFFER_BLOCKSIZE=BUF, BUFFER_COUNT=2, LINE=LN, INFILE=IN)
-    !                   END IF
-    !             END IF
-    !       END IF
-    !       !
-    !    END IF
-    !    !
-    !    INQUIRE(FL%IU,FORM=FORM)
-    !    IF(FORM == 'FORMATTED') THEN
-    !        FL%BINARY = FALSE
-    !    ELSE
-    !        FL%BINARY = TRUE
-    !    END IF
-    !    !
-    !  END SUBROUTINE
+  !
+  !    CLASS(GENERIC_OUTPUT_FILE), INTENT(INOUT):: FL
+  !    INTEGER,                    INTENT(INOUT):: LLOC
+  !    CHARACTER(*),               INTENT(IN   ):: LN
+  !    INTEGER,                    INTENT(IN   ):: IOUT, IN
+  !    INTEGER, OPTIONAL,          INTENT(IN   ):: IU
+  !    LOGICAL, OPTIONAL,          INTENT(IN   ):: BINARY
+  !    INTEGER, OPTIONAL,          INTENT(IN   ):: BUFFER
+  !    CHARACTER(8):: EXT
+  !    INTEGER:: I,Z,ISTART,ISTOP,IERR, BUF
+  !    REAL:: R
+  !    !
+  !    Z = 0
+  !    FL%IN  = IN
+  !    FL%IOUT= IOUT
+  !    FL%BINARY = FALSE
+  !    !
+  !    IF(FL%OPENCLOSE) CLOSE(FL%IU)
+  !    FL%OPENCLOSE = FALSE
+  !    !
+  !    FL%IU = Z
+  !    IF(PRESENT(IU)) FL%IU = IU
+  !    !
+  !    IF(PRESENT(BINARY)) FL%BINARY = BINARY
+  !    BUF = 131072 != 128KB  --1048576 = 1MB   --NOTE THAT TWO THREADS ARE USED PER BUFFER SO ACTUAL SPACE IS TWICE AS BIG
+  !    IF(PRESENT(BUFFER)) BUF = BUFFER
+  !    !
+  !    IF (FL%IU == Z) THEN
+  !       CALL URWORD(LN,LLOC,ISTART,ISTOP,Z,I,R,Z,Z)
+  !       READ(LN(ISTART:ISTOP),*,IOSTAT=IERR) FL%IU
+  !       !
+  !       IF (IERR /= Z) THEN
+  !             !
+  !             EXT = LN(ISTART:ISTOP)
+  !             CALL UPPER(EXT)
+  !             !
+  !             IF    (EXT == 'EXTERNAL') THEN
+  !                   CALL URWORD(LN,LLOC,ISTART,ISTOP,2,FL%IU,R,FL%IOUT,FL%IN)
+  !             ELSEIF(EXT == 'LIST' .OR. EXT=='') THEN
+  !                   FL%IU = IOUT
+  !             ELSE
+  !                   IF(EXT == 'OPEN/CLO' ) CALL URWORD(LN,LLOC,ISTART,ISTOP,Z,I,R,Z,Z)   !MOVE TO NEXT WORD WHICH IS THE FILE NAME
+  !                   !
+  !                   FL%OPENCLOSE = TRUE
+  !                   FL%IU = Z
+  !                   !
+  !                   IF(FL%BINARY) THEN
+  !                        CALL GENERIC_OPEN(LN(ISTART:ISTOP), FL%IU, FL%IOUT, ACTION='WRITE', FORM=FORM, ACCESS=ACCESS, STATUS='REPLACE', ASYNC='NO', BUFFER_BLOCKSIZE=BUF, BUFFER_COUNT=2, LINE=LN, INFILE=IN)
+  !                   ELSE
+  !                        CALL GENERIC_OPEN(LN(ISTART:ISTOP), FL%IU, FL%IOUT, ACTION='WRITE', FORM='FORMATTED', ACCESS='SEQUENTIAL', STATUS='REPLACE', ASYNC='NO', BUFFER_BLOCKSIZE=BUF, BUFFER_COUNT=2, LINE=LN, INFILE=IN)
+  !                   END IF
+  !             END IF
+  !       END IF
+  !       !
+  !    END IF
+  !    !
+  !    INQUIRE(FL%IU,FORM=FORM)
+  !    IF(FORM == 'FORMATTED') THEN
+  !        FL%BINARY = FALSE
+  !    ELSE
+  !        FL%BINARY = TRUE
+  !    END IF
+  !    !
+  !  END SUBROUTINE
   !
   SUBROUTINE GENERIC_OUTPUT_FILE_WRITE_LINE(FL,LINE)
     CLASS(GENERIC_OUTPUT_FILE), INTENT(INOUT):: FL
