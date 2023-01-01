@@ -133,17 +133,17 @@ CONFIG := debug
 #
 # Compilation Software                        --> Indicates the compiler collection used for setting compiler flags
 #   ===> Accepted Answers: INTEL, GCC, LLVM       --> LLVM not fully-supported yet
-COMPILER := GCC
+COMPILER := INTEL
 #
 #
 # Define the Fortran Compiler
 #                    ===> For example: gfortran, gfortran-9, gfortran-10, ifort
 #                         ****Note that the version of your Fortran compiler may not support all of the Fortran Standards (viz 2003, 2008, 2015)
-F90 := gfortran
+F90 := ifort
 #
 # Define the C Compiler
 #   ===> Accepted Answers: gcc, icc
-CC  := gcc
+CC  := icc
 #
 # Program Name - Do not include extension (eg .exe). Also _debug will automatically be added if CONFIG = debug. Use bin_out= to specify exact location and name for binary.
 #
@@ -424,10 +424,10 @@ PROGRAM :=$(strip $(PROGRAM))
 #
 ifeq ($(CFG), DEBUG)
    #
-   PROGRAM:=$(PROGRAM)_debug
+   PROGRAM:=$(PROGRAM)-debug
    #
    F90FlagsIntel :=-O0 -g -debug -traceback -assume nocc_omp -fpe0 -fp-model source -nologo -warn nousage -check bounds,pointers,stack,format,output_conversion,uninit
-   F90FlagsGCC   :=-O0 -g -w -fbacktrace -fdefault-double-8  -ffree-line-length-2048 -fmax-errors=10 -ffpe-trap=zero,overflow,underflow -finit-real=nan #-fstack-usage  #<= THIS PROVIDES LOTS OF INFO   -std=f2008
+   F90FlagsGCC   :=-O0 -g -w  -fcheck=all -fbacktrace -fdefault-double-8  -ffree-line-length-2048 -fmax-errors=10 -ffpe-trap=zero,overflow,underflow -finit-real=nan #-fstack-usage  #<= THIS PROVIDES LOTS OF INFO   -std=f2008
    F90FlagsLLVM  :=
    #
    CFlagsIntel   :=-O0 -debug -g  -fbuiltin 
