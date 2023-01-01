@@ -136,6 +136,7 @@
 		<Filter Name="types-containers">
 		<File RelativePath="..\..\src\types_and_containers\array_data_types_instruction.f90"/>
 		<File RelativePath="..\..\src\types_and_containers\binary_heap_instruction.f90"/>
+		<File RelativePath="..\..\src\types_and_containers\circular_queue_instruction.f90"/>
 		<File RelativePath="..\..\src\types_and_containers\hash_table_instruction.f90"/>
 		<File RelativePath="..\..\src\types_and_containers\integer_array_builder.f90"/>
 		<File RelativePath="..\..\src\types_and_containers\integer_queue_instruction.f90"/>
