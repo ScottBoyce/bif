@@ -1327,6 +1327,7 @@ MODULE ULOAD_AND_SFAC_INTERFACE
                     !
                     NEG_LLOC = .not. NEG_LLOC .or. VAR%ERROR    ! Set to true if no key is found
               ELSE
+                  IF(.NOT. BIN) BACKSPACE(IU)  ! Read line to check for SFAC, but unit was passed so that will be used to read data of GENERIC_INPUT_FILE type
                   VAR%IU = IU
                   VAR%OPENCLOSE = FALSE
                   VAR%ERROR     = FALSE
