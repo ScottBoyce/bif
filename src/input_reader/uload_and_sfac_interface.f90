@@ -6,13 +6,6 @@
 !
 !   ULOAD_AND_SFAC_INTERFACE
 !
-!   TRANSIENT_FILE_READER_INSTRUCTION
-!
-!   LIST_ARRAY_INPUT_INTERFACE
-!
-!   SUB_BLOCK_INPUT_INTERFACE
-!
-!
 MODULE ULOAD_AND_SFAC_INTERFACE
   ! THIS ROUTINE DOES *NOT* CHECK FOR SFAC, IT ONLY LOADS A LIST OF DATA.  --CHECK FOR SFAC FIRST WITH SFAC MODULE
   !
@@ -2088,16 +2081,16 @@ MODULE ULOAD_AND_SFAC_INTERFACE
         !
         IF(IERR /= Z .AND. ALLOW_ERROR) THEN
                IF(NO_MAIN_KEY) THEN
-                    CALL FILE_IO_ERROR( IERR, UNIT=ERROR_IU, LINE=LN, INFILE=IN, OUTPUT=IOUT, MSG= 'ATTEMPT MADE TO READ LIST FROM ULOAD ON LINE, BUT IT FAILED TO LOAD THE FOLLOWING VALUE "'//LN(ISTART:ISTOP)//'"'//BLN//'NOTE THAT NO KEYWORD WAS FOUND ON THE PREVIOUS LINE, SO CODE AUTOMOVED DOWNWARD TO NEXT LINE.'//NL//'YOU MAYBE MISSING A KEYWORD (viz. INTERNAL, EXTERNAL, OPEN/CLOSE, DATEFILE, DATAUNIT).', MSG2=MSG)
+                    CALL FILE_IO_ERROR( IERR, UNIT=ERROR_IU, LINE=LN, INFILE=IN, OUTPUT=IOUT, MSG= 'Attempt made to read list from uload on line, but it failed to load the following value "'//LN(ISTART:ISTOP)//'"'//BLN//'Note that no keyword was found on the previous line, so code automoved downward to next line.'//NL//'You maybe missing a keyword (viz. INTERNAL, EXTERNAL, OPEN/CLOSE, DATEFILE, DATAUNIT).', MSG2=MSG)
                ELSE
                     SELECT TYPE (VAR)
-                    TYPE IS (DATE_OPERATOR);           CALL FILE_IO_ERROR( IERR, UNIT=ERROR_IU, LINE=LN, INFILE=IN, OUTPUT=IOUT, MSG= 'ATTEMPT MADE TO READ DATE FROM ULOAD LIST ON LINE, BUT IT FAILED TO CONVERT THE FOLLOWING TO A CALENDAR DATE "'//LN(ISTART:ISTOP)//'"'//BLN//'THE ACCEPTED DATE FORMATS ARE "mm/dd/YYYY" OR "YYYY-mm-dd" IF YOU WANT TO ADD A 24-HOUR TIME TO IT YOU MUST ADD TO THE DATE "Thh:mm:ss" (e.g. "YYYY-mm-ddThh:mm:ss")', MSG2=MSG)
-                    TYPE IS (GENERIC_INPUT_FILE);      CALL FILE_IO_ERROR( IERR, UNIT=ERROR_IU, LINE=LN, INFILE=IN, OUTPUT=IOUT, MSG= 'ATTEMPT MADE TO OPEN FILE FROM LIST OF FILES BEING LOADED WITH ULOAD, BUT IT FAILED TO EITHER OPEN, FIND THE FILE, OR IS NOT SET UP CORRECTLY. THE FOLLOWING IS THE FILE THAT WAS ATTEMPTED TO BE OPENED "'//LN(ISTART:ISTOP)//'".', MSG2=MSG)
+                    TYPE IS (DATE_OPERATOR);           CALL FILE_IO_ERROR( IERR, UNIT=ERROR_IU, LINE=LN, INFILE=IN, OUTPUT=IOUT, MSG= 'Attempt made to read date from ULOAD list on line, but it failed to convert the following to a calendar date "'//LN(ISTART:ISTOP)//'"'//BLN//'THE ACCEPTED DATE FORMATS ARE "mm/dd/YYYY" OR "YYYY-mm-dd" IF YOU WANT TO ADD A 24-HOUR TIME TO IT YOU MUST ADD TO THE DATE "Thh:mm:ss" (e.g. "YYYY-mm-ddThh:mm:ss")', MSG2=MSG)
+                    TYPE IS (GENERIC_INPUT_FILE);      CALL FILE_IO_ERROR( IERR, UNIT=ERROR_IU, LINE=LN, INFILE=IN, OUTPUT=IOUT, MSG= 'Attempt made to open file from list of files being loaded with ULOAD, but it failed to either open, find the file, or is not set up correctly. The following is the file that was attempted to be opened "'//LN(ISTART:ISTOP)//'".', MSG2=MSG)
                     CLASS DEFAULT
                                                        IF(IMPLIED_INTERNAL) THEN
-                                                           CALL FILE_IO_ERROR( IERR, UNIT=ERROR_IU, LINE=LN, INFILE=IN, OUTPUT=IOUT, MSG= 'ATTEMPT MADE TO READ LIST FROM ULOAD ON LINE'//NL//'BUT IT FAILED TO IDENFIY GENERIC INPUT/ULOAD KEYWORD (e.g. INTERNAL, OPEN/CLOSE),'//BLN//'SO ULOAD ATTEMPED AN IMPLIED INTERNAL LOAD'//BLN//'ULOAD FAILED TO READ THE VALUES WITH IMPLIED INTERNAL LOAD,'//BLN//'PERHAPS INPUT DOES NOT SUPPORT IMPLIED INTERNAL,'//BLN//'A BAD VALUE WAS SPECIFIED,'//BLN//'YOU DO NOT HAVE '//NUM2STR(SIZE(VAR))//' INPUT VALUES SPECIFIED ALONG THE LINE,'//BLN//'OR THE PRELOADED LINE WAS NOT LONG ENOUGH TO READ ENTIRE INPUT.'//NL//'THE MAX LINE LENGTH IS '//NUM2STR(LEN(LN))//' CHARACTERS.'//NL//'IF USING A TRANSIENT FILE READER (TFR), YOU CAN INCREASE THE LENGTH OF THE PRE-LOADED LINE'//NL//'WITH THE POST-KEYWORD "DIM" FOLLOWED BY THE SIZE OF THE LINE.'//NL//'FOR EXAMPLE:'//NL//'           "ROOT_DEPTH  TRANSIENT  LIST  OPEN/CLOSE  Input.txt  DIM 2000"'//NL//'INDICATE THAT THE MAX LINE LENGTH IS 2000 CHARACTERS.', MSG2=MSG)
+                                                           CALL FILE_IO_ERROR( IERR, UNIT=ERROR_IU, LINE=LN, INFILE=IN, OUTPUT=IOUT, MSG= 'Attempt made to read list from ULOAD on line'//NL//'But it failed to identify GENERIC INPUT/ULOAD keyword (e.g. INTERNAL, OPEN/CLOSE),'//BLN//'So ULOAD attemped an IMPLIED INTERNAL load'//BLN//'ULOAD failed to read the values with IMPLIED INTERNAL load,'//BLN//'Perhaps input does not support IMPLIED INTERNAL,'//BLN//'A bad value was specified,'//BLN//'You do not have '//NUM2STR(SIZE(VAR))//' Input values specified along the line,'//BLN//'Or the preloaded line was not long enough to read entire input.'//NL//'The max line length is '//NUM2STR(LEN(LN))//' characters.'//NL//'If using a TRANSIENT FILE READER (TFR), you can increase the length of the pre-loaded line'//NL//'with the post-keyword "DIM" followed by the size of the line.'//NL//'For example:'//NL//'           "ROOT_DEPTH  TRANSIENT  LIST  OPEN/CLOSE  Input.txt  DIM 2000"'//NL//'Indicate that the max line length is 2000 characters.', MSG2=MSG)
                                                        ELSE
-                                                           CALL FILE_IO_ERROR( IERR, UNIT=ERROR_IU, LINE=LN, INFILE=IN, OUTPUT=IOUT, MSG= 'ATTEMPT MADE TO READ LIST FROM ULOAD ON LINE, BUT IT FAILED TO LOAD THE FOLLOWING VALUE "'//LN(ISTART:ISTOP)//'"', MSG2=MSG)
+                                                           CALL FILE_IO_ERROR( IERR, UNIT=ERROR_IU, LINE=LN, INFILE=IN, OUTPUT=IOUT, MSG= 'Attempt made to read list from ULOAD on line, but it failed to load the following value "'//LN(ISTART:ISTOP)//'"', MSG2=MSG)
                                                        END IF
                     END SELECT
 
@@ -2658,13 +2651,13 @@ MODULE ULOAD_AND_SFAC_INTERFACE
         !
         IF(IERR /= Z .AND. ALLOW_ERROR) THEN
                IF(NO_MAIN_KEY) THEN
-                    CALL FILE_IO_ERROR( IERR, UNIT=ERROR_IU, LINE=LN, INFILE=IN, OUTPUT=IOUT, MSG= 'ATTEMPT MADE TO READ LIST FROM ULOAD ON LINE, BUT IT FAILED TO LOAD THE FOLLOWING VALUE "'//LN(ISTART:ISTOP)//'"'//BLN//'NOTE THAT NO KEYWORD WAS FOUND ON THE PREVIOUS LINE, SO CODE AUTOMOVED DOWNWARD TO NEXT LINE.'//NL//'YOU MAYBE MISSING A KEYWORD (viz. INTERNAL, EXTERNAL, OPEN/CLOSE, DATEFILE, DATAUNIT).', MSG2=MSG)
+                    CALL FILE_IO_ERROR( IERR, UNIT=ERROR_IU, LINE=LN, INFILE=IN, OUTPUT=IOUT, MSG= 'Attempt made to read list from uload on line, but it failed to load the following value "'//LN(ISTART:ISTOP)//'"'//BLN//'Note that no keyword was found on the previous line, so code automoved downward to next line.'//NL//'You maybe missing a keyword (viz. INTERNAL, EXTERNAL, OPEN/CLOSE, DATEFILE, DATAUNIT).', MSG2=MSG)
                ELSE
                     SELECT TYPE (VAR)
-                    TYPE IS (DATE_OPERATOR);           CALL FILE_IO_ERROR( IERR, UNIT=ERROR_IU, LINE=LN, INFILE=IN, OUTPUT=IOUT, MSG= 'ATTEMPT MADE TO READ ROW OF DATES FROM ULOAD ON LINE, BUT IT FAILED TO CONVERT THE FOLLOWING TO A CALENDAR DATE "'//LN(ISTART:ISTOP)//'"'//BLN//'THE ACCEPTED DATE FORMATS ARE "mm/dd/YYYY" OR "YYYY-mm-dd" IF YOU WANT TO ADD A 24-HOUR TIME TO IT YOU MUST ADD TO THE DATE "Thh:mm:ss" (e.g. "YYYY-mm-ddThh:mm:ss")', MSG2=MSG)
-                    TYPE IS (GENERIC_INPUT_FILE);      CALL FILE_IO_ERROR( IERR, UNIT=ERROR_IU, LINE=LN, INFILE=IN, OUTPUT=IOUT, MSG= 'ATTEMPT MADE TO OPEN ROW OF FILES WITH ULOAD, BUT IT FAILED TO EITHER OPEN, FIND THE FILE, OR IS NOT SET UP CORRECTLY. THE FOLLOWING IS THE FILE THAT WAS ATTEMPTED TO BE OPENED "'//LN(ISTART:ISTOP)//'".', MSG2=MSG)
+                    TYPE IS (DATE_OPERATOR);           CALL FILE_IO_ERROR( IERR, UNIT=ERROR_IU, LINE=LN, INFILE=IN, OUTPUT=IOUT, MSG= 'Attempt made to read row of dates from ULOAD ON LINE, BUT IT FAILED TO CONVERT THE FOLLOWING TO A CALENDAR DATE "'//LN(ISTART:ISTOP)//'"'//BLN//'The accepted date formats are "mm/dd/YYYY" OR "YYYY-mm-dd" if you want to add a 24-Hour time to it you must add to the date "Thh:mm:ss" (e.g. "YYYY-mm-ddThh:mm:ss")', MSG2=MSG)
+                    TYPE IS (GENERIC_INPUT_FILE);      CALL FILE_IO_ERROR( IERR, UNIT=ERROR_IU, LINE=LN, INFILE=IN, OUTPUT=IOUT, MSG= 'Attempt made to open row of files with ULOAD, but it failed to either open, find the file, or is not set up correctly. The following is the file that was attempted to be opened "'//LN(ISTART:ISTOP)//'".', MSG2=MSG)
                     CLASS DEFAULT
-                                                       CALL FILE_IO_ERROR( IERR, UNIT=ERROR_IU, LINE=LN, INFILE=IN, OUTPUT=IOUT, MSG= 'ATTEMPT MADE TO READ A ROW OF NUMBERS FROM ULOAD ON LINE, BUT IT FAILED TO LOAD.'//NL//' (NOTE THAT ERROR CODE -1 MAY INDICATE THAT YOU DO NOT HAVE ENOUGH NUMBERS ON THE LINE'//NL//'  e.g. EXPECTS 5 NUMBERS BUT ONLY 4 NUMBERS ON LINE)', MSG2=MSG)
+                                                       CALL FILE_IO_ERROR( IERR, UNIT=ERROR_IU, LINE=LN, INFILE=IN, OUTPUT=IOUT, MSG= 'Attempt made to read a row of numbers from ULOAD on line, but it failed to load.'//NL//' (Note that error code -1 may indicate that you do not have enough numbers on the line'//NL//'  e.g. expects 5 numbers but only 4 numbers on line'//NL//'  or if line is empty/blank then you may have reached the end of file prematurely.)', MSG2=MSG)
                     END SELECT
 
                END IF

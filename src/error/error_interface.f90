@@ -275,41 +275,41 @@ MODULE ERROR_INTERFACE
     !
     ! ~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~
     !
-    ERR=NL//NL//'                           ERROR'//BLN//'         THE FOLLOWING COMMENTS WERE PASSED TO THE ERROR ROUTINE'//NL
+    ERR=NL//NL//'                           ERROR'//BLN//'         The following comments were passed to the error routine'//NL
     !
     IF(HAS_INFILE) THEN
         INQUIRE(INFILE,NAME=FNAME)
-        ERR = ERR//NL//'THIS ERROR IS BELIEVED TO HAVE ORIGINATED FROM THE FOLLOWING FILE:'//NL//'"'//TRIM(FNAME)//'"'//NL
+        ERR = ERR//NL//'This error is believed to have originated from the following file:'//NL//'"'//TRIM(FNAME)//'"'//NL
     END IF
     !
-    IF(HAS_LINE) ERR = ERR//NL//'THE GUESSED LINE THAT THE ERROR OCCURED ON IS:'//BLN//'"'//TRIM(LINE)//'"'//NL
+    IF(HAS_LINE) ERR = ERR//NL//'The guessed line that the error occured on is:'//BLN//'"'//TRIM(LINE)//'"'//NL
     !
     IF(GET_LINE) THEN
                  FNAME(:) = BLNK
                  BACKSPACE(INFILE, IOSTAT=IE)
                  IF(IE /= Z) READ(INFILE, "(A)", IOSTAT=IE) FNAME
                  !
-                 IF(IE /= Z .AND. FNAME /= BLNK) ERR = ERR//NL//"THE GUESSED PREVIOUS INPUT FILE'S LINE THAT WAS READ AND MAY CONTAIN THE ERROR IS:"//BLN//'"'//TRIM(FNAME)//'"'//NL 
+                 IF(IE /= Z .AND. FNAME /= BLNK) ERR = ERR//NL//"The guessed previous input file's line that was read and may contain the error is:"//BLN//'"'//TRIM(FNAME)//'"'//NL 
     END IF
     !
     IF(PRESENT(STAT)) THEN
-                      ERR = ERR//NL//'THE FORTRAN ERROR STATUS CODE IS '//NUM2STR(STAT)//NL
+                      ERR = ERR//NL//'The Fortran error status code is '//NUM2STR(STAT)//NL
                       !
-                      IF(STAT<Z) ERR = ERR//NL//'    **NOTE THAT A STATUS CODE <0 INDICATES THAT THE END OF FILE WAS REACHED'//NL//        &
-                                                '      OR A END OF RECORD CONDITION OCCURED'//NL//                                         &
-                                                '      OR YOU DID NOT HAVE ENOUGH INPUT VALUES SPECIFIED ON LINE.'//NL//                   &
-                                                '      NOTE THAT IF YOU HAVE THE CORRECT NUMBER OF VALUES ON THE LINE'//NL//               &
-                                                '        AND USED THE KEWYORD INTERNAL TO LOAD THEM,'//NL//                                &
-                                                '        TRY MOVING INPUT TO SEPARATE FILE AND USE OPEN/CLOSE TO LOAD DATA.'//NL//         &
-                                                '        THE BUFFER FOR AN INTERNAL LOAD MAY NOT BE SUFFICIENT TO LOAD THE ENTIRE LINE.'//NL
+                      IF(STAT<Z) ERR = ERR//NL//'    ERROR<0 indicates that the END OF FILE was reached (not enough rows read)'//NL// &
+                                                '    or a END OF RECORD condition occured (not enough columns read)'//NL// &
+                                                '    or you did not have enough input values specified on line.'//NL//NL// &
+                                                '    Note that if you have the correct number of values on the line'//NL// &
+                                                '      and used the keyword INTERNAL to load them,'//NL// &
+                                                '      Try moving input to separate file and use OPEN/CLOSE to load data.'//NL// &
+                                                '      The buffer for an INTERNAL load may not be sufficient to load the entire line.'
     END IF
     !
     IF(    HAS_MSG .AND. HAS_MSG2 )THEN
-                                          ERR = ERR//NL//'THE DESCRIPTION OF THE ERROR IS:'//BLN// TRIM(MSG)//BLN//  TRIM(MSG2)//NL
+                                          ERR = ERR//NL//'The description of the error is:'//BLN// TRIM(MSG)//BLN//  TRIM(MSG2)//NL
     ELSEIF(HAS_MSG                )THEN
-                                          ERR = ERR//NL//'THE DESCRIPTION OF THE ERROR IS:'//BLN//TRIM(MSG )//NL
+                                          ERR = ERR//NL//'The description of the error is:'//BLN//TRIM(MSG )//NL
     ELSEIF(HAS_MSG2               )THEN
-                                          ERR = ERR//NL//'THE DESCRIPTION OF THE ERROR IS:'//BLN//TRIM(MSG2)//NL
+                                          ERR = ERR//NL//'The description of the error is:'//BLN//TRIM(MSG2)//NL
     END IF
     !
     IF( .NOT. (HAS_LINE .OR. HAS_INFILE .OR. GET_LINE .OR. HAS_MSG .OR. HAS_MSG2) ) ERR = ERR//BLN//' --- SORRY UNKNOWN ERROR ---'//NL//NL
@@ -371,7 +371,7 @@ MODULE ERROR_INTERFACE
         IF(LINE /= BLNK) THEN
             ERRLINE=TRIM(ADJUSTL(LINE))
         ELSE
-            ERRLINE='*** EMPTY/BLANK LINE LOADED ***'
+            ERRLINE='*** Empty/Blank Line Loaded ***'
         END IF
     ELSE
         ERRLINE='¿¿¿UNKOWN LINE???'
@@ -408,13 +408,19 @@ MODULE ERROR_INTERFACE
     !
     IF(PRESENT(IOSTAT)) THEN
         IF(IOSTAT  /=  Z) THEN
-            ERR_CODE='AND HAS THE FOLLOWING IOSTAT ERROR CODE: '//NUM2STR(IOSTAT)
+            ERR_CODE='And has the following IOSTAT error code: '//NUM2STR(IOSTAT)
             IF(ISOPEN) THEN
               IF(IOSTAT<Z) THEN
-                  ERR_CODE=ERR_CODE//BLN//'    ERROR<0 INDICATES THAT THE END OF FILE WAS REACHED'//NL//'    OR A END OF RECORD CONDITION OCCURED'//NL//'    OR YOU DID NOT HAVE ENOUGH INPUT VALUES SPECIFIED ON LINE.'//NL//'    NOTE THAT IF YOU HAVE THE CORRECT NUMBER OF VALUES ON THE LINE'//NL//'      AND USED THE KEWYORD INTERNAL TO LOAD THEM,'//NL//'      TRY MOVING INPUT TO SEPARATE FILE AND USE OPEN/CLOSE TO LOAD DATA.'//NL//'      THE BUFFER FOR AN INTERNAL LOAD MAY NOT BE SUFFICIENT TO LOAD THE ENTIRE LINE.'
+                  ERR_CODE=ERR_CODE//BLN//'    ERROR<0 indicates that the END OF FILE was reached (not enough rows read)'//NL// &
+                                          '    or a END OF RECORD condition occured (not enough columns read)'//NL// &
+                                          '    or you did not have enough input values specified on line.'//NL//NL// &
+                                          '    Note that if you have the correct number of values on the line'//NL// &
+                                          '      and used the keyword INTERNAL to load them,'//NL// &
+                                          '      Try moving input to separate file and use OPEN/CLOSE to load data.'//NL// &
+                                          '      The buffer for an INTERNAL load may not be sufficient to load the entire line.'
                       
               ELSE
-                  ERR_CODE=ERR_CODE//BLN//'    ERROR>0 INDICATES THAT YOU HAVE TO LOOK UP THE SPECIFIC ERROR CONDITION SPECIFIED BY THE COMPILER.' 
+                  ERR_CODE=ERR_CODE//BLN//'    ERROR>0 indicates that you have to look up the specific error condition specified by the compiler.' 
               END IF
             END IF
             !
@@ -430,32 +436,32 @@ MODULE ERROR_INTERFACE
        !
        IF(ISOPEN) THEN
            ERRMSG=NL//'FILE I/O ERROR:'                                         //BLN//       &
-           'FOR FILE UNIT '//NUM2STR(IU)                                         //BLN//       &
-           'WHICH IS ASSOCIATED WITH FILE: '//FN                                 //BLN//       &
-           'WHILE READING OR WRITING LINE '//NL//'"'//ERRLINE//'"'               //BLN//       &
+           'For file unit '//NUM2STR(IU)                                         //BLN//       &
+           'Which is associated with file: '//FN                                 //BLN//       &
+           'While reading or writing line '//NL//'"'//ERRLINE//'"'               //BLN//       &
             ERR_CODE
        ELSEIF( .NOT. ISOPEN .AND. (IU /= Z .OR. FN /= BLNK) )THEN
            IF(IU.EQ.Z) THEN
          ERRMSG=NL//'FILE I/O ERROR:'                                               //BLN//  &
-                    'FOR AN UNKNOWN FILE UNIT [POSSIBLE FAILURE TO OPEN/FIND FILE]'  //BLN//  &
-                    'FOR THE REQUESTED FILE NAME: '//FN                              //BLN//  &
+                    'For an unknown file unit [possible failure to open/find file]'  //BLN//  &
+                    'For the requested file name: '//FN                              //BLN//  &
                     ERR_CODE
            ELSEIF (FN /= BLNK) THEN
          ERRMSG=NL//'FILE I/O ERROR:'                                                      //BLN//  &
-                    'FOR FILE UNIT '//NUM2STR(IU)//' [POSSIBLE FAILURE TO OPEN/FIND FILE]' //BLN//  &
-                    'FOR THE REQUESTED FILE NAME: '//NL//FN                               //BLN//  &
+                    'For file unit '//NUM2STR(IU)//' [possible failure to open/find file]' //BLN//  &
+                    'For the requested file name: '//NL//FN                               //BLN//  &
                     ERR_CODE
            ELSE
          ERRMSG=NL//'FILE I/O ERROR:'                                                     //BLN//   &
-                    'FOR FILE UNIT '//NUM2STR(IU)//' [POSSIBLE FAILURE TO OPEN/FIND FILE]' //BLN//  &
-                    'WHICH HAS NO FILE NAME ASSOCIATED WITH IT'                            //BLN//  &
+                    'For file unit '//NUM2STR(IU)//' [possible failure to open/find file]' //BLN//  &
+                    'Which has no file name associated with it'                            //BLN//  &
                     ERR_CODE
            END IF          
        ELSE
          ERRMSG=NL//'FILE I/O ERROR:'                                                        //BLN//  &
-                    'FOR AN UNKNOWN FILE UNIT AND FILE [POSSIBLE FAILURE TO OPEN/FIND FILE]'  //BLN//  &
+                    'For an unknown file unit and file [possible failure to open/find file]'  //BLN//  &
                      ERR_CODE          //NL//  &
-                    'FOR THE FOLLOWING LINE '//NL//'"'//ERRLINE//'"'
+                    'For the following line '//NL//'"'//ERRLINE//'"'
        END IF
        !
        !
@@ -464,42 +470,42 @@ MODULE ERROR_INTERFACE
        !
        IF(ISOPEN) THEN
            ERRMSG=NL//'FILE I/O ERROR:'                                                      //BLN//        &
-                      'FOR FILE UNIT '//NUM2STR(IU)                                          //BLN//        &
-                      'WHICH IS ASSOCIATED WITH FILE: '//NL//FN                              //BLN//        &
-                      'WHILE UTILIZING THE FOLLOWING LINE: '//NL//'"'//ERRLINE//'"'          //BLN//       &
-                      'THAT IS ASSOCIATED WITH INPUT FILE: '//NL//'"'//INLINE//'"'           //BLN//       &
+                      'For file unit '//NUM2STR(IU)                                          //BLN//        &
+                      'Which is associated with file: '//NL//FN                              //BLN//        &
+                      'While utilizing the following line: '//NL//'"'//ERRLINE//'"'          //BLN//       &
+                      'That is associated with input file: '//NL//'"'//INLINE//'"'           //BLN//       &
                       ERR_CODE                                                                
        ELSEIF( .NOT. ISOPEN .AND. (IU /= Z .OR. FN /= BLNK) )THEN
            IF(IU.EQ.Z) THEN
          ERRMSG=NL//'FILE I/O ERROR:'                                                //BLN//  &
-                    'FOR AN UNKNOWN FILE UNIT [POSSIBLE FAILURE TO OPEN/FIND FILE]'  //BLN//  &
-                    'FOR THE REQUESTED FILE NAME: '//NL//FN                          //BLN//  &
+                    'For an unknown file unit [possible failure to open/find file]'  //BLN//  &
+                    'For the requested file name: '//NL//FN                          //BLN//  &
                     ERR_CODE                                                         //BLN//  &
-                    'WHILE UTILIZING THE FOLLOWING LINE: '//NL//'"'//ERRLINE//'"'    //BLN//  &
-                    'THAT IS ASSOCIATED WITH INPUT FILE: '//NL//'"'//INLINE//'"'
+                    'While utilizing the following line: '//NL//'"'//ERRLINE//'"'    //BLN//  &
+                    'That is associated with input file: '//NL//'"'//INLINE//'"'
            ELSEIF (FN /= BLNK) THEN
          ERRMSG=NL//'FILE I/O ERROR:'                                                      //BLN//  &
-                    'FOR FILE UNIT '//NUM2STR(IU)//' [POSSIBLE FAILURE TO OPEN/FIND FILE]' //BLN//  &
-                    'FOR THE REQUESTED FILE NAME: '//NL//FN                                //BLN//  &
+                    'For file unit '//NUM2STR(IU)//' [possible failure to open/find file]' //BLN//  &
+                    'For the requested file name: '//NL//FN                                //BLN//  &
                     ERR_CODE
            ELSE
          ERRMSG=NL//'FILE I/O ERROR:'                                                     //BLN//   &
-                    'FOR FILE UNIT '//NUM2STR(IU)//' [POSSIBLE FAILURE TO OPEN/FIND FILE]' //BLN//  &
-                    'WHICH HAS NO FILE NAME ASSOCIATED WITH IT'                            //BLN//  &
+                    'For file unit '//NUM2STR(IU)//' [possible failure to open/find file]' //BLN//  &
+                    'Which has no file name associated with it'                            //BLN//  &
                     ERR_CODE
            END IF          
        ELSE
          ERRMSG=NL//'FILE I/O ERROR:'                                                       //BLN//  &
-                    'FOR AN UNKNOWN FILE UNIT AND FILE [POSSIBLE FAILURE TO OPEN/FIND FILE]' //BLN//  &
+                    'For an unknown file unit and file [possible failure to open/find file]' //BLN//  &
                     ERR_CODE                                                                 //BLN//  &
-                    'WHILE UTILIZING THE FOLLOWING LINE: '//NL//'"'//ERRLINE//'"'            //BLN// &
-                    'THAT IS ASSOCIATED WITH INPUT FILE: '//NL//'"'//INLINE//'"'
+                    'While utilizing the following line: '//NL//'"'//ERRLINE//'"'            //BLN// &
+                    'That is associated with input file: '//NL//'"'//INLINE//'"'
        END IF
        !
        !
     END IF
     !
-    IF(MSGLINE /= BLNK) ERRMSG=ERRMSG//BLN//'THE FOLLOWING IS AN ADDITIONAL COMMENT INCLUDED WITH ERROR:'//BLN//MSGLINE
+    IF(MSGLINE /= BLNK) ERRMSG=ERRMSG//BLN//'The following is an additional comment included with error:'//BLN//MSGLINE
     !
     IF(WARN_IU /= Z .AND. WARN_IU /= IOUT) THEN
                                            WRITE(WARN_IU,'(/A/)') ERRMSG
