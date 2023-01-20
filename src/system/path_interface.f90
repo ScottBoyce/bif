@@ -5,10 +5,12 @@ MODULE PATH_INTERFACE
   !
   PRIVATE
   !
-  PUBLIC:: IS_WINDOWS       !      IS_WINDOWS()
+  PUBLIC:: IS_WINDOWS         ! win = IS_WINDOWS()
   !
-  PUBLIC:: GET_CWD          ! cwd = GET_CWD()
-  PUBLIC:: SET_TO_CWD       ! CALL SET_TO_CWD(CWD, LENGTH) 
+  PUBLIC:: GET_CWD            ! cwd = GET_CWD()
+  PUBLIC:: SET_TO_CWD         ! CALL SET_TO_CWD(CWD, LENGTH) 
+  !
+  PUBLIC:: GET_FILE_EXTENSION ! CALL GET_FILE_EXTENSION(FILE_NAME, EXT)
   !
   PUBLIC:: MAKE_DIRECTORY   ! CALL MAKE_DIRECTORY(PATH, HAS_FILE, FIXED) -->This relies on SYSTEM call of mkdir
   PUBLIC:: FIX_PATH         ! CALL FIX_PATH(PATH)
@@ -58,6 +60,31 @@ MODULE PATH_INTERFACE
     HAS_WIN_OS = OS == 'Windows_NT'                    !If any Windows variant then variable exists and is set to Windows_NT
     !
   END FUNCTION
+  !
+  !#############################################################################################################################################################
+  !
+  subroutine get_file_extension(file_name, ext)
+    character(*),              intent(in ):: file_name
+    character(:), allocatable, intent(out):: ext
+    integer:: i, p, dim
+    !
+    dim = len_trim(file_name)
+    p = dim
+    do i=dim, 1, -1
+       if(file_name(i:i) == '.') then
+          p = i
+          exit
+       end if
+    end do
+    !
+    p = p + 1
+    if(p > dim) then
+       ext = ''
+    else
+       ext = file_name(p:dim)
+    end if
+    !
+  end subroutine
   !
   !#############################################################################################################################################################
   !
