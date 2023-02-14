@@ -128,7 +128,8 @@
 		<Filter Name="system">
 		<File RelativePath="..\..\src\system\console_commander.f90"/>
 		<File RelativePath="..\..\src\system\directory_iso_c_binding.f90"/>
-		<File RelativePath="..\..\src\system\path_interface.f90"/></Filter>
+		<File RelativePath="..\..\src\system\path_interface.f90"/>
+		<File RelativePath="..\..\src\system\system_call.f90"/></Filter>
 		<Filter Name="test_routines">
 		<File RelativePath="..\..\tests\src\array_data_types_test.f90"/>
 		<File RelativePath="..\..\tests\src\main_tests.f90"/>
