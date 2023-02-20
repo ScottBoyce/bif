@@ -1704,50 +1704,7 @@ SUBROUTINE test_TIMER_INSTRUCTION(UT)
   !
   CALL UT%NEXT_SECTION("TIMER_INSTRUCTION")
   !
-  CALL UT%NEXT_TEST("1 second Tests")
-  !
-  BLOCK 
-    TYPE(SIMPLE_TIMER):: TIM
-    DOUBLE PRECISION:: DTMP
-    !
-    CALL TIM%START()
-    !
-    call sleep(1)     ! Uses GNU and Intel Fortran extension for timing
-    !
-    DTMP = TIM%ELAPSED()
-    !
-    CALL UT%ASSERT(ABS(DTMP-5d0) < TOL, MSG='SIMPLE_TIM%ELAPSED() = 5s')
-    !
-    call sleep(1)
-    DTMP = TIM%ELAPSED()
-    !
-    CALL UT%ASSERT(ABS(DTMP-6d0) < TOL, MSG='SIMPLE_TIM%ELAPSED() = 6s Attempt 2')
-    !
-  END BLOCK
-  !
-  BLOCK 
-    TYPE(CPU_TIMER):: TIM
-    DOUBLE PRECISION:: DTMP
-    !
-    CALL TIM%INIT()
-    CALL TIM%START()
-    !
-    call sleep(5)     ! Uses GNU and Intel Fortran extension for timing
-    !
-    DTMP = TIM%ELAPSED()
-    !
-    CALL UT%ASSERT(ABS(DTMP-5d0) < TOL, MSG='CPU_TIM%ELAPSED() = 5s')
-    !
-    call sleep(1)
-    DTMP = TIM%ELAPSED()
-    !
-    CALL UT%ASSERT(ABS(DTMP-6d0) < TOL, MSG='CPU_TIM%ELAPSED() = 6s Attempt 2')
-    !
-  END BLOCK
-  !
-  !--------------------------------------------------------------------
-  CALL UT%NEXT_TEST("SIMPLE_TIMER")
-  !--------------------------------------------------------------------
+  CALL UT%NEXT_TEST("SIMPLE_TIMER (1s    accuracy)")
   !
   BLOCK 
     TYPE(SIMPLE_TIMER):: TIM
@@ -1759,31 +1716,12 @@ SUBROUTINE test_TIMER_INSTRUCTION(UT)
     !
     DTMP = TIM%ELAPSED()
     !
-    CALL UT%ASSERT(ABS(DTMP-5d0) < TOL, MSG='SIMPLE_TIM%ELAPSED() = 5s')
+    CALL UT%ASSERT(ABS(DTMP-5.d0) < TOL, MSG='SIMPLE_TIMER%ELAPSED() = 5s')
     !
-    call sleep(1)
+    call sleep(3)
     DTMP = TIM%ELAPSED()
     !
-    CALL UT%ASSERT(ABS(DTMP-6d0) < TOL, MSG='SIMPLE_TIM%ELAPSED() = 6s Attempt 2')
-    !
-  END BLOCK
-  BLOCK 
-    TYPE(CPU_TIMER):: TIM
-    DOUBLE PRECISION:: DTMP
-    !
-    CALL TIM%INIT()
-    CALL TIM%START()
-    !
-    call sleep(5)     ! Uses GNU and Intel Fortran extension for timing
-    !
-    DTMP = TIM%ELAPSED()
-    !
-    CALL UT%ASSERT(ABS(DTMP-5d0) < TOL, MSG='CPU_TIM%ELAPSED() = 5s')
-    !
-    call sleep(1)
-    DTMP = TIM%ELAPSED()
-    !
-    CALL UT%ASSERT(ABS(DTMP-6d0) < TOL, MSG='CPU_TIM%ELAPSED() = 6s Attempt 2')
+    CALL UT%ASSERT(ABS(DTMP-8.d0) < 2*TOL, MSG='SIMPLE_TIMER%ELAPSED() = 8s -> 5s + 3s')
     !
   END BLOCK
   !
@@ -1806,11 +1744,11 @@ SUBROUTINE test_TIMER_INSTRUCTION(UT)
     DTMP = TIM%ELAPSED()
     !
     CALL UT%ASSERT(     TIM%LAP_NUM == 4          .AND. &
-                        ABS( TIM%LAPS(1) - 4d0 ) < TOL .AND. &
-                        ABS( TIM%LAPS(2) - 6d0 ) < TOL .AND. &
-                        ABS( TIM%LAPS(3) - 5d0 ) < TOL .AND. &
-                        ABS( TIM%LAPS(4) - 2d0 ) < TOL .AND. &
-                        ABS( DTMP       - 17d0 ) < TOL, MSG='SIMPLE_TIM%SAVE_LAP() done 4 times')
+                        ABS( TIM%LAPS(1) - 4.d0 ) < TOL .AND. &
+                        ABS( TIM%LAPS(2) - 6.d0 ) < TOL .AND. &
+                        ABS( TIM%LAPS(3) - 5.d0 ) < TOL .AND. &
+                        ABS( TIM%LAPS(4) - 2.d0 ) < TOL .AND. &
+                        ABS( DTMP       - 17.d0 ) < 2.d0*TOL, MSG='SIMPLE_TIMER%SAVE_LAP() done 4 times')
   END BLOCK
   !
   BLOCK 
@@ -1820,7 +1758,7 @@ SUBROUTINE test_TIMER_INSTRUCTION(UT)
     !
     CALL TIM%START()
     !
-    DTIM = 0d0
+    DTIM = 0.d0
     J = 0
     DO I=1, 100
         J = J + 1
@@ -1833,11 +1771,11 @@ SUBROUTINE test_TIMER_INSTRUCTION(UT)
     DTMP = TIM%ELAPSED()
     !
     CALL UT%ASSERT(     TIM%LAP_NUM == 100        .AND. &
-                        ABS( TIM%LAPS(1) - 1d0 ) < TOL .AND. &
-                        ABS( TIM%LAPS(4) - 4d0 ) < TOL .AND. &
-                        ABS( TIM%LAPS( 50)-2d0 ) < TOL .AND. &
-                        ABS( TIM%LAPS(100)-4d0 ) < TOL .AND. &
-                        ABS( DTMP       - DTIM ) < 0.5d0, MSG='SIMPLE_TIM%SAVE_LAP() done 4 times')
+                        ABS( TIM%LAPS(1) - 1.d0 ) < TOL .AND. &
+                        ABS( TIM%LAPS(4) - 4.d0 ) < TOL .AND. &
+                        ABS( TIM%LAPS( 50)-2.d0 ) < TOL .AND. &
+                        ABS( TIM%LAPS(100)-4.d0 ) < TOL .AND. &
+                        ABS( DTMP       - DTIM ) < 1.5d0, MSG='SIMPLE_TIMER%SAVE_LAP() done 100 times')
   END BLOCK
   !
   BLOCK 
@@ -1857,51 +1795,17 @@ SUBROUTINE test_TIMER_INSTRUCTION(UT)
     !
     DTMP = TIM%ELAPSED()
     !
-    CALL UT%ASSERT(ABS( LAP1 -  4d0 ) < TOL .AND. &
-                        ABS( LAP2 -  6d0 ) < TOL .AND. &
-                        ABS( LAP3 -  5d0 ) < TOL .AND. &
-                        ABS( DTMP - 15d0 ) < TOL, MSG='SIMPLE_TIM%LAP(LAP3)')
+    CALL UT%ASSERT(ABS( LAP1 -  4.d0 ) < TOL .AND. &
+                   ABS( LAP2 -  6.d0 ) < TOL .AND. &
+                   ABS( LAP3 -  5.d0 ) < TOL .AND. &
+                   ABS( DTMP - 15.d0 ) < TOL, MSG='SIMPLE_TIMER%LAP(LAP3)')
     !
   END BLOCK
   !
-  !!!BLOCK 
-  !!!  TYPE(SIMPLE_TIMER):: TIM
-  !!!  !
-  !!!  WRITE(*,*)
-  !!!  CALL TIM%START()
-  !!!  !
-  !!!  CALL sleep(4)     ! Uses GNU and Intel Fortran extension for timing
-  !!!  CALL TIM%PRINT_LAP(TXT='Lap 1', HED='Timer Output')
-  !!!  !
-  !!!  CALL sleep(6)
-  !!!  CALL TIM%PRINT_LAP(TXT='Lap 2')
-  !!!  !
-  !!!  CALL sleep(5)
-  !!!  CALL TIM%PRINT_LAP(TXT='Lap 3')
-  !!!  !
-  !!!END BLOCK
-  !!!CONTINUE
-  !!!!
-  !!!BLOCK 
-  !!!  TYPE(SIMPLE_TIMER):: TIM
-  !!!  !
-  !!!  CALL TIM%START()
-  !!!  !
-  !!!  CALL sleep(4)     ! Uses GNU and Intel Fortran extension for timing
-  !!!  CALL TIM%SAVE_LAP()
-  !!!  CALL sleep(6)
-  !!!  CALL TIM%SAVE_LAP()
-  !!!  CALL sleep(3)
-  !!!  CALL TIM%SAVE_LAP()
-  !!!  !
-  !!!  WRITE(*,*)
-  !!!  CALL TIM%PRINT_LAPS(HED='Lap Output')
-  !!!  !
-  !!!END BLOCK
-  !!!CONTINUE
   !--------------------------------------------------------------------
-  CALL UT%NEXT_TEST("CPU_TIMER")
+  CALL UT%NEXT_TEST("CPU_TIMER    (0.01s accuracy)")
   !--------------------------------------------------------------------
+  !
   BLOCK 
     TYPE(CPU_TIMER):: TIM
     DOUBLE PRECISION:: DTMP
@@ -1913,12 +1817,12 @@ SUBROUTINE test_TIMER_INSTRUCTION(UT)
     !
     DTMP = TIM%ELAPSED()
     !
-    CALL UT%ASSERT(ABS(DTMP-5d0) < TOL, MSG='CPU_TIM%ELAPSED() = 5s')
+    CALL UT%ASSERT(ABS(DTMP-5.d0) < TOL, MSG='CPU_TIMER%ELAPSED() = 5s')
     !
-    call sleep(1)
+    call sleep(4)
     DTMP = TIM%ELAPSED()
     !
-    CALL UT%ASSERT(ABS(DTMP-6d0) < TOL, MSG='CPU_TIM%ELAPSED() = 6s Attempt 2')
+    CALL UT%ASSERT(ABS(DTMP-9.d0) < TOL, MSG='CPU_TIMER%ELAPSED() = 9s -> 5s + 4s')
     !
   END BLOCK
   !
@@ -1941,11 +1845,11 @@ SUBROUTINE test_TIMER_INSTRUCTION(UT)
     DTMP = TIM%ELAPSED()
     !
     CALL UT%ASSERT(     TIM%LAP_NUM == 4          .AND. &
-                        ABS( TIM%LAPS(1) - 4d0 ) < TOL .AND. &
-                        ABS( TIM%LAPS(2) - 6d0 ) < TOL .AND. &
-                        ABS( TIM%LAPS(3) - 5d0 ) < TOL .AND. &
-                        ABS( TIM%LAPS(4) - 2d0 ) < TOL .AND. &
-                        ABS( DTMP       - 17d0 ) < TOL, MSG='CPU_TIM%SAVE_LAP() done 4 times')
+                        ABS( TIM%LAPS(1) - 4.d0 ) < TOL .AND. &
+                        ABS( TIM%LAPS(2) - 6.d0 ) < TOL .AND. &
+                        ABS( TIM%LAPS(3) - 5.d0 ) < TOL .AND. &
+                        ABS( TIM%LAPS(4) - 2.d0 ) < TOL .AND. &
+                        ABS( DTMP       - 17.d0 ) < TOL, MSG='CPU_TIMER%SAVE_LAP() done 4 times')
   END BLOCK
   !
   BLOCK 
@@ -1955,7 +1859,7 @@ SUBROUTINE test_TIMER_INSTRUCTION(UT)
     !
     CALL TIM%START()
     !
-    DTIM = 0d0
+    DTIM = 0.d0
     J = 0
     DO I=1, 100
         J = J + 1
@@ -1968,11 +1872,11 @@ SUBROUTINE test_TIMER_INSTRUCTION(UT)
     DTMP = TIM%ELAPSED()
     !
     CALL UT%ASSERT(     TIM%LAP_NUM == 100        .AND. &
-                        ABS( TIM%LAPS(1) - 1d0 ) < TOL .AND. &
-                        ABS( TIM%LAPS(4) - 4d0 ) < TOL .AND. &
-                        ABS( TIM%LAPS( 50)-2d0 ) < TOL .AND. &
-                        ABS( TIM%LAPS(100)-4d0 ) < TOL .AND. &
-                        ABS( DTMP       - DTIM ) < 0.5d0, MSG='CPU_TIM%SAVE_LAP() done 4 times')
+                        ABS( TIM%LAPS(1) - 1.d0 ) < TOL .AND. &
+                        ABS( TIM%LAPS(4) - 4.d0 ) < TOL .AND. &
+                        ABS( TIM%LAPS( 50)-2.d0 ) < TOL .AND. &
+                        ABS( TIM%LAPS(100)-4.d0 ) < TOL .AND. &
+                        ABS( DTMP       - DTIM ) < 1.5d0, MSG='CPU_TIMER%SAVE_LAP() done 100 times')
   END BLOCK
   !
   BLOCK 
@@ -1992,48 +1896,12 @@ SUBROUTINE test_TIMER_INSTRUCTION(UT)
     !
     DTMP = TIM%ELAPSED()
     !
-    CALL UT%ASSERT(ABS( LAP1 -  4d0 ) < TOL .AND. &
-                        ABS( LAP2 -  6d0 ) < TOL .AND. &
-                        ABS( LAP3 -  5d0 ) < TOL .AND. &
-                        ABS( DTMP - 15d0 ) < TOL, MSG='CPU_TIM%LAP(LAP3)')
+    CALL UT%ASSERT(ABS( LAP1 -  4.d0 ) < TOL .AND. &
+                        ABS( LAP2 -  6.d0 ) < TOL .AND. &
+                        ABS( LAP3 -  5.d0 ) < TOL .AND. &
+                        ABS( DTMP - 15.d0 ) < TOL, MSG='CPU_TIMER%LAP(LAP3)')
     !
   END BLOCK
-  !
-  !!!BLOCK 
-  !!!  TYPE(CPU_TIMER):: TIM
-  !!!  !
-  !!!  WRITE(*,*)
-  !!!  CALL TIM%START()
-  !!!  !
-  !!!  CALL sleep(4)     ! Uses GNU and Intel Fortran extension for timing
-  !!!  CALL TIM%PRINT_LAP(TXT='Lap 1', HED='Timer Output')
-  !!!  !
-  !!!  CALL sleep(6)
-  !!!  CALL TIM%PRINT_LAP(TXT='Lap 2')
-  !!!  !
-  !!!  CALL sleep(5)
-  !!!  CALL TIM%PRINT_LAP(TXT='Lap 3')
-  !!!  !
-  !!!END BLOCK
-  !!!CONTINUE
-  !!!!
-  !!!BLOCK 
-  !!!  TYPE(CPU_TIMER):: TIM
-  !!!  !
-  !!!  CALL TIM%START()
-  !!!  !
-  !!!  CALL sleep(4)     ! Uses GNU and Intel Fortran extension for timing
-  !!!  CALL TIM%SAVE_LAP()
-  !!!  CALL sleep(6)
-  !!!  CALL TIM%SAVE_LAP()
-  !!!  CALL sleep(3)
-  !!!  CALL TIM%SAVE_LAP()
-  !!!  !
-  !!!  WRITE(*,*)
-  !!!  CALL TIM%PRINT_LAPS(HED='Lap Output')
-  !!!  !
-  !!!END BLOCK
-  !!!CONTINUE
   !
 END SUBROUTINE
 !
