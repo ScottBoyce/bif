@@ -81,7 +81,7 @@ SUBROUTINE test_ALLOC_INTERFACE(UT)
     !
     !
     !
-    CALL ALLOC(DVEC, N, SRC=1D0)
+    CALL ALLOC(DVEC, N, SRC=1.d0)
     !
     CALL UT%ASSERT(SIZE(DVEC) == N, MSG='DBL_VECTOR')
     DEALLOCATE(DVEC)
@@ -105,7 +105,7 @@ SUBROUTINE test_ALLOC_INTERFACE(UT)
   CALL UT%NEXT_TEST("RESIZE")
     !
     IVEC = 1
-    DVEC = 1D0
+    DVEC = 1.d0
     CALL RESIZE(IVEC, 40)
     CALL UT%ASSERT(SIZE(IVEC) == 40, MSG='INT_RESIZE')
     !
@@ -1404,7 +1404,7 @@ SUBROUTINE test_SLEEP_INTERFACE(UT)
   !###############################################################################
   !
   CALL UT%NEXT_TEST("OS_SLEEP SUBROUTINE")
-  TOL = 1d0
+  TOL = 1.d0
   !
   BLOCK 
     INTEGER(INT32):: TIM

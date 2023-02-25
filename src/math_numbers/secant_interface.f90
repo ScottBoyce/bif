@@ -30,7 +30,7 @@
 !       REAL(REL64), intent(in ):: coef1, coef2, coef3
 !       REAL(REL64), intent(out):: ans
 !       !
-!       ans = secant(custom, -1d0, 1d0)                  ! -1 and 1 are abitrarily chosen. 
+!       ans = secant(custom, -1.d0, 1.d0)                ! -1 and 1 are abitrarily chosen. 
 !       !                                                !    Secant will hopefully improve or an inverse bisection search for proper values
 !       CONTAINS
 !       !~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~!
