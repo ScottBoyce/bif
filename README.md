@@ -271,7 +271,7 @@ The dependency **order** is set up such that a file with a higher dependency req
 |  2   | alloc_interface.f90                              |
 |  3   | binary_heap_instruction.f90                      |
 |  4   | num2str_interface.f90                            |
-|  5   | sort_interface.f90                               |
+|  5   | sort_interface_driver.f90 and sort submodules    |
 |  6   | error_interface.f90                              |
 |  7   | warning_type_instruction.f90                     |
 
@@ -514,10 +514,11 @@ The dependency **order** is set up such that a file with a higher dependency req
 | :--: | -------------------------------- |
 |  1   | constants.f90                    |
 |  2   | array_data_types_instruction.f90 |
-|  3   | num2str_interface.f90            |
-|  4   | parse_word_interface.f90         |
-|  5   | error_interface.f90              |
-|  6   | generic_open_interface.fpp       |
+|  3   | path_interface.f90               |
+|  4   | num2str_interface.f90            |
+|  5   | parse_word_interface.f90         |
+|  6   | error_interface.f90              |
+|  7   | generic_open_interface.fpp       |
 
 
 
@@ -532,6 +533,7 @@ The dependency **order** is set up such that a file with a higher dependency req
 | :--: | ------------------------------------ |
 |  1   | constants.f90                        |
 |  2   | array_data_types_instruction.f90     |
+|  3   | path_interface.f90                   |
 |  3   | linked_list_instruction.f90          |
 |  4   | num2str_interface.f90                |
 |  5   | parse_word_interface.f90             |
@@ -695,16 +697,17 @@ The dependency **order** is set up such that a file with a higher dependency req
 |  1   | constants.f90                        |
 |  2   | alloc_interface.f90                  |
 |  3   | array_data_types_instruction.f90     |
-|  4   | linked_list_instruction.f90          |
-|  5   | num2str_interface.f90                |
-|  6   | parse_word_interface.f90             |
-|  7   | error_interface.f90                  |
-|  8   | post_key_sub.f90                     |
-|  9   | generic_open_interface.fpp           |
-|  10  | file_io_interface.f90                |
-|  11  | string_routines.f90                  |
-|  12  | generic_input_file_instruction.f90   |
-|  13  | generic_block_reader_instruction.f90 |
+|  4   | path_interface.f90                   |
+|  5   | linked_list_instruction.f90          |
+|  6   | num2str_interface.f90                |
+|  7   | parse_word_interface.f90             |
+|  8   | error_interface.f90                  |
+|  9   | post_key_sub.f90                     |
+|  10  | generic_open_interface.fpp           |
+|  11  | file_io_interface.f90                |
+|  12  | string_routines.f90                  |
+|  13  | generic_input_file_instruction.f90   |
+|  14  | generic_block_reader_instruction.f90 |
 
 
 
@@ -741,31 +744,32 @@ The dependency **order** is set up such that a file with a higher dependency req
 
 ### list_array_input_interface.f90
 
-| Dep  | list_array_input_interface.f90        |
-| :--: | ------------------------------------- |
-|  1   | constants.f90                         |
-|  2   | alloc_interface.f90                   |
-|  3   | array_data_types_instruction.f90      |
-|  4   | calendar_functions.f90                |
-|  5   | is_routine_interface.f90              |
-|  6   | linked_list_instruction.f90           |
-|  7   | num2str_interface.f90                 |
-|  8   | parse_word_interface.f90              |
-|  9   | set_array_interface.f90               |
-|  10  | sort_interface.f90                    |
-|  11  | date_operator_instruction.f90         |
-|  12  | error_interface.f90                   |
-|  13  | post_key_sub.f90                      |
-|  14  | generic_open_interface.fpp            |
-|  15  | file_io_interface.f90                 |
-|  16  | string_routines.f90                   |
-|  17  | generic_input_file_instruction.f90    |
-|  18  | generic_block_reader_instruction.f90  |
-|  19  | IXJ_instruction.f90                   |
-|  20  | lookup_table_instruction.f90          |
-|  21  | time_series_file_instruction.f90      |
-|  22  | uload_and_sfac_interface.f90          |
-|  23  | transient_file_reader_instruction.f90 |
+| Dep  | list_array_input_interface.f90                |
+| :--: | --------------------------------------------- |
+|  1   | constants.f90                                 |
+|  2   | alloc_interface.f90                           |
+|  3   | array_data_types_instruction.f90              |
+|  4   | path_interface.f90                            |
+|  5   | calendar_functions.f90                        |
+|  6   | is_routine_interface.f90                      |
+|  7   | linked_list_instruction.f90                   |
+|  8   | num2str_interface.f90                         |
+|  9   | parse_word_interface.f90                      |
+|  10  | set_array_interface.f90                       |
+|  11  | sort_interface_driver.f90 and sort submodules |
+|  12  | date_operator_instruction.f90                 |
+|  13  | error_interface.f90                           |
+|  14  | post_key_sub.f90                              |
+|  15  | generic_open_interface.fpp                    |
+|  16  | file_io_interface.f90                         |
+|  17  | string_routines.f90                           |
+|  18  | generic_input_file_instruction.f90            |
+|  19  | generic_block_reader_instruction.f90          |
+|  20  | IXJ_instruction.f90                           |
+|  21  | lookup_table_instruction.f90                  |
+|  22  | time_series_file_instruction.f90              |
+|  23  | uload_and_sfac_interface.f90                  |
+|  24  | transient_file_reader_instruction.f90         |
 
 
 
@@ -787,21 +791,21 @@ The dependency **order** is set up such that a file with a higher dependency req
 
 ### lookup_table_instruction.f90
 
-| Dep  | lookup_table_instruction.f90         |
-| :--: | ------------------------------------ |
-|  1   | constants.f90                        |
-|  2   | array_data_types_instruction.f90     |
-|  3   | linked_list_instruction.f90          |
-|  4   | num2str_interface.f90                |
-|  5   | parse_word_interface.f90             |
-|  6   | sort_interface.f90                   |
-|  7   | error_interface.f90                  |
-|  8   | post_key_sub.f90                     |
-|  9   | generic_open_interface.fpp           |
-|  10  | file_io_interface.f90                |
-|  11  | string_routines.f90                  |
-|  12  | generic_input_file_instruction.f90   |
-|  13  | generic_block_reader_instruction.f90 |
+| Dep  | lookup_table_instruction.f90                  |
+| :--: | --------------------------------------------- |
+|  1   | constants.f90                                 |
+|  2   | array_data_types_instruction.f90              |
+|  3   | linked_list_instruction.f90                   |
+|  4   | num2str_interface.f90                         |
+|  5   | parse_word_interface.f90                      |
+|  6   | sort_interface_driver.f90 and sort submodules |
+|  7   | error_interface.f90                           |
+|  8   | post_key_sub.f90                              |
+|  9   | generic_open_interface.fpp                    |
+|  10  | file_io_interface.f90                         |
+|  11  | string_routines.f90                           |
+|  12  | generic_input_file_instruction.f90            |
+|  13  | generic_block_reader_instruction.f90          |
 
 
 
@@ -900,8 +904,9 @@ The dependency **order** is set up such that a file with a higher dependency req
 | Dep  | post_key_sub.f90         |
 | :--: | ------------------------ |
 |  1   | constants.f90            |
-|  2   | parse_word_interface.f90 |
-|  3   | error_interface.f90      |
+|  2   | num2str_interface.f90    |
+|  3   | parse_word_interface.f90 |
+|  4   | error_interface.f90      |
 
 
 
@@ -1109,6 +1114,7 @@ Not really dependencies, but rather it contains interfaces that describe module 
 | :--: | -------------------------------- |
 |  1   | constants.f90                    |
 |  2   | array_data_types_instruction.f90 |
+|  3   | path_interface.f90               |
 |  3   | num2str_interface.f90            |
 |  4   | parse_word_interface.f90         |
 |  5   | error_interface.f90              |
@@ -1123,31 +1129,32 @@ Not really dependencies, but rather it contains interfaces that describe module 
 
 ### sub_block_input_interface.f90
 
-| Dep  | sub_block_input_interface.f90         |
-| :--: | ------------------------------------- |
-|  1   | constants.f90                         |
-|  2   | alloc_interface.f90                   |
-|  3   | array_data_types_instruction.f90      |
-|  4   | calendar_functions.f90                |
-|  5   | is_routine_interface.f90              |
-|  6   | linked_list_instruction.f90           |
-|  7   | num2str_interface.f90                 |
-|  8   | parse_word_interface.f90              |
-|  9   | set_array_interface.f90               |
-|  10  | sort_interface.f90                    |
-|  11  | date_operator_instruction.f90         |
-|  12  | error_interface.f90                   |
-|  13  | post_key_sub.f90                      |
-|  14  | generic_open_interface.fpp            |
-|  15  | file_io_interface.f90                 |
-|  16  | string_routines.f90                   |
-|  17  | generic_input_file_instruction.f90    |
-|  18  | generic_block_reader_instruction.f90  |
-|  19  | IXJ_instruction.f90                   |
-|  20  | lookup_table_instruction.f90          |
-|  21  | time_series_file_instruction.f90      |
-|  22  | uload_and_sfac_interface.f90          |
-|  23  | transient_file_reader_instruction.f90 |
+| Dep  | sub_block_input_interface.f90                 |
+| :--: | --------------------------------------------- |
+|  1   | constants.f90                                 |
+|  2   | alloc_interface.f90                           |
+|  3   | array_data_types_instruction.f90              |
+|  4   | path_interface.f90                            |
+|  5   | calendar_functions.f90                        |
+|  6   | is_routine_interface.f90                      |
+|  7   | linked_list_instruction.f90                   |
+|  8   | num2str_interface.f90                         |
+|  9   | parse_word_interface.f90                      |
+|  10  | set_array_interface.f90                       |
+|  11  | sort_interface_driver.f90 and sort submodules |
+|  12  | date_operator_instruction.f90                 |
+|  13  | error_interface.f90                           |
+|  14  | post_key_sub.f90                              |
+|  15  | generic_open_interface.fpp                    |
+|  16  | file_io_interface.f90                         |
+|  17  | string_routines.f90                           |
+|  18  | generic_input_file_instruction.f90            |
+|  19  | generic_block_reader_instruction.f90          |
+|  20  | IXJ_instruction.f90                           |
+|  21  | lookup_table_instruction.f90                  |
+|  22  | time_series_file_instruction.f90              |
+|  23  | uload_and_sfac_interface.f90                  |
+|  24  | transient_file_reader_instruction.f90         |
 
 
 
@@ -1171,6 +1178,7 @@ Not really dependencies, but rather it contains interfaces that describe module 
 | :--: | ------------------------------------ |
 |  1   | constants.f90                        |
 |  2   | array_data_types_instruction.f90     |
+|  3   | path_interface.f90                   |
 |  3   | calendar_functions.f90               |
 |  4   | linked_list_instruction.f90          |
 |  5   | num2str_interface.f90                |
@@ -1203,30 +1211,31 @@ Not really dependencies, but rather it contains interfaces that describe module 
 
 ### transient_file_reader_instruction.f90
 
-| Dep  | transient_file_reader_instruction.f90 |
-| :--: | ------------------------------------- |
-|  1   | constants.f90                         |
-|  2   | alloc_interface.f90                   |
-|  3   | array_data_types_instruction.f90      |
-|  4   | calendar_functions.f90                |
-|  5   | is_routine_interface.f90              |
-|  6   | linked_list_instruction.f90           |
-|  7   | num2str_interface.f90                 |
-|  8   | parse_word_interface.f90              |
-|  9   | set_array_interface.f90               |
-|  10  | sort_interface.f90                    |
-|  11  | date_operator_instruction.f90         |
-|  12  | error_interface.f90                   |
-|  13  | post_key_sub.f90                      |
-|  14  | generic_open_interface.fpp            |
-|  15  | file_io_interface.f90                 |
-|  16  | string_routines.f90                   |
-|  17  | generic_input_file_instruction.f90    |
-|  18  | generic_block_reader_instruction.f90  |
-|  19  | IXJ_instruction.f90                   |
-|  20  | lookup_table_instruction.f90          |
-|  21  | time_series_file_instruction.f90      |
-|  22  | uload_and_sfac_interface.f90          |
+| Dep  | transient_file_reader_instruction.f90         |
+| :--: | --------------------------------------------- |
+|  1   | constants.f90                                 |
+|  2   | alloc_interface.f90                           |
+|  3   | array_data_types_instruction.f90              |
+|  4   | path_interface.f90                            |
+|  5   | calendar_functions.f90                        |
+|  6   | is_routine_interface.f90                      |
+|  7   | linked_list_instruction.f90                   |
+|  8   | num2str_interface.f90                         |
+|  9   | parse_word_interface.f90                      |
+|  10  | set_array_interface.f90                       |
+|  11  | sort_interface_driver.f90 and sort submodules |
+|  12  | date_operator_instruction.f90                 |
+|  13  | error_interface.f90                           |
+|  14  | post_key_sub.f90                              |
+|  15  | generic_open_interface.fpp                    |
+|  16  | file_io_interface.f90                         |
+|  17  | string_routines.f90                           |
+|  18  | generic_input_file_instruction.f90            |
+|  19  | generic_block_reader_instruction.f90          |
+|  20  | IXJ_instruction.f90                           |
+|  21  | lookup_table_instruction.f90                  |
+|  22  | time_series_file_instruction.f90              |
+|  23  | uload_and_sfac_interface.f90                  |
 
 
 
@@ -1236,29 +1245,30 @@ Not really dependencies, but rather it contains interfaces that describe module 
 
 ### uload_and_sfac_interface.f90
 
-| Dep  | uload_and_sfac_interface.f90         |
-| :--: | ------------------------------------ |
-|  1   | constants.f90                        |
-|  2   | alloc_interface.f90                  |
-|  3   | array_data_types_instruction.f90     |
-|  4   | calendar_functions.f90               |
-|  5   | is_routine_interface.f90             |
-|  6   | linked_list_instruction.f90          |
-|  7   | num2str_interface.f90                |
-|  8   | parse_word_interface.f90             |
-|  9   | set_array_interface.f90              |
-|  10  | sort_interface.f90                   |
-|  11  | date_operator_instruction.f90        |
-|  12  | error_interface.f90                  |
-|  13  | post_key_sub.f90                     |
-|  14  | generic_open_interface.fpp           |
-|  15  | file_io_interface.f90                |
-|  16  | string_routines.f90                  |
-|  17  | generic_input_file_instruction.f90   |
-|  18  | generic_block_reader_instruction.f90 |
-|  19  | IXJ_instruction.f90                  |
-|  20  | lookup_table_instruction.f90         |
-|  21  | time_series_file_instruction.f90     |
+| Dep  | uload_and_sfac_interface.f90                  |
+| :--: | --------------------------------------------- |
+|  1   | constants.f90                                 |
+|  2   | alloc_interface.f90                           |
+|  3   | array_data_types_instruction.f90              |
+|  4   | path_interface.f90                            |
+|  5   | calendar_functions.f90                        |
+|  6   | is_routine_interface.f90                      |
+|  7   | linked_list_instruction.f90                   |
+|  8   | num2str_interface.f90                         |
+|  9   | parse_word_interface.f90                      |
+|  10  | set_array_interface.f90                       |
+|  11  | sort_interface_driver.f90 and sort submodules |
+|  12  | date_operator_instruction.f90                 |
+|  13  | error_interface.f90                           |
+|  14  | post_key_sub.f90                              |
+|  15  | generic_open_interface.fpp                    |
+|  16  | file_io_interface.f90                         |
+|  17  | string_routines.f90                           |
+|  18  | generic_input_file_instruction.f90            |
+|  19  | generic_block_reader_instruction.f90          |
+|  20  | IXJ_instruction.f90                           |
+|  21  | lookup_table_instruction.f90                  |
+|  22  | time_series_file_instruction.f90              |
 
 
 
