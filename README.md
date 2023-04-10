@@ -9,18 +9,23 @@
 
 Fortran library source files that assist in file I/O, common operations that are present in other languages, and include data types that mimic python data types (such as, `list` and `dict`).
 
+&nbsp; 
+
+**USGS Software Websites**
+
+- Landing Page: &nbsp; &nbsp; &nbsp; &nbsp; &nbsp; &nbsp; https://www.usgs.gov/software/batteries-included-fortran-library-bif-lib
+- Source Repository: &nbsp; &nbsp; https://code.usgs.gov/fortran/bif
+
+&nbsp; 
+
+------
+
+&nbsp; 
 
 
 ## Important Updates
 
 [CHANGELOG.md](CHANGELOG.md) for bug fixes, new features, and updates.
-
-
-
-
-## USGS Official Website
-
-**[Git Respository](https://code.usgs.gov/fortran/bif)**
 
 
 
@@ -34,7 +39,7 @@ Fortran library source files that assist in file I/O, common operations that are
 
 ## Code Citation
 
-Boyce, S.E., 2022, Batteries Included Fortran Library (BiF-lib), version 1.1: U.S. Geological Survey Software Release, https://doi.org/10.5066/P9K2IQ6Y
+Boyce, S.E., 2023, Batteries Included Fortran Library (BiF-lib), version 1.2: U.S. Geological Survey Software Release, https://doi.org/10.5066/P9K2IQ6Y
 
 
 
@@ -42,7 +47,7 @@ Boyce, S.E., 2022, Batteries Included Fortran Library (BiF-lib), version 1.1: U.
 
 Part of these utilities were developed for the following project:
 
-- Boyce, S.E., 2022, MODFLOW One-Water Hydrologic Flow Model (MF-OWHM) Conjunctive Use and Integrated Hydrologic Flow Modeling Software, version 2.x: U.S. Geological Survey Software Release, https://doi.org/10.5066/P9P8I8GS
+- Boyce, S.E., 2023, MODFLOW One-Water Hydrologic Flow Model (MF-OWHM) Conjunctive Use and Integrated Hydrologic Flow Modeling Software, version 2.x: U.S. Geological Survey Software Release, https://doi.org/10.5066/P9P8I8GS
 
 - Boyce, S.E., Hanson, R.T., Ferguson, I., Schmid, W., Henson, W., Reimann, T., Mehl, S.M., and Earll, M.M., 2020, One-Water Hydrologic Flow Model: A MODFLOW based conjunctive-use simulation software: U.S. Geological Survey Techniques and Methods 6–A60, 435 p., [https://doi.org/10.3133/tm6A60](https://doi.org/10.3133/tm6A60)
 

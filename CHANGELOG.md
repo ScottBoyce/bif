@@ -6,7 +6,7 @@
 
 ## Code Citation
 
-Boyce, S.E., 2022, Batteries Included Fortran Library (BiF-Lib), version 1.1.0: U.S. Geological Survey Software Release, https://doi.org/10.5066/P9K2IQ6Y
+Boyce, S.E., 2023, Batteries Included Fortran Library (BiF-Lib), version 1.2.0: U.S. Geological Survey Software Release, https://doi.org/10.5066/P9K2IQ6Y
 
 
 
@@ -14,7 +14,7 @@ Boyce, S.E., 2022, Batteries Included Fortran Library (BiF-Lib), version 1.1.0: 
 
 Part of these utilities were developed for the following project:
 
-Boyce, S.E., 2022, MODFLOW One-Water Hydrologic Flow Model (MF-OWHM) Conjunctive Use and Integrated Hydrologic Flow Modeling Software, version 2.x: U.S. Geological Survey Software Release, https://doi.org/10.5066/P9P8I8GS
+Boyce, S.E., 2023, MODFLOW One-Water Hydrologic Flow Model (MF-OWHM) Conjunctive Use and Integrated Hydrologic Flow Modeling Software, version 2.x: U.S. Geological Survey Software Release, https://doi.org/10.5066/P9P8I8GS
 
 Boyce, S.E., Hanson, R.T., Ferguson, I., Schmid, W., Henson, W., Reimann, T., Mehl, S.M., and Earll, M.M., 2020, One-Water Hydrologic Flow Model: A MODFLOW based conjunctive-use simulation software: U.S. Geological Survey Techniques and Methods 6–A60, 435 p., [https://doi.org/10.3133/tm6A60](https://doi.org/10.3133/tm6A60)
 
@@ -43,12 +43,31 @@ Header TBA
 
 #### Features
 
-- `src/system/path_interface.f90` added `FUNCTION GET_CWD()` and `SUBROUTINE SET_TO_CWD(CWD, LENGTH)`
-  - `GET_CWD` returns the current working directory.
-  - `SET_TO_CWD` sets the variable `CHARACTER(*):: CWD` to the current working directory and optional integer variable, `LENGTH`, as the size of the character array. 
+- Circular Queue Data Type added in `src/types_and_containers/circular_queue_instruction.f90`
+  - This type is a linked list whose end points to the start to form a circle list.
+
+  - Currently only supports `integer(int64) numbers`.
+
+- `EXECUTE_COMMAND_GET_OUTPUT`  added to `system/system_call.f90 ` (new file).  
+  This procedure executes a command using the operating system shell and returns the output from the command.
+  - `SUBROUTINE EXECUTE_COMMAND_GET_OUTPUT(command, output, stat, keep_empty_lines)`   
+    `character(*),                            intent(in ) :: command`  
+    `character(*), dimension(:), allocatable, intent(out) :: output`  
+    `integer,                       optional, intent(out) :: stat`  
+    `logical,                       optional, intent(in ) :: keep_empty_lines` 
+  - where  
+    `command` - Command passed to terminal to be executed  
+    `output` - Output generated from command, dimension is set to the number of non-empty/blank lines returned  
+    `stat` - Status generated from command. If not present and error occurs, invokes `ERROR STOP`. If present, `OUTPUT` contains error message  
+    `keep_empty_lines` - If present, and TRUE, then empty/blank lines are included in `OUTPUT`
+
+- `src/system/path_interface.f90` added additional procedures: and `SUBROUTINE SET_TO_CWD(CWD, LENGTH)`
+  - `FUNCTION GET_CWD()` returns the current working directory.
+  -  `SUBROUTINE SET_TO_CWD(CWD, LENGTH)` sets the variable `CHARACTER(*):: CWD` to the current working directory and optional integer variable, `LENGTH`, as the size of the character array. 
     - Pretty much this routine just does `CWD = GET_CWD()` and `LENGTH = LEN(GET_CWD())`
     - Note it is possible to have, `LENGTH > LEN(CWD)`, that case `CWD` does not hold the entire path.
-
+  - `SUBROUTINE GET_FILE_EXTENSION(FILE_NAME, EXT)` given a file name returns the extension (anything after last `.`)
+    - For example: `"doc/myfile.txt"` would return `"txt"`
 - `src/io/generic_open_interface.fpp` subroutine `GENERIC_OPEN() ` added the optional argument `POSITION`
   - All Fortran `OPEN(POSITION=)` strings are accepted.  
     However it is recommended to only use:
@@ -56,12 +75,9 @@ Header TBA
     - `POSITION="ASIS"`
     - `POSITION="REWIND"`
   - If not specified, then it is set to `POSITION="REWIND"`.
-
 - `src/io/file_io_interface.f90` data type `UNIT_ARRAY_BUILDER` added the `FUNCTION PRINT_STR()` type bound routine.
-
   - This routine is identical to `SUBROUTINE UNIT_ARRAY_BUILDER%PRINT(IOUT)`, except that it returns a `character(*)` rather than writing to a file.
   - The function call is: `str = UNIT_ARRAY_BUILDER%PRINT_STR()`
-
 - `src/io/post_key_sub.f90` added the optional argument `NO_WARN` to `SUBROUTINE CHECK_FOR_POST_KEY`. 
   - If present, and set to `.TRUE.` will disable any warning messages when searching for a post-keyword option. 
 
@@ -69,8 +85,14 @@ Header TBA
     - `src/io/generic_input_file_instruction.f90` in the routine `GENERIC_INPUT%OPEN`  
 
     - `src/io/generic_output_file_instruction.f90` in the routine `GENERIC_OUTPUT%OPEN`
-
 - Added test for `MODULE GENERIC_INPUT_FILE_INSTRUCTION`
+- `src/strings/num2str_interface.f90` added check for 0.0;  
+  that is: `NUM2STR(0.0)` returns `'0.0'` instead of `'0.00000000E+00'`
+- All code was shifted to be within the first 132 columns to be compatible with gfortran.
+  - Fortran 95 free format standard limits the file width to 132 columns.
+
+  - Note, code still fails to compile with gfortran because it does not support the destructor statement `FINAL::`
+
 
 
 &nbsp; 
@@ -80,19 +102,45 @@ Header TBA
 - `src/datetime/calendar_functions.f90` 
   uses the function `julianday_to_date(jdn_in, year_in, day, month, year, jdn, leap)` for converting Julian Day of the Year (`jdn_in`) to a calendar month, day, and year. However if `jdn_in > 364`, then the routine would only check if year_in is a leap year rather than each interval of Julian days overlapped a leap year. This has been fixed to account the appropriate 365 and 366 day years.
 
-- `src/system/directory_iso_c_binding.f90`  `FUNCTION MAKE_C_CHAR` takes a Fortran character type and converts it to a C-string. The function was modified to return a character array (correct method) instead of CHARACTER(*). 
+- `src/input_reader/uload_and_sfac_interface.f90` when loading a  `GENERIC_INPUT_FILE`  variable with `SUBROUTINE ULOAD_SCALAR` that has a specified unit number (`IU /= 0`) reads an extra line from `IN`.
   
+  - This effected `MODULE LIST_ARRAY_INPUT_INTERFACE` when using `TYPE GENERIC_LINE_INPUT` that reads a transient file reader (TFR) with the `DATAFILE` or `DATAUNIT` keyword (bypass TFR and read input directly). The resulting call to the `MODULE TRANSIENT_FILE_READER_INSTRUCTION` reads a line to check for `SFAC`, but since `IU` is specified the extra read of the line is not needed because not file is parsed.
+  
+- `src/system/directory_iso_c_binding.f90`  `FUNCTION MAKE_C_CHAR` takes a Fortran character type and converts it to a C-string. The function was modified to return a character array (correct method) instead of CHARACTER(*). 
+
   - That is, the function previously returned:  
     &nbsp; &nbsp; &nbsp; `CHARACTER(len=LEN(F_STR)+1, kind=C_CHAR)`  
     now returns:  
     &nbsp; &nbsp; &nbsp; `CHARACTER(len=1, kind=C_CHAR), DIMENSION(LEN(F_STR)+1)`
-  
+
 - `C_LOC` requires argument that has either the `TARGET` or `POINTER` attribute but does NOT support `ALLOCATABLE` arrays. Routines that make use of `C_LOC` had the TARGET attribute added to incoming arrays. Also `FUNCTION GET_C_LOC` was added that adds to an array the `TARGET` attribute and returns its `C_LOC`. This effected the following files:
 
   - `src/util_misc/same_memory_address_interface.f90`  
     `src/dynamic_arrays/dynamic_array_int32.f90`
 
+- `src/math_numbers/number_conversion_interface.f90` 
+
+  - `MODULE NUMBER_CONVERSION_INTERFACE` converts all the major integer types from/to binary to decimal, octal, or hexadecimal. A set of parameters were added to ensure that zero and one comparisons are made with the same type integer as that of the routine. That is:
+    - converting INT8 to Octal uses only INT8 operations
+
+    - converting INT16 to Octal uses only INT16 operations
+
+    - converting INT32 to Octal uses only INT32 operations
+
+    - converting INT64 to Octal uses only INT64 operations
+
 - `makefile` added gfortran complier flag fno-range-check to prevent compiler errors.
+
+- Sort routines removed redundant use of `USE ISO_FORTRAN_ENV`
+
+  - `MODULE SORT_INTERFACE` contains a set of `SUBMODULE`s that sort each of the major Fortran data types. The problem is that a `SUBMODULE` imports all the global variables from the parent `MODULE`. The parent module has:  
+    `USE, INTRINSIC:: ISO_FORTRAN_ENV, ONLY: INT8, INT32, INT64, REL32=>REAL32, REL64=>REAL64`  
+    so that declaration is not necessary in the submodules.
+
+- Added `int(  )` around BOZ constants (binary, octal, hexadecimal constants) to conform to Fortran standard.
+
+  - For example, fortran standard requires the binary notation `b''` to be converted to the desired integer type:  
+    `int(b'1100000010000000', int32)`
 
 - Added decimal to literal real numbers in a variaty of files. For example, changes `1D0` to `1.D0`
 
@@ -100,10 +148,13 @@ Header TBA
     `src/datetime/date_operator_instruction.f90`  
     `src/math_numbers/EquationParser.f90`  
     `src/math_numbers/log2_interface.f90`  
+    
+    `src/math_numbers/secant_interface.f90`  
     `src/spatial/xy_grid_coordinate_interface.f90`  
     `src/types_and_containers/array_data_types_instruction.f90`  
     `src/types_and_containers/linked_list_instruction.f90`  
-    `src/unit_test/unit_testing_instruction.f90`
+    `src/unit_test/unit_testing_instruction.f90`  
+    `tests/src/main_tests.f90`
 
 - `src/math_numbers/descriptive_statistics.f90`   
   changed the intent for the `online_stats%merge` routine from `intent(in)` to `intent(inout)`
@@ -123,6 +174,14 @@ Header TBA
 
 #### Refactoring
 
+- Rewrite of `GENERIC_INPUT_FILE_INSTRUCTION` and `GENERIC_OUTPUT_FILE_INSTRUCTION` modules to have consistent interfaces and code structure.
+  - **BREAKING CHANGE**: This changed the order of optional arguments in `%OPEN()` for the `GENERIC_INPUT_FILE` and `GENERIC_OUTPUT_FILE` data types. However, they know use the same arguments, and argument order, in their common type bound procedures. This also changed some of the components in the data types to be the same name.  In particular:
+    - The attribute `%NULL_FILE` replaced `%SKIP`
+
+    - `%IU == 0` only indicates implied internal, and added `%IS_INTERNAL` to indicate if file is internal and `%IU` is set the internal file unit.
+
+    - `%IS_OPEN` is added and set to True if file is open and `IU` is connected to a file, and False otherwise.
+
 - `src/io/generic_input_file_instruction.f90` and `src/io/generic_output_file_instruction.f90` improved error messages.
 
 - `src/strings/parse_word_interface.f90` replaced `" "` with the `CONSTANT` module parameter `BLNK`
@@ -134,6 +193,28 @@ Header TBA
 - `src/input_reader/uload_and_sfac_interface.f90` changed `.ne.` to `/=` for clarity.
 
 - `src/input_reader/uload_and_sfac_interface.f90` switched to `get_word` routine to replace using the following routines: `comment_index()`, `parse_word()` and `upper()`.
+
+- Convert all capital case error messages to sentence case.
+
+- Change all odd number check code from using IAND to BTEST.
+  - The code previously used IAND to check if a number is odd with the following code:  
+    &nbsp; &nbsp; &nbsp; `IAND( num, 1 ) == 1`  
+    This bit folding only checks to see if the least significant bit is set, which indicates the number is odd.
+
+  - Rather than doing two operations, the code was changed to:  
+    &nbsp; &nbsp; &nbsp; `BTEST( num, 0 )`  
+    which returns TRUE if the lest significant bit is set.
+
+- Remove the integer *type-spec* from do *concurrent-header* for all source files that use it.
+
+  - The gfortran compiler does not support the DO CONCURRENT *type-spec* in the *concurrent-header*. This has been removed to improve compatibility with gfortran. The following is an example of changed code.
+
+    - That is,  
+      &nbsp; &nbsp; &nbsp; `do concurrent ( integer:: i = 1 : 10 )`  
+      is changed to:   
+      &nbsp; &nbsp; &nbsp; `integer:: i`  
+      &nbsp; &nbsp; &nbsp; `do concurrent (i = 1 : 10 )`
+
 
 &nbsp; 
 
