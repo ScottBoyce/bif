@@ -489,7 +489,7 @@ MODULE GENERIC_INPUT_FILE_INSTRUCTION!, ONLY: GENERIC_INPUT_FILE                
                                 '  was not found.'//NL//                  &
                                 'Please check to see if the path and file name are correct.'//NL// &
                                 'If you are are using a relative path to specify the file (such as: ../dir/file.txt),'//NL// &
-                                '  then the current working director (point for  relative paths) is:'//NL// &
+                                '  then the current working director (point for relative paths) is:'//NL// &
                                 '     "'//GET_CWD()//'"'//BLN//                                    &
                                 '  ***Note: in a path to a file'//NL//                             &
                                 '     the the "/" works for both Windows and Linux,' //NL//        &
