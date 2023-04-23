@@ -775,7 +775,7 @@ MODULE NUM2STR_INTERFACE!, ONLY: NUM2STR, NUM2STR7, INTFMT, NUMFMT
   !##########################################################################################################################
   ! REAL(rel32) To String
   !
-  PURE FUNCTION rel32_2STR(RVAL,PAD,GENERAL,LS,RS) RESULT(STR)
+  PURE FUNCTION REL32_2STR(RVAL,PAD,GENERAL,LS,RS) RESULT(STR)
     REAL(rel32),       INTENT(IN):: RVAL
     INTEGER, OPTIONAL, INTENT(IN):: PAD
     LOGICAL, OPTIONAL, INTENT(IN):: GENERAL
@@ -826,7 +826,7 @@ MODULE NUM2STR_INTERFACE!, ONLY: NUM2STR, NUM2STR7, INTFMT, NUMFMT
     ELSEIF(RVAL>=1.E-9_rel32 .OR. RVAL<=-1.E-9_rel32)          THEN
        WRITE(NUM,'(ES16.7E1)') RVAL
     ELSE
-       WRITE(NUM,'(ES16.7E3)') RVAL
+       WRITE(NUM,'(ES16.7E2)') RVAL
     END IF
     !
     END IF
