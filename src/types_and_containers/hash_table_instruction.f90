@@ -233,7 +233,7 @@ MODULE HASH_TABLE_INSTRUCTION
                                            POS = ID
                                            FOUND = .TRUE.
                                            EXIT
-            ELSEIF  ( KV(ID)%KEY == NULL ) THEN
+            ELSEIF  ( POS == Z .AND. KV(ID)%KEY == NULL ) THEN
                                            POS = ID
             END IF
         ELSE
