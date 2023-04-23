@@ -191,6 +191,7 @@ The dependency **order** is set up such that a file with a higher dependency req
 | input_reader         | uload_and_sfac_interface.f90                     | Universal loading and scale factor routines that can automatically load scalar, vector, and array data. |   9   |
 | io                   | cycling_text_file_interface.f90                  | Open WRITE-only, STREAM, UNFORMATTED file that is meant to be overwritten frequently<br />That is, it cycles through one write, then rewinds to the start of the file, then writes a new record. |   6   |
 | io                   | file_incrementer_interface.f90                   | Can increment file name with a number to the file name.      |   4   |
+| io                   | file_info_interface.f90                          | Queries a file by name or unit number; stores in a data type all Fortran properties about the file. |   1   |
 | io                   | file_io_interface.f90                            | File name and unit operations                                |   4   |
 | io                   | generic_input_file_instruction.f90               | Open a READ-only file based on keywords.                     |   6   |
 | io                   | generic_open_interface.fpp                       | Specifies options to open a file. Requires Fortran Pre-Processing. |   3   |
@@ -500,6 +501,17 @@ The dependency **order** is set up such that a file with a higher dependency req
 |  2   | array_data_types_instruction.f90 |
 |  3   | path_interface.f90               |
 |  4   | generic_open_interface.fpp       |
+
+
+
+
+------
+
+
+
+### file_info_interface.f90
+
+*No Dependency*
 
 
 

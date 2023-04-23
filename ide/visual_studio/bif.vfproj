@@ -2,68 +2,76 @@
 <VisualStudioProject ProjectCreator="Intel Fortran" Keyword="Console Application" Version="11.0" ProjectIdGuid="{EA3EE8BC-18AA-47DA-8DCC-FC3553E70D29}">
 	<Platforms>
 		<Platform Name="Win32"/>
-		<Platform Name="x64"/></Platforms>
+		<Platform Name="x64"/>
+	</Platforms>
 	<Configurations>
 		<Configuration Name="Debug|Win32" OutputDirectory="$(SolutionDir)bin" IntermediateDirectory="$(ProjectDir)obj_$(Platform)_$(Configuration)" TargetName="$(ProjectName)_$(ConfigurationName)">
-				<Tool Name="VFFortranCompilerTool" SuppressStartupBanner="true" DebugInformationFormat="debugEnabled" Optimization="optimizeDisabled" OpenMPConditionalCompilation="false" DisableSpecificDiagnostics="6717" WarnInterfaces="true" RealKIND="realKIND8" FloatingPointExceptionHandling="fpe0" FloatingPointModel="source" Traceback="true" BoundsCheck="true" StackFrameCheck="true" RuntimeLibrary="rtMultiThreadedDebug"/>
-				<Tool Name="VFLinkerTool" LinkIncremental="linkIncrementalNo" SuppressStartupBanner="true" GenerateDebugInformation="true" SubSystem="subSystemConsole" StackReserveSize="10485760" StackCommitSize="10485760"/>
-				<Tool Name="VFResourceCompilerTool"/>
-				<Tool Name="VFMidlTool" SuppressStartupBanner="true"/>
-				<Tool Name="VFCustomBuildTool"/>
-				<Tool Name="VFPreLinkEventTool"/>
-				<Tool Name="VFPreBuildEventTool"/>
-				<Tool Name="VFPostBuildEventTool"/>
-				<Tool Name="VFManifestTool" SuppressStartupBanner="true"/></Configuration>
+			<Tool Name="VFFortranCompilerTool" SuppressStartupBanner="true" DebugInformationFormat="debugEnabled" Optimization="optimizeDisabled" OpenMPConditionalCompilation="false" DisableSpecificDiagnostics="6717" WarnInterfaces="true" RealKIND="realKIND8" FloatingPointExceptionHandling="fpe0" FloatingPointModel="source" Traceback="true" BoundsCheck="true" StackFrameCheck="true" RuntimeLibrary="rtMultiThreadedDebug"/>
+			<Tool Name="VFLinkerTool" LinkIncremental="linkIncrementalNo" SuppressStartupBanner="true" GenerateDebugInformation="true" SubSystem="subSystemConsole" StackReserveSize="10485760" StackCommitSize="10485760"/>
+			<Tool Name="VFResourceCompilerTool"/>
+			<Tool Name="VFMidlTool" SuppressStartupBanner="true"/>
+			<Tool Name="VFCustomBuildTool"/>
+			<Tool Name="VFPreLinkEventTool"/>
+			<Tool Name="VFPreBuildEventTool"/>
+			<Tool Name="VFPostBuildEventTool"/>
+			<Tool Name="VFManifestTool" SuppressStartupBanner="true"/>
+		</Configuration>
 		<Configuration Name="Release|Win32" OutputDirectory="$(SolutionDir)bin" IntermediateDirectory="$(ProjectDir)obj_$(Platform)_$(Configuration)" TargetName="$(ProjectName)_$(ConfigurationName)">
-				<Tool Name="VFFortranCompilerTool" SuppressStartupBanner="true" OpenMPConditionalCompilation="false" DisableSpecificDiagnostics="6717" RealKIND="realKIND8" FloatingPointExceptionHandling="fpe0" FloatingPointModel="source"/>
-				<Tool Name="VFLinkerTool" LinkIncremental="linkIncrementalNo" SuppressStartupBanner="true" SubSystem="subSystemConsole" StackReserveSize="10485760" StackCommitSize="10485760"/>
-				<Tool Name="VFResourceCompilerTool"/>
-				<Tool Name="VFMidlTool" SuppressStartupBanner="true"/>
-				<Tool Name="VFCustomBuildTool"/>
-				<Tool Name="VFPreLinkEventTool"/>
-				<Tool Name="VFPreBuildEventTool"/>
-				<Tool Name="VFPostBuildEventTool"/>
-				<Tool Name="VFManifestTool" SuppressStartupBanner="true"/></Configuration>
+			<Tool Name="VFFortranCompilerTool" SuppressStartupBanner="true" OpenMPConditionalCompilation="false" DisableSpecificDiagnostics="6717" RealKIND="realKIND8" FloatingPointExceptionHandling="fpe0" FloatingPointModel="source"/>
+			<Tool Name="VFLinkerTool" LinkIncremental="linkIncrementalNo" SuppressStartupBanner="true" SubSystem="subSystemConsole" StackReserveSize="10485760" StackCommitSize="10485760"/>
+			<Tool Name="VFResourceCompilerTool"/>
+			<Tool Name="VFMidlTool" SuppressStartupBanner="true"/>
+			<Tool Name="VFCustomBuildTool"/>
+			<Tool Name="VFPreLinkEventTool"/>
+			<Tool Name="VFPreBuildEventTool"/>
+			<Tool Name="VFPostBuildEventTool"/>
+			<Tool Name="VFManifestTool" SuppressStartupBanner="true"/>
+		</Configuration>
 		<Configuration Name="Debug|x64" OutputDirectory="$(SolutionDir)..\..\bin" IntermediateDirectory="$(SolutionDir)..\..\obj\vs_bif_obj_$(Platform)_$(Configuration)" TargetName="bif_$(ConfigurationName)">
-				<Tool Name="VFFortranCompilerTool" SuppressStartupBanner="true" DebugInformationFormat="debugEnabled" Optimization="optimizeDisabled" OpenMPConditionalCompilation="false" OmpOffloadConstructs="ompOffloadNo" ErrorLimit="10" DisableSpecificDiagnostics="6717" WarnDeclarations="true" WarnUnusedVariables="true" WarnIgnoreLOC="true" WarnUnalignedData="false" WarnUncalled="true" WarnInterfaces="true" RealKIND="realKIND8" FloatingPointExceptionHandling="fpe0" FloatingPointModel="source" FloatingPointStackCheck="true" Traceback="true" NullPointerCheck="true" BoundsCheck="true" ArrayShapeCheck="true" UninitializedVariablesCheck="true" DescriptorDataTypeCheck="true" StackFrameCheck="true" RuntimeLibrary="rtMultiThreadedDebug"/>
-				<Tool Name="VFLinkerTool" LinkIncremental="linkIncrementalNo" SuppressStartupBanner="true" GenerateDebugInformation="true" ProgramDatabaseFile="$(IntDir)\$(TargetName).pdb" SubSystem="subSystemConsole" StackReserveSize="10485760" StackCommitSize="10485760"/>
-				<Tool Name="VFResourceCompilerTool"/>
-				<Tool Name="VFMidlTool" SuppressStartupBanner="true" TargetEnvironment="midlTargetAMD64"/>
-				<Tool Name="VFCustomBuildTool"/>
-				<Tool Name="VFPreLinkEventTool"/>
-				<Tool Name="VFPreBuildEventTool"/>
-				<Tool Name="VFPostBuildEventTool"/>
-				<Tool Name="VFManifestTool" SuppressStartupBanner="true"/></Configuration>
+			<Tool Name="VFFortranCompilerTool" SuppressStartupBanner="true" DebugInformationFormat="debugEnabled" Optimization="optimizeDisabled" OpenMPConditionalCompilation="false" OmpOffloadConstructs="ompOffloadNo" ErrorLimit="10" DisableSpecificDiagnostics="6717" WarnDeclarations="true" WarnUnusedVariables="true" WarnIgnoreLOC="true" WarnUnalignedData="false" WarnUncalled="true" WarnInterfaces="true" RealKIND="realKIND8" FloatingPointExceptionHandling="fpe0" FloatingPointModel="source" FloatingPointStackCheck="true" Traceback="true" NullPointerCheck="true" BoundsCheck="true" ArrayShapeCheck="true" UninitializedVariablesCheck="true" DescriptorDataTypeCheck="true" StackFrameCheck="true" RuntimeLibrary="rtMultiThreadedDebug"/>
+			<Tool Name="VFLinkerTool" LinkIncremental="linkIncrementalNo" SuppressStartupBanner="true" GenerateDebugInformation="true" ProgramDatabaseFile="$(IntDir)\$(TargetName).pdb" SubSystem="subSystemConsole" StackReserveSize="10485760" StackCommitSize="10485760"/>
+			<Tool Name="VFResourceCompilerTool"/>
+			<Tool Name="VFMidlTool" SuppressStartupBanner="true" TargetEnvironment="midlTargetAMD64"/>
+			<Tool Name="VFCustomBuildTool"/>
+			<Tool Name="VFPreLinkEventTool"/>
+			<Tool Name="VFPreBuildEventTool"/>
+			<Tool Name="VFPostBuildEventTool"/>
+			<Tool Name="VFManifestTool" SuppressStartupBanner="true"/>
+		</Configuration>
 		<Configuration Name="Release|x64" OutputDirectory="$(SolutionDir)..\..\bin" IntermediateDirectory="$(SolutionDir)..\..\obj\vs_bif_obj_$(Platform)_$(Configuration)" TargetName="bif" WholeProgramOptimization="true">
-				<Tool Name="VFFortranCompilerTool" AdditionalOptions="/Qinline-factor:200" SuppressStartupBanner="true" DebugInformationFormat="debugLineInfoOnly" GenAlternateCodePaths="codeForAVX" OpenMPConditionalCompilation="false" OmpOffloadConstructs="ompOffloadNo" RealKIND="realKIND8" FloatingPointExceptionHandling="fpe0" Traceback="true"/>
-				<Tool Name="VFLinkerTool" LinkIncremental="linkIncrementalNo" SuppressStartupBanner="true" ProgramDatabaseFile="$(IntDir)\(TargetName).pdb" SubSystem="subSystemConsole" StackReserveSize="10485760" StackCommitSize="10485760" ObjectFileName="$(SolutionDir)..\..\obj\vs_bif_obj_$(Platform)_$(Configuration)"/>
-				<Tool Name="VFResourceCompilerTool"/>
-				<Tool Name="VFMidlTool" SuppressStartupBanner="true" TargetEnvironment="midlTargetAMD64"/>
-				<Tool Name="VFCustomBuildTool"/>
-				<Tool Name="VFPreLinkEventTool"/>
-				<Tool Name="VFPreBuildEventTool"/>
-				<Tool Name="VFPostBuildEventTool"/>
-				<Tool Name="VFManifestTool" SuppressStartupBanner="true"/></Configuration>
+			<Tool Name="VFFortranCompilerTool" AdditionalOptions="/Qinline-factor:200" SuppressStartupBanner="true" DebugInformationFormat="debugLineInfoOnly" GenAlternateCodePaths="codeForAVX" OpenMPConditionalCompilation="false" OmpOffloadConstructs="ompOffloadNo" RealKIND="realKIND8" FloatingPointExceptionHandling="fpe0" Traceback="true"/>
+			<Tool Name="VFLinkerTool" LinkIncremental="linkIncrementalNo" SuppressStartupBanner="true" ProgramDatabaseFile="$(IntDir)\(TargetName).pdb" SubSystem="subSystemConsole" StackReserveSize="10485760" StackCommitSize="10485760" ObjectFileName="$(SolutionDir)..\..\obj\vs_bif_obj_$(Platform)_$(Configuration)"/>
+			<Tool Name="VFResourceCompilerTool"/>
+			<Tool Name="VFMidlTool" SuppressStartupBanner="true" TargetEnvironment="midlTargetAMD64"/>
+			<Tool Name="VFCustomBuildTool"/>
+			<Tool Name="VFPreLinkEventTool"/>
+			<Tool Name="VFPreBuildEventTool"/>
+			<Tool Name="VFPostBuildEventTool"/>
+			<Tool Name="VFManifestTool" SuppressStartupBanner="true"/>
+		</Configuration>
 		<Configuration Name="Fast_Debug|Win32" TargetName="$(ProjectName)_$(ConfigurationName)">
-				<Tool Name="VFFortranCompilerTool" SuppressStartupBanner="true" DebugInformationFormat="debugEnabled" Optimization="optimizeDisabled" OpenMPConditionalCompilation="false" DisableSpecificDiagnostics="6717" WarnInterfaces="true" RealKIND="realKIND8" FloatingPointExceptionHandling="fpe0" FloatingPointModel="source" Traceback="true" BoundsCheck="true" StackFrameCheck="true" RuntimeLibrary="rtMultiThreadedDebug"/>
-				<Tool Name="VFLinkerTool" LinkIncremental="linkIncrementalNo" SuppressStartupBanner="true" GenerateDebugInformation="true" SubSystem="subSystemConsole" StackReserveSize="10485760" StackCommitSize="10485760"/>
-				<Tool Name="VFResourceCompilerTool"/>
-				<Tool Name="VFMidlTool" SuppressStartupBanner="true"/>
-				<Tool Name="VFCustomBuildTool"/>
-				<Tool Name="VFPreLinkEventTool"/>
-				<Tool Name="VFPreBuildEventTool"/>
-				<Tool Name="VFPostBuildEventTool"/>
-				<Tool Name="VFManifestTool" SuppressStartupBanner="true"/></Configuration>
+			<Tool Name="VFFortranCompilerTool" SuppressStartupBanner="true" DebugInformationFormat="debugEnabled" Optimization="optimizeDisabled" OpenMPConditionalCompilation="false" DisableSpecificDiagnostics="6717" WarnInterfaces="true" RealKIND="realKIND8" FloatingPointExceptionHandling="fpe0" FloatingPointModel="source" Traceback="true" BoundsCheck="true" StackFrameCheck="true" RuntimeLibrary="rtMultiThreadedDebug"/>
+			<Tool Name="VFLinkerTool" LinkIncremental="linkIncrementalNo" SuppressStartupBanner="true" GenerateDebugInformation="true" SubSystem="subSystemConsole" StackReserveSize="10485760" StackCommitSize="10485760"/>
+			<Tool Name="VFResourceCompilerTool"/>
+			<Tool Name="VFMidlTool" SuppressStartupBanner="true"/>
+			<Tool Name="VFCustomBuildTool"/>
+			<Tool Name="VFPreLinkEventTool"/>
+			<Tool Name="VFPreBuildEventTool"/>
+			<Tool Name="VFPostBuildEventTool"/>
+			<Tool Name="VFManifestTool" SuppressStartupBanner="true"/>
+		</Configuration>
 		<Configuration Name="Fast_Debug|x64" OutputDirectory="$(SolutionDir)..\..\obj\vs_bif_obj_$(Platform)_$(Configuration)" IntermediateDirectory="$(SolutionDir)..\..\obj\vs_bif_obj_$(Platform)_$(Configuration)" TargetName="bif_$(ConfigurationName)">
-				<Tool Name="VFFortranCompilerTool" SuppressStartupBanner="true" DebugInformationFormat="debugEnabled" Optimization="optimizeDisabled" OpenMPConditionalCompilation="false" OmpOffloadConstructs="ompOffloadNo" ErrorLimit="10" DisableSpecificDiagnostics="6717" WarnUnusedVariables="true" RealKIND="realKIND8" InitLocalVarToNAN="true" FloatingPointExceptionHandling="fpe0" FloatingPointModel="source" Traceback="true" NullPointerCheck="true" BoundsCheck="true" UninitializedVariablesCheck="true" RuntimeLibrary="rtMultiThreadedDebug"/>
-				<Tool Name="VFLinkerTool" LinkIncremental="linkIncrementalNo" SuppressStartupBanner="true" GenerateDebugInformation="true" ProgramDatabaseFile="$(IntDir)\$(TargetName).pdb" SubSystem="subSystemConsole" StackReserveSize="10485760" StackCommitSize="10485760"/>
-				<Tool Name="VFResourceCompilerTool"/>
-				<Tool Name="VFMidlTool" SuppressStartupBanner="true" TargetEnvironment="midlTargetAMD64"/>
-				<Tool Name="VFCustomBuildTool"/>
-				<Tool Name="VFPreLinkEventTool"/>
-				<Tool Name="VFPreBuildEventTool"/>
-				<Tool Name="VFPostBuildEventTool"/>
-				<Tool Name="VFManifestTool" SuppressStartupBanner="true"/></Configuration></Configurations>
+			<Tool Name="VFFortranCompilerTool" SuppressStartupBanner="true" DebugInformationFormat="debugEnabled" Optimization="optimizeDisabled" OpenMPConditionalCompilation="false" OmpOffloadConstructs="ompOffloadNo" ErrorLimit="10" DisableSpecificDiagnostics="6717" WarnUnusedVariables="true" RealKIND="realKIND8" InitLocalVarToNAN="true" FloatingPointExceptionHandling="fpe0" FloatingPointModel="source" Traceback="true" NullPointerCheck="true" BoundsCheck="true" UninitializedVariablesCheck="true" RuntimeLibrary="rtMultiThreadedDebug"/>
+			<Tool Name="VFLinkerTool" LinkIncremental="linkIncrementalNo" SuppressStartupBanner="true" GenerateDebugInformation="true" ProgramDatabaseFile="$(IntDir)\$(TargetName).pdb" SubSystem="subSystemConsole" StackReserveSize="10485760" StackCommitSize="10485760"/>
+			<Tool Name="VFResourceCompilerTool"/>
+			<Tool Name="VFMidlTool" SuppressStartupBanner="true" TargetEnvironment="midlTargetAMD64"/>
+			<Tool Name="VFCustomBuildTool"/>
+			<Tool Name="VFPreLinkEventTool"/>
+			<Tool Name="VFPreBuildEventTool"/>
+			<Tool Name="VFPostBuildEventTool"/>
+			<Tool Name="VFManifestTool" SuppressStartupBanner="true"/>
+		</Configuration>
+	</Configurations>
 	<Files>
 		<Filter Name="datetime">
 		<File RelativePath="..\..\src\datetime\calendar_functions.f90"/>
@@ -87,6 +95,7 @@
 		<Filter Name="io">
 		<File RelativePath="..\..\src\io\cycling_text_file_interface.f90"/>
 		<File RelativePath="..\..\src\io\file_incrementer_interface.f90"/>
+		<File RelativePath="..\..\src\io\file_info_interface.f90"/>
 		<File RelativePath="..\..\src\io\file_io_interface.f90"/>
 		<File RelativePath="..\..\src\io\generic_input_file_instruction.f90"/>
 		<File RelativePath="..\..\src\io\generic_open_interface.fpp"/>
@@ -160,5 +169,7 @@
 		<File RelativePath="..\..\src\util_misc\set_array_interface.f90"/>
 		<File RelativePath="..\..\src\util_misc\util_interface.f90"/></Filter>
 		<File RelativePath="..\..\tests\src\main.f90"/>
-		<File RelativePath="..\..\makefile"/></Files>
-	<Globals/></VisualStudioProject>
+		<File RelativePath="..\..\makefile"/>
+	</Files>
+	<Globals/>
+</VisualStudioProject>
