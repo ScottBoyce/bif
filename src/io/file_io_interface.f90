@@ -5,7 +5,7 @@
 ! Holds a list of file unit numbers files and provides a convenient method of closing the files.
 !    
 ! MODULE LISTING:
-!   FILE_OPERATIONS_INTERFACE
+!   FILE_IO_INTERFACE
 !                           Global Variable
 !                                    TYPE(UNIT_ARRAY_BUILDER), SAVE:: DATAFILE_UNIT_NUMBER --> Any unit that remains open for entire program should be added - Note units opened with Generic_Input or Generic_Output with DATAFILE are automatically added. 
 !
@@ -247,7 +247,7 @@ MODULE FILE_IO_INTERFACE !, ONLY: CLOSE_GERNIC_INPUT_OUTPUT_DATAFILES, DATAFILE_
           !
     END DO READ_LOOP
     !
-    IF(.NOT. FIRST) WRITE(IOUT,'(A)')
+    IF(.NOT. FIRST) WRITE(IOUT,'(A)')  ! Implies TRANSCRIBE is true
     !
     IF(PRESENT(CNT)) CNT=N
     !
@@ -379,7 +379,7 @@ MODULE FILE_IO_INTERFACE !, ONLY: CLOSE_GERNIC_INPUT_OUTPUT_DATAFILES, DATAFILE_
     IU = Z
     CALL GENERIC_OPEN(FNAME, IU, Z, ACTION='READ', FORM='UNFORMATTED', ACCESS='STREAM', STATUS='OLD', BUFFER_BLOCKSIZE=65536)   !, WARN=GET_WARN()
     !
-    IBLNK = Z
+    IBLNK = Z  ! Keep track of trailing blank spaces (dont include them)
     WID = Z
     DO
         READ(IU,IOSTAT=IERR) TXT

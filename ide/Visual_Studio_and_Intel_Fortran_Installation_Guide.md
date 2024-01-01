@@ -5,7 +5,7 @@ This document provides an overview on how to setup the tools for compiling
 In particular, the installation and setup of [MS Visual Studio](https://visualstudio.microsoft.com/) (the IDE) and [Intel oneAPI](https://www.intel.com/content/www/us/en/developer/tools/oneapi/overview.html) (Fortran and C compilers).
 The tools mentioned are not endorsed in any way, but are used to build the
 BiF library and run the test cases. 
-Fortunately, as of writing this document, both offer both Visual Studio and oneAPI offer free, no-cost editions. [GFortran](https://gcc.gnu.org/wiki/GFortran) and [LLVM Flang](https://flang.llvm.org/docs/) are open-source compilers that are available, but come with several limitations. First, there are GFortran multiple versions of gfortran, and most older versions are unable to compile this code due to compiler bugs or lack of newer fortran features (gfortran 11.3.0 and 12.1.0 can compile this repository). Second, gfortran tends to provide slower running executables compared to Intel Fortran. Despite this, the included makefile is set to compile with gfortran as the default option. Flang is a relatively new Fortran compiler that is part of the [LLVM](https://llvm.org/) project. While LLVM does support MS Windows, Flang does NOT nor, as of writing this, considered "production ready".
+Fortunately, as of writing this document, both Visual Studio and oneAPI offer free, no-cost editions. [GFortran](https://gcc.gnu.org/wiki/GFortran) and [LLVM Flang](https://flang.llvm.org/docs/) are open-source compilers that are available, but come with several limitations. First, there are multiple versions of GFortran, and most older versions are unable to compile this code due to compiler bugs or lack of newer fortran features (gfortran 11.3.0 and 12.1.0 can compile this repository). Second, GFortran tends to provide slower running executables compared to Intel Fortran. Despite this, the included makefile is set to compile with GFortran as the default option. Flang is a relatively new Fortran compiler that is part of the [LLVM](https://llvm.org/) project. While LLVM does support MS Windows, it is not considered "production ready".
 
 This document will first explain what Visual Studio is, and how to do a minimal installation for setting up oneAPI. Then it will go over the minimal installation of oneAPI in order to compile
 BiF.
@@ -13,27 +13,25 @@ BiF.
 
 [[_TOC_]]     
 
-## Import Note: oneAPI Compiler Versions
+## Important Note: oneAPI Compiler Versions
 
-Intel oneAPI currently has two Fortran compilers denoted as Intel Fortran Compiler Classic (**ifort**) and Intel Fortran Compiler (**ifx**). The ifort compiler, formerly called *Intel Parallel Studio* and *Intel Fortran Composer*, is the original Fortran compiler provided by Intel that is used to compile MODFLOW. The ifx compiler is a new, redesigned compiler by Intel that translates the Fortran to [LLVM language-independent intermediate representation]([LLVM - Wikipedia](https://en.wikipedia.org/wiki/LLVM)) (IR) that is then compiled. The ifx compiler is intended to replace ifort; however as of writing this, ifx cannot compile all software that is ifort can. As of writing this document, 
-**BiF only compiles with ifort**; 
-using ifx raises multiple errors saying feature not currently implemented.  
+Intel oneAPI currently has two Fortran compilers denoted as Intel Fortran Compiler Classic (**ifort**) and Intel Fortran Compiler (**ifx**). The ifort compiler, formerly called *Intel Parallel Studio* and *Intel Fortran Composer*, is the original Fortran compiler provided by Intel that is used to compile MODFLOW. The ifx compiler is a new, redesigned compiler by Intel that translates Fortran to a language-independent intermediate representation ([LLVM - Wikipedia](https://en.wikipedia.org/wiki/LLVM)) that is  compiled. The ifx compiler is intended to replace ifort and Intel has announced that support for ifort will only continue until December-2024. It is recommended to compile your code first with ifort, then try ifx and check to see if the solution deviates. If they do, then it is check if there is a solution at [Intel® Fortran Compiler - Intel Community](https://community.intel.com/t5/Intel-Fortran-Compiler/bd-p/fortran-compiler), if not then post your issue. 
 
-To make compilers more confusing is the versioning of oneAPI is different for ifort and ifx. The oneAPI version is formatted as `YYYY.x`, where `YYYY` is the year released and `x` is a release number (bigger is newer). For example, the past five versions are:
+To make compilers more confusing is the versioning of oneAPI is different for ifort and ifx. The oneAPI version is formatted as `YYYY.x`, where `YYYY` is the year released and `x` is a release number (bigger is newer). For example, the following are past versions from newest to oldest:
 
-| oneAPI  Version | ifx Version | ifort Version |
-| --------------- | ----------- | ------------- |
-| 2023.0          | 2023.0      | 2021.8        |
-| 2022.3          | 2022.3      | 2021.7        |
-| 2022.2          | 2022.2      | 2021.6        |
-| 2022.1          | 2022.1      | 2021.5        |
-| 2021.4          | 2021.4      | 2021.4        |
+| oneAPI Version | ifx Version | ifort Version |
+| -------------- | ----------- | ------------- |
+| 2023.0         | 2023.0      | 2021.8        |
+| 2022.3         | 2022.3      | 2021.7        |
+| 2022.2         | 2022.2      | 2021.6        |
+| 2022.1         | 2022.1      | 2021.5        |
+| 2021.4         | 2021.4      | 2021.4        |
 
 
 
 ## Visual Studio Community Installation Guide (Windows 10)
 
-Visual Studio (VS) does a major release every two to three years and distinguishes the version with the year it's released. The three recent versions are Visual Studio 2017, Visual Studio 2019, Visual Studio 2022  (denoted as, vs2017, vs2019, vs2022, respectively, and with sematic versioning as v15, v16, v17, respectively). The key difference between the "major" versions (vs2019, vs2022, vsXYZ) is the Microsoft  `.NET` framework and Microsoft `C` compilers included. This does not affect the Intel OneAPI, so long as the version of visual studio is supported by it. 
+Visual Studio (VS) does a major release every two to three years and distinguishes the version with the year it's released. The three recent versions are Visual Studio 2017, Visual Studio 2019, Visual Studio 2022  (denoted as, vs2017, vs2019, vs2022, respectively, and with sematic versioning as v15, v16, v17, respectively). The key difference between the "major" versions (vs2019, vs2022, vsXYZ) is the Microsoft  `.NET` framework and Microsoft `C` compilers included. This does not affect the Intel OneAPI, so long as the version of Visual Studio is supported by it. 
 
 **It is important to ensure that both Fortran (ifort/ifx) and C (icc/icx) are supported by the Visual Studio version installed.** The C version is only necessary if you intend to compile the GMG solver. The C version is automatically installed along with the Intel oneAPI DPC++/C++ (which is a requirement of ifort). The Intel Compiler support in Visual Studio is specified at:  
 https://www.intel.com/content/www/us/en/developer/articles/reference-implementation/intel-compilers-compatibility-with-microsoft-visual-studio-and-xcode.html  
@@ -68,7 +66,7 @@ https://visualstudio.microsoft.com/thank-you-downloading-visual-studio/?sku=Comm
 
 &nbsp; &nbsp; &nbsp; ➥ [Make sure Intel oneAPI supports it](https://www.intel.com/content/www/us/en/developer/articles/reference-implementation/intel-compilers-compatibility-with-microsoft-visual-studio-and-xcode.html)
 
-&nbsp; &nbsp; &nbsp; ➥  You can download a specific older versions at:  
+&nbsp; &nbsp; &nbsp; ➥  You can download a specific older version at:  
 &nbsp; &nbsp; &nbsp; &nbsp; &nbsp; &nbsp; https://visualstudio.microsoft.com/vs/older-downloads/  
 &nbsp; &nbsp; &nbsp; &nbsp; &nbsp; &nbsp;  &nbsp; &nbsp; &nbsp; ➥  Use this link to download VS2019.
 
@@ -85,7 +83,7 @@ At a minimum, for using Intel Visual Fortran (ifort), you must include the `Desk
 
 
 
-After installation, VS will ask if you want to log into your Microsoft account. You can skip this step and log in later if you do not want to log in. The advantage to logging into your Microsoft account is that your settings are transferred across multiple computers (such as dark theme and window placement).
+After installation, VS will ask if you want to log into your Microsoft account. You can skip this step and log in later if you do not want to log in. The advantage to logging in to your Microsoft account is that your settings are transferred across multiple computers (such as dark theme and window placement).
 
 The next window will ask you to select a theme. You may want to leave this as *General* and select the *Dark* theme. Note that, this window may not appear if you signed into your Microsoft account.
 
@@ -158,7 +156,7 @@ To automatically use Unix style ending you can add the Visual Studio Extension [
 
 ## Intel oneAPI and Visual Fortran
 
-Intel Visual Fortran is now part of the [Intel OneAPI](https://software.intel.com/content/www/us/en/develop/tools/oneapi.html) software suite and is free to use. It requires that Visual Studio to be installed beforehand and two Intel specific installation files. The first is the [Intel oneAPI Base Toolkit](https://software.intel.com/content/www/us/en/develop/tools/oneapi/base-toolkit.html) and the second is [Intel oneAPI HPC Toolkit](https://software.intel.com/content/www/us/en/develop/tools/oneapi/hpc-toolkit.html). The latter contains the Fortran compiler, which is dependent on the base toolkit.
+Intel Visual Fortran is now part of the [Intel OneAPI](https://software.intel.com/content/www/us/en/develop/tools/oneapi.html) software suite and is free to use. It requires that Visual Studio be installed beforehand plus two Intel specific installation files: the [Intel oneAPI Base Toolkit](https://software.intel.com/content/www/us/en/develop/tools/oneapi/base-toolkit.html) and the [Intel oneAPI HPC Toolkit](https://software.intel.com/content/www/us/en/develop/tools/oneapi/hpc-toolkit.html). The latter contains the Fortran compiler, which is dependent on the base toolkit.
 
 1. Download the Intel oneAPI Base Toolkit by selecting the appropriate boxes at:  
    https://www.intel.com/content/www/us/en/developer/tools/oneapi/base-toolkit-download.html 

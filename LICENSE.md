@@ -1,4 +1,4 @@
-# Copyright 2022 U.S. Geological Survey
+# Copyright 2024 U.S. Geological Survey
 ```
                                  Apache License
                            Version 2.0, January 2004
@@ -210,3 +210,26 @@
   See the License for the specific language governing permissions and
   limitations under the License.
 ```
+
+  
+
+## APPENDIX B: Modification
+
+  
+
+```
+Any compiled executable binary that uses source code provided in this respository or release assets
+do not require inclusion of this license file. 
+
+That is, Section 4a does not apply to sharing, using, or 
+distributing compiled executable binaries obtained from this respository.
+
+However, any publications that result from using this library
+should include the following citation:
+```
+
+
+* Boyce, S.E., 20XX, Batteries Included Fortran Library (BiF-lib), version 1.x: U.S. Geological Survey Software Release, https://doi.org/10.5066/P9K2IQ6Y
+  + 20XX should replace the XX with the year of release for the minor version.
+  + 1.x should replace the x with the appropriate minor version.
+

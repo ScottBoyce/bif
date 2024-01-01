@@ -7,9 +7,9 @@
 # If you use BiF-lib, this MAKEFILE, a derivative of this makefile 
 #   please include in any publications the following citations:
 #
-#    Boyce, S.E., Hanson, R.T., Ferguson, I., Schmid, W., Henson, W., Reimann, T., Mehl, S.M., and Earll, M.M., 2020, One-Water Hydrologic Flow Model: A MODFLOW based conjunctive-use simulation software: U.S. Geological Survey Techniques and Methods 6–A60, 435 p., https://doi.org/10.3133/tm6A60
+#    Boyce, S.E., 2024, Batteries Included Fortran Library (BiF-Lib), version 1.2.0: U.S. Geological Survey Software Release, https://doi.org/10.5066/P9K2IQ6Y
 #
-#    Boyce, S.E., 2022, Batteries Included Fortran Library (BiF-Lib), version 1.1.0: U.S. Geological Survey Software Release, https://doi.org/10.5066/xyz
+#    Boyce, S.E., Hanson, R.T., Ferguson, I., Schmid, W., Henson, W., Reimann, T., Mehl, S.M., and Earll, M.M., 2020, One-Water Hydrologic Flow Model: A MODFLOW based conjunctive-use simulation software: U.S. Geological Survey Techniques and Methods 6–A60, 435 p., https://doi.org/10.3133/tm6A60
 #
 #    Boyce, S.E., 2022, MODFLOW One-Water Hydrologic Flow Model (MF-OWHM) Conjunctive Use and Integrated Hydrologic Flow Modeling Software, version 2.2.x: U.S. Geological Survey Software Release, https://doi.org/10.5066/P9P8I8GS
 #
@@ -18,8 +18,10 @@
 #~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~
 #
 # This makefile contains the options for compiling using Intel, GFortran, and LLVM.  
-#   There are a set of known compiler bugs that have been summitted to Intel and GCC that prevent compilation.
-#   If you receive "internal compiler error" when running this makefile, it is because the compiler version does not work.
+#   It is recommended to use the current release of either the Intel Fortran or GNU Fortran compilers.
+#      Older versions had a set of known compiler bugs that have been summitted to Intel and GCC, and were subsequently patched with recent compiler versions.
+#      If you receive "internal compiler error" when running this makefile, it is because the compiler version does not work.
+#      Linux on windows recommends using MinGW or WSL. Cygwin is an emulator and its use is not recommended.
 #   
 #   The Intel Fortran compiler is now part of Intel oneAPI and has two different versions:
 #     Intel Fortran Compiler Classic (ifort) and Intel Fortran (ifx).
