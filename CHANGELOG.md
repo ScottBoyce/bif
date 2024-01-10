@@ -6,7 +6,7 @@
 
 ## Code Citation
 
-Boyce, S.E., 2023, Batteries Included Fortran Library (BiF-Lib), version 1.2.0: U.S. Geological Survey Software Release, https://doi.org/10.5066/P9K2IQ6Y
+Boyce, S.E., 2024, Batteries Included Fortran Library (BiF-Lib), version 1.2.0: U.S. Geological Survey Software Release, https://doi.org/10.5066/P9K2IQ6Y
 
 
 
@@ -14,7 +14,7 @@ Boyce, S.E., 2023, Batteries Included Fortran Library (BiF-Lib), version 1.2.0: 
 
 Part of these utilities were developed for the following project:
 
-Boyce, S.E., 2023, MODFLOW One-Water Hydrologic Flow Model (MF-OWHM) Conjunctive Use and Integrated Hydrologic Flow Modeling Software, version 2.x: U.S. Geological Survey Software Release, https://doi.org/10.5066/P9P8I8GS
+Boyce, S.E., 2024, MODFLOW One-Water Hydrologic Flow Model (MF-OWHM) Conjunctive Use and Integrated Hydrologic Flow Modeling Software, version 2.x: U.S. Geological Survey Software Release, https://doi.org/10.5066/P9P8I8GS
 
 Boyce, S.E., Hanson, R.T., Ferguson, I., Schmid, W., Henson, W., Reimann, T., Mehl, S.M., and Earll, M.M., 2020, One-Water Hydrologic Flow Model: A MODFLOW based conjunctive-use simulation software: U.S. Geological Survey Techniques and Methods 6–A60, 435 p., [https://doi.org/10.3133/tm6A60](https://doi.org/10.3133/tm6A60)
 
@@ -36,17 +36,29 @@ Boyce, S.E., Hanson, R.T., Ferguson, I., Schmid, W., Henson, W., Reimann, T., Me
 
 ## 1.2.0
 
-TBA
+2024-1-10
 
-Header TBA  
-Header TBA  
+Major release  
+Includes a new modules `simple_file_io`, ``file_info_interface`, and `circular_queue_instruction` that writes to a file 1D and 2D arrays.  
 
 #### Features
 
+- Simple, dependency free file io routines Gadded in `src/io/simple_file_io.f90`
+  - Contains a set of convenience routines for parsing input files and opening read only or write only files.
+
+  - The module is self-contained with simplified versions of multiple files from the full library.
+    - Its use is not recommended with other parts of BiF to avoid import conflicts.
+    - Provided for programs that require easy file io and do not want the full BiF dependency tree.
+  
 - Circular Queue Data Type added in `src/types_and_containers/circular_queue_instruction.f90`
   - This type is a linked list whose end points to the start to form a circle list.
 
   - Currently only supports `integer(int64) numbers`.
+
+- File Info Data Type added in `src/io/file_info_interface.f90`
+  - Queries and populates the type with all file properties of an open file (that is, something associated with a fortran unit number).
+
+  - The information query can be done by unit number or file name.
 
 - `EXECUTE_COMMAND_GET_OUTPUT`  added to `system/system_call.f90 ` (new file).  
   This procedure executes a command using the operating system shell and returns the output from the command.
@@ -92,8 +104,6 @@ Header TBA
   - Fortran 95 free format standard limits the file width to 132 columns.
 
   - Note, code still fails to compile with gfortran because it does not support the destructor statement `FINAL::`
-
-
 
 &nbsp; 
 

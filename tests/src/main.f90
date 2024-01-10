@@ -14,7 +14,6 @@ PROGRAM MAIN
   !
   CALL UT%INIT(NTEST=128)
   CALL test_WRITE_ARRAY_INTERFACE(UT)
-  
   !
   ! ----------------------------------------------------------------------------------------------
   !

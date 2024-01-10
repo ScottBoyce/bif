@@ -1,10 +1,10 @@
 [
   {
     "version": "1.2.0",
-    "status": "Preliminary",
+    "status": "Production",
 
     "date": {
-      "metadataLastUpdated": "2023-04-10"
+      "metadataLastUpdated": "2024-01-10"
     },
 
     "downloadURL":   "https://code.usgs.gov/fortran/bif/-/archive/main/bif-main.zip",
