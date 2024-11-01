@@ -78,6 +78,8 @@ MODULE IXJ_INSTRUCTION!, ONLY: IXJ_STRUCTURE, IXJ_SINGLE_ENTRY
       PROCEDURE, PASS(IXJ):: COUNT_ID => COUNT_INT_IXJ_STRUCTURE     !COUNT_ID(ID, ICOL, CNT)
       PROCEDURE, PASS(IXJ):: GET_VAL  => GET_POS_P_VAL_PART          !GET_VAL(ICOL) RESULT(VAL)
       PROCEDURE, PASS(IXJ):: GET_VALUE_IXJ                           !GET_VALUE_IXJ(VAL, IVAL, ID, ID_COL, ROW, IROW, COL, ICOL, FOUND, FROM_START)
+      GENERIC             :: GET_VALUE => GET_VALUE_DBL, &           !GET_VALUE(VAL, IVALS, VPOS) 
+                                          GET_VALUE_INT              !GET_VALUE(VAL, IVALS) 
       !
       PROCEDURE, PASS(IXJ):: MOVE_POS_P_TO_RECORD          !(FOUND, FROM_START, ID, ID_COLNUM, ROW, IROW, COL, ICOL)
       !
@@ -119,6 +121,9 @@ MODULE IXJ_INSTRUCTION!, ONLY: IXJ_STRUCTURE, IXJ_SINGLE_ENTRY
       !
       PROCEDURE, PASS(IXJ), PRIVATE:: BUILD_COMPRESSED_VALUE_STORAGE_TYPE_DIM2 !(IDIM1, IDIM2, VPOS, CVS)
       PROCEDURE, PASS(IXJ), PRIVATE:: BUILD_COMPRESSED_VALUE_STORAGE_TYPE_DIM3 !(IDIM1, IDIM2, IDIM3, VPOS, CVS)
+      !
+      PROCEDURE, PASS(IXJ), PRIVATE:: GET_VALUE_DBL
+      PROCEDURE, PASS(IXJ), PRIVATE:: GET_VALUE_INT
       !
       !!!PROCEDURE, PASS(IXJ):: GET_J_IXJ                   !(J,   IVAL, ID, ID_COL, ROW, IROW, COL, ICOL, FOUND, FROM_START)
       !
@@ -716,6 +721,61 @@ MODULE IXJ_INSTRUCTION!, ONLY: IXJ_STRUCTURE, IXJ_SINGLE_ENTRY
     IF(PRESENT(FOUND)) FOUND = FND
     !
   END SUBROUTINE
+  !
+  ! -----------------------------------------------------------------------------------------------------------------------------
+  !
+  PURE FUNCTION GET_VALUE_DBL(IXJ, IVALS, VPOS) RESULT(VAL)
+    ! Assumes IVALS are at the start of I
+    CLASS(IXJ_STRUCTURE),  INTENT(IN):: IXJ
+    INTEGER, DIMENSION(:), INTENT(IN ):: IVALS
+    INTEGER,               INTENT(IN ):: VPOS
+    REAL(DBL):: VAL
+    INTEGER:: I, P, N
+    !
+    IF(IXJ%IS_CONSTANT) THEN
+                         VAL = IXJ%DAT(ONE)%X(VPOS)
+    ELSE
+        N = SIZE(IVALS)
+        P = Z
+        DO I=ONE, IXJ%N
+                IF(ALL(IXJ%DAT(I)%I(:N) == IVALS(:N))) THEN
+                                            P = I
+                                            EXIT
+                END IF
+        END DO
+        !
+        IF(P > Z) THEN
+            VAL = IXJ%DAT(P)%X(VPOS)
+        ELSE
+            VAL = IEEE_VALUE(VAL, IEEE_QUIET_NAN)
+        END IF
+    END IF
+    !
+  END FUNCTION
+  !
+  PURE FUNCTION GET_VALUE_INT(IXJ, IVALS) RESULT(VAL)
+    ! Assumes that IVALS are at the start and VAL is just after them.
+    CLASS(IXJ_STRUCTURE),  INTENT(IN):: IXJ
+    INTEGER, DIMENSION(:), INTENT(IN ):: IVALS
+    INTEGER:: VAL
+    INTEGER:: I, N
+    !
+    N = SIZE(IVALS)
+    IF(IXJ%IS_CONSTANT) THEN
+                         VAL = IXJ%DAT(ONE)%X(N+ONE)
+    ELSE
+        VAL = -HUGE(VAL)
+        DO I=ONE, IXJ%N
+                IF(ALL(IXJ%DAT(I)%I(:N) == IVALS(:N))) THEN
+                                            VAL = IXJ%DAT(I)%I(N+ONE)
+                                            RETURN
+                END IF
+        END DO
+        !
+    END IF
+    !
+  END FUNCTION
+  !
   !
   ! -----------------------------------------------------------------------------------------------------------------------------
   !
