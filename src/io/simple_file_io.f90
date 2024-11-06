@@ -554,16 +554,15 @@ module simple_file_io
     character(:),     allocatable :: str
     real(real32):: tmp
     logical :: val10_chk, val1c_chk, val1k_chk
-    real(real32):: tol, one, neg
     character(16):: num                                         ! Largest possible number is 14 characters
     !
     num=''
     !
     if(val /= val) then  ! NaN never equals itself if IEEE float
         num='nan'
-    elseif(val >= HUGE(one)) then
+    elseif(val >= HUGE(tmp)) then
         num = 'inf'
-    elseif(val <= -HUGE(one)) then
+    elseif(val <= -HUGE(tmp)) then
         num = '-inf'
     elseif(val == 0.0_real32) then
         num = '0.0'
@@ -573,12 +572,9 @@ module simple_file_io
        write(num,'(es16.7e1)') val
     else !~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~v
     !
-    tol= 1.e-13_real32
-    one= 1.0_real32
-    neg= -1.0_real32
-    tmp =     10._real32*val;   val10_chk = abs(tmp - anint(tmp)) < tmp * tol  .and. (tmp>=one .or. tmp<=neg)
-    tmp =    100._real32*val;   val1c_chk = abs(tmp - anint(tmp)) < tmp * tol  .and. (tmp>=one .or. tmp<=neg)
-    tmp =   1000._real32*val;   val1k_chk = abs(tmp - anint(tmp)) < tmp * tol  .and. (tmp>=one .or. tmp<=neg)
+    tmp =   10._real32*val; val10_chk = abs(tmp - anint(tmp)) < abs(tmp) * 1.e-7_real32 .and. (tmp>=1.0_real32 .or. tmp<=-1.0_real32)
+    tmp =  100._real32*val; val1c_chk = abs(tmp - anint(tmp)) < abs(tmp) * 1.e-7_real32 .and. (tmp>=1.0_real32 .or. tmp<=-1.0_real32)
+    tmp = 1000._real32*val; val1k_chk = abs(tmp - anint(tmp)) < abs(tmp) * 1.e-7_real32 .and. (tmp>=1.0_real32 .or. tmp<=-1.0_real32)
     !
     if( val10_chk ) then
        write(num,'(f16.1)') val
@@ -612,16 +608,15 @@ module simple_file_io
     character(:),     allocatable :: str
     real(real64):: tmp
     logical :: val10_chk, val1c_chk, val1k_chk, val100k_chk
-    real(real64):: tol, one, neg
     character(16):: num                                         ! Largest possible number is 14 characters
     !
     num=''
     !
     if(val /= val) then  ! NaN never equals itself if IEEE float
         num='nan'
-    elseif(val >= HUGE(one)) then
+    elseif(val >= HUGE(tmp)) then
         num = 'inf'
-    elseif(val <= -HUGE(one)) then
+    elseif(val <= -HUGE(tmp)) then
         num = '-inf'
     elseif(val == 0.0_real64) then
         num = '0.0'
@@ -633,13 +628,10 @@ module simple_file_io
        write(num,'(es16.7e1)') val
     else !~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~v
     !
-    tol= 1.e-13_real64
-    one= 1.0_real64
-    neg= -1.0_real64
-    tmp =     10._real64*val;   val10_chk = abs(tmp - anint(tmp)) < tmp * tol  .and. (tmp>=one .or. tmp<=neg)
-    tmp =    100._real64*val;   val1c_chk = abs(tmp - anint(tmp)) < tmp * tol  .and. (tmp>=one .or. tmp<=neg)
-    tmp =   1000._real64*val;   val1k_chk = abs(tmp - anint(tmp)) < tmp * tol  .and. (tmp>=one .or. tmp<=neg)
-    tmp = 100000._real64*val; val100k_chk = abs(tmp - anint(tmp)) < tmp * tol  .and. (tmp>=one .or. tmp<=neg)
+    tmp =     10._real64*val;   val10_chk = abs(tmp - anint(tmp)) < abs(tmp) * 1.e-13_real64 .and. (tmp>=1.0_real64 .or. tmp<=-1.0_real64)
+    tmp =    100._real64*val;   val1c_chk = abs(tmp - anint(tmp)) < abs(tmp) * 1.e-13_real64 .and. (tmp>=1.0_real64 .or. tmp<=-1.0_real64)
+    tmp =   1000._real64*val;   val1k_chk = abs(tmp - anint(tmp)) < abs(tmp) * 1.e-13_real64 .and. (tmp>=1.0_real64 .or. tmp<=-1.0_real64)
+    tmp = 100000._real64*val; val100k_chk = abs(tmp - anint(tmp)) < abs(tmp) * 1.e-13_real64 .and. (tmp>=1.0_real64 .or. tmp<=-1.0_real64)
     !
     if( val10_chk ) then
        write(num,'(f16.1)') val
