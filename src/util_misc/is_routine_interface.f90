@@ -307,34 +307,51 @@ MODULE IS_ROUTINES
   !
   !#############################################################################################################################################################
   !
-  PURE ELEMENTAL FUNCTION IS_INTEGER(VAR)
-    CHARACTER(*), INTENT(IN):: VAR
-    LOGICAL:: IS_INTEGER
-    INTEGER:: I, N, ISTART
+  pure elemental function is_integer(n, allow_int_like_float) result(is_int)
+    ! Function to check if a given character string represents an integer value.
+    ! It optionally, accepts Fortran input styles including scientific notation.
+    ! Note, this is very similar to the is_integer_interface.f90
+    character(*),      intent(in) :: n
+    logical, optional, intent(in) :: allow_int_like_float
+    logical:: is_int
+    integer:: i, dim, istart
     !
-    N = LEN_TRIM(VAR)
-    ISTART = N+1
-    DO I=ONE, N
-        IF(VAR(I:I) /= ' ') THEN
-            ISTART = I
-            IF(VAR(I:I)=='+' .OR. VAR(I:I) =='-') ISTART = ISTART + ONE
-            EXIT
-        END IF
-    END DO
+    if(present(allow_int_like_float)) then
+        if (allow_int_like_float) then
+            if(scan(n, ".eEdD")) then
+                block
+                   real(DBL) :: x
+                   read(n, *, iostat=i) x
+                   if (i == 0) then
+                       is_int = abs(x - anint(x)) < abs(x) * 1.e-13_DBL
+                   else
+                       is_int = FALSE
+                   end if
+                end block
+                return
+            end if
+        end if
+    end if
     !
-    IF( ISTART <= N ) THEN
-       IS_INTEGER = TRUE
-       DO I=ISTART, N
-           IF( INDEX('0123456789',VAR(I:I)) == Z ) THEN ! DID NOT FIND A NUMBER, SO NOT AN INTEGER
-               IS_INTEGER = FALSE
-               EXIT
-           END IF
-       END DO
-    ELSE
-        IS_INTEGER = FALSE
-    END IF
+    dim = len_trim(n)
+    istart = dim + 1
+    do i=1, dim
+        if(n(i:i) /= " ") then
+            istart = i
+            if(n(i:i)=="+" .or. n(i:i) =="-") istart = istart + 1
+            exit
+        end if
+    end do
     !
-  END FUNCTION
+    is_int = istart <= dim
+    do i=istart, dim
+       if( iachar(n(i:i)) < iachar('0') .or. iachar('9') < iachar(n(i:i)) ) then ! did not find a number, so not an integer
+           is_int = FALSE
+           exit
+       end if
+    end do
+    !
+  end function
   !
   !#############################################################################################################################################################
   !
