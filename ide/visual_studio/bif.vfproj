@@ -109,17 +109,25 @@
 			<File RelativePath="..\..\src\io\write_array_interface.f90"/>
 		</Filter>
 		<Filter Name="math_numbers">
-			<File RelativePath="..\..\src\math_numbers\descriptive_statistics.f90"/>
-			<File RelativePath="..\..\src\math_numbers\EquationParser.f90"/>
+			<File RelativePath="..\..\src\math_numbers\binomial_interface.f90">
+			</File>
+			<File RelativePath="..\..\src\math_numbers\descriptive_statistics.f90">
+			</File>
+			<File RelativePath="..\..\src\math_numbers\EquationParser.f90">
+			</File>
+			<File RelativePath="..\..\src\math_numbers\factorial_interface.f90">
+			</File>
 			<File RelativePath="..\..\src\math_numbers\hexadecimal_instruction.f90"/>
 			<File RelativePath="..\..\src\math_numbers\isqrt_interface.f90"/>
 			<File RelativePath="..\..\src\math_numbers\log2_interface.f90"/>
-			<File RelativePath="..\..\src\math_numbers\number_conversion_interface.f90"/>
+			<File RelativePath="..\..\src\math_numbers\number_conversion_interface.f90">
+			</File>
 			<File RelativePath="..\..\src\math_numbers\power_interface.f90"/>
 			<File RelativePath="..\..\src\math_numbers\prime_finder.f90"/>
 			<File RelativePath="..\..\src\math_numbers\random_routines_interface.f90"/>
 			<File RelativePath="..\..\src\math_numbers\relax_interface.f90"/>
-			<File RelativePath="..\..\src\math_numbers\secant_interface.f90"/>
+			<File RelativePath="..\..\src\math_numbers\secant_interface.f90">
+			</File>
 		</Filter>
 		<Filter Name="sort">
 			<File RelativePath="..\..\src\sort\sort_interface_ascii.f90"/>
@@ -178,14 +186,17 @@
 		<Filter Name="util_misc">
 			<File RelativePath="..\..\src\util_misc\alloc_interface.f90"/>
 			<File RelativePath="..\..\src\util_misc\constants.f90"/>
-			<File RelativePath="..\..\src\util_misc\is_routine_interface.f90"/>
+			<File RelativePath="..\..\src\util_misc\is_integer_interface.f90">
+			</File>
+			<File RelativePath="..\..\src\util_misc\is_routine_interface.f90">
+			</File>
 			<File RelativePath="..\..\src\util_misc\position_interface.f90"/>
 			<File RelativePath="..\..\src\util_misc\same_memory_address_interface.f90"/>
 			<File RelativePath="..\..\src\util_misc\set_array_interface.f90"/>
-			<File RelativePath="..\..\src\util_misc\util_interface.f90"/>
+			<File RelativePath="..\..\src\util_misc\util_interface.f90">
+			</File>
 		</Filter>
-		<File RelativePath="..\..\tests\src\main.f90">
-		</File>
+		<File RelativePath="..\..\tests\src\main.f90"/>
 		<File RelativePath="..\..\makefile"/>
 	</Files>
 	<Globals/>
