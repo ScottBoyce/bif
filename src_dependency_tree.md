@@ -71,6 +71,16 @@
 
 
 
+### binomial_interface.f90
+
+*No Dependency*
+
+
+
+
+------
+
+
 ### buffered_reader_instruction.f90
 
 | Dep  | buffered_reader_instruction.f90 |
@@ -240,6 +250,17 @@
 | :--: | --------------------- |
 |  1   | constants.f90         |
 |  2   | num2str_interface.f90 |
+
+
+
+
+------
+
+
+
+### factorial_interface.f90
+
+*No Dependency*	
 
 
 
@@ -425,6 +446,17 @@
 |  1   | constants.f90          |
 |  2   | num2str_interface.f90  |
 |  3   | error_interface.f90    |
+
+
+
+
+------
+
+
+
+###  is_integer_interface.f90
+
+*No Dependency*
 
 
 
