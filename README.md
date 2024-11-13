@@ -201,7 +201,9 @@ For an exact listing of each files dependencies, please see open the file [src_d
 | io                   | post_key_sub.f90                                 | Parse string to get specified post-keywords for file-io <br />Used by GenericInput and GenericOut |   2   |
 | io                   | simple_file_io.f90                               | Set of convenience routines for parsing input files and opening read only or write only files.<br/>Uses code already defined in BiF; only use when minimal dependencies are required. |   1   |
 | io                   | write_array_interface.f90                        | Write a 1D or 2D array to a file.                            |   2   |
+| math_numbers         | binomial_interface.f90                           | Calculates the binomial coefficient, C(n, k), for a given n and k. |   1   |
 | math_numbers         | descriptive_statistics.f90                       | Provides an routines for calculating basic descriptive statistics (eg mean, variance, etc).<br />Includes a data type for online estimation of the descriptive statistics |   1   |
+| math_numbers         | factorial_interface.f90                          | Calculate the factorial for a given non-negative integer or real. |   1   |
 | math_numbers         | EquationParser.f90                               | Parse string to solve an equation for a given variable set.  |   3   |
 | math_numbers         | hexadecimal_instruction.f90                      | Provides hexadecimal structure with basic operations, such as addition   and conversion to Unicode point. |   1   |
 | math_numbers         | isqrt_interface.f90                              | Floor square root of integer using bisection method.         |   1   |
@@ -249,6 +251,7 @@ For an exact listing of each files dependencies, please see open the file [src_d
 | unit_test            | unit_testing_instruction.f90                     | Data type that provides unit test methods, such as assert.<br />Provides bookkeeping of what tests fail and pass. |   1   |
 | util_misc            | alloc_interface.f90                              | Allocate arrays with lots of options                         |   1   |
 | util_misc            | constants.f90                                    | Defines a set of parameter variables that are used by the rest of the library. |   0   |
+| util_misc            | is_integer_interface.f90                         | Function that determines if a variable contains an integer or not. |   1   |
 | util_misc            | is_routine_interface.f90                         | IS_ query functions. <br />For example, `IS_ODD` returns if the number is odd. |   1   |
 | util_misc            | position_interface.f90                           | Return index where a value is in a vector                    |   2   |
 | util_misc            | same_memory_address_interface.f90                | Routine that tests if two variables occupy the same ram-memory location. |   1   |
