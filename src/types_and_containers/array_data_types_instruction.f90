@@ -331,6 +331,7 @@ MODULE ARRAY_DATA_TYPES!, ONLY: INTEGER_VECTOR, DOUBLE_VECTOR, INTEGER_MATRIX, D
   TYPE COMPRESSED_VALUE_STORAGE
       INTEGER:: N = Z      !Size of VAL and DIM(2)
       INTEGER:: M = Z      !Size of DIM(1)
+      INTEGER:: CAP = Z    ! Allocated size of VAL AND DIM
       LOGICAL:: IS_CONSTANT = FALSE                      !If true then N = ONE and all entries hold the same value
       INTEGER,          DIMENSION(:,:), ALLOCATABLE:: DIM
       DOUBLE PRECISION, DIMENSION(:),   ALLOCATABLE:: VAL
@@ -2695,20 +2696,29 @@ MODULE ARRAY_DATA_TYPES!, ONLY: INTEGER_VECTOR, DOUBLE_VECTOR, INTEGER_MATRIX, D
                               M = TWO
     END IF
     !
+    IF( ALLOCATED(CVS%VAL)) THEN
+                  CVS%CAP = SIZE(CVS%VAL)
+    ELSE
+                  CVS%CAP = Z
+    END IF
+    !
     IF(N > Z) THEN
-                  NEW_ALLOCATION = CVS%N /= N .OR. CVS%M /= M
+                  NEW_ALLOCATION = CVS%CAP < N .OR. CVS%M /= M
                   !
                   IF(NEW_ALLOCATION) THEN
                       !
                       CALL DEALLCOATE_COMPRESSED_VALUE_STORAGE(CVS)
                       !
+                      CVS%CAP = N
                       CVS%N = N
                       CVS%M = M
                       ALLOCATE(CVS%DIM(M,N))
                       ALLOCATE(CVS%VAL(N))
                   END IF
-    ELSE
+    ELSEIF (CVS%M /= M) THEN
                   CALL DEALLCOATE_COMPRESSED_VALUE_STORAGE(CVS)
+    ELSE
+                  CVS%N = Z
     END IF
     !
     IF(PRESENT(NEW_ALLOC)) NEW_ALLOC=NEW_ALLOCATION
@@ -2730,48 +2740,51 @@ MODULE ARRAY_DATA_TYPES!, ONLY: INTEGER_VECTOR, DOUBLE_VECTOR, INTEGER_MATRIX, D
     IF(PRESENT(TOLERANCE)) THEN
         TOL = TOLERANCE
     ELSE
-        TOL = 1E-30_dbl !NEARZERO_30
+        TOL = 1.0E-30_dbl !NEARZERO_30
     END IF
     !
     N = Z
-    DO CONCURRENT (I=ONE:DIM1, J=ONE:DIM2, ABS(ARR(I,J)) > TOL .AND. ARR(I,J) == ARR(I,J))
-       N = N + ONE
-    END  DO
+    DO J=ONE, DIM2
+    DO I=ONE, DIM1
+        IF (ARR(I,J) == ARR(I,J) .AND. ABS(ARR(I,J)) > TOL) N = N + ONE  ! Not NaN and Non-Zero
+    END DO
+    END DO
     !
-    IF(N == DIM1*DIM2 .AND. N > Z) THEN  !CHECK IF ALL THE SAME VALUES
+    IF(N == DIM1*DIM2 .AND. N > Z) THEN  !Check if all the same values
                                    !
                                    N = Z
-                                   DO CONCURRENT (I=ONE:DIM1, J=ONE:DIM2, ABS(ARR(ONE,ONE)-ARR(I,J)) < TOL)
-                                      N = N + ONE
-                                   END  DO
+                                   DO J=ONE, DIM2
+                                   DO I=ONE, DIM1
+                                       IF (ABS(ARR(ONE,ONE)-ARR(I,J)) < TOL) N = N + ONE
+                                   END DO
+                                   END DO
                                    CVS%IS_CONSTANT = N == DIM1*DIM2
+                                   N = DIM1*DIM2                    ! Go back to original dim in case it is not constant
     END IF
     !
     IF(CVS%IS_CONSTANT) THEN
-                                   CALL ALLOCATE_CVS(CVS, ONE, TWO)
-                                   !
-                                   N = INT(ARR(ONE,ONE))
-                                   CVS%DIM = N
-                                   CVS%VAL = ARR(ONE,ONE)
-    ELSEIF (N > Z) THEN
-                       IF( N /= CVS%N) THEN
-                                             CALL DEALLCOATE_COMPRESSED_VALUE_STORAGE(CVS)
-                                             CVS%N = N
-                                             ALLOCATE(CVS%DIM(TWO,N))
-                                             ALLOCATE(CVS%VAL(N))
-                       END IF
-                       !
-                       K=Z
-                       DO I=ONE, DIM1
-                       DO J=ONE, DIM2
-                             IF( ABS(ARR(I,J)) > TOL .AND. ARR(I,J) == ARR(I,J) ) THEN
-                                   K = K + ONE
-                                   CVS%DIM(ONE,K) = I
-                                   CVS%DIM(TWO,K) = J
-                                   CVS%VAL(K)     = ARR(I,J)
-                             END IF
-                       END DO
-                       END DO
+        IF(CVS%CAP < ONE .OR. CVS%M /= TWO) CALL ALLOCATE_CVS(CVS, ONE, TWO)
+        CVS%N = ONE
+        CVS%IS_CONSTANT = TRUE
+        CVS%DIM = Z
+        CVS%VAL = ARR(ONE,ONE)
+    ELSE
+        IF ( N > CVS%CAP .OR. (CVS%M > Z .AND. CVS%M /= TWO)) CALL ALLOCATE_CVS(CVS, N, TWO)
+        CVS%N = N
+        !
+        IF ( N > Z ) THEN
+                     K=Z
+                     DO J=ONE, DIM2
+                     DO I=ONE, DIM1
+                           IF( ABS(ARR(I,J)) > TOL .AND. ARR(I,J) == ARR(I,J) ) THEN
+                                 K = K + ONE
+                                 CVS%DIM(ONE,K) = I
+                                 CVS%DIM(TWO,K) = J
+                                 CVS%VAL(K)     = ARR(I,J)
+                           END IF
+                     END DO
+                     END DO
+        END IF
     END IF
     !
   END SUBROUTINE
@@ -2779,6 +2792,7 @@ MODULE ARRAY_DATA_TYPES!, ONLY: INTEGER_VECTOR, DOUBLE_VECTOR, INTEGER_MATRIX, D
   PURE SUBROUTINE DEALLCOATE_COMPRESSED_VALUE_STORAGE(CVS)
     CLASS (COMPRESSED_VALUE_STORAGE), INTENT(INOUT):: CVS
     !
+    CVS%CAP = Z
     CVS%N = Z
     CVS%M = Z
     IF(ALLOCATED(CVS%DIM)) DEALLOCATE(CVS%DIM)
