@@ -905,14 +905,8 @@ MODULE IXJ_INSTRUCTION!, ONLY: IXJ_STRUCTURE, IXJ_SINGLE_ENTRY
     CVS%IS_CONSTANT = FALSE
     !
     IF(IXJ%IS_CONSTANT) THEN
-                       CALL CVS%ALLOC(ONE,TWO)
-                       CVS%IS_CONSTANT = TRUE
-                       !
-                       K=1
-                       CVS%DIM(ONE,K) = IXJ%DAT(ONE)%I(IDIM1)
-                       CVS%DIM(TWO,K) = IXJ%DAT(ONE)%I(IDIM2)
-                       CVS%VAL(K)     = IXJ%DAT(ONE)%X(VPOS )
-    ELSEIF (IXJ%N > Z) THEN
+                       CALL CVS%SET_CONSTANT(IXJ%DAT(ONE)%X(VPOS), TWO)
+    ELSE
                        CALL CVS%ALLOC(IXJ%N,TWO)
                        !
                        DO K =1, IXJ%N
@@ -920,8 +914,6 @@ MODULE IXJ_INSTRUCTION!, ONLY: IXJ_STRUCTURE, IXJ_SINGLE_ENTRY
                                 CVS%DIM(TWO,K) = IXJ%DAT(K)%I(IDIM2)
                                 CVS%VAL(K)     = IXJ%DAT(K)%X(VPOS )
                        END DO
-    ELSE
-                       CALL CVS%DESTROY()
     END IF
     !
   END SUBROUTINE
@@ -937,15 +929,8 @@ MODULE IXJ_INSTRUCTION!, ONLY: IXJ_STRUCTURE, IXJ_SINGLE_ENTRY
     CVS%IS_CONSTANT = FALSE
     !
     IF(IXJ%IS_CONSTANT) THEN
-                       CALL CVS%ALLOC(ONE,3)
-                       CVS%IS_CONSTANT = TRUE
-                       !
-                       K=1
-                       CVS%DIM(ONE, K) = IXJ%DAT(K)%I(IDIM1)
-                       CVS%DIM(TWO, K) = IXJ%DAT(K)%I(IDIM2)
-                       CVS%DIM(  3, K) = IXJ%DAT(K)%I(IDIM3)
-                       CVS%VAL(K)      = IXJ%DAT(K)%X(VPOS )
-    ELSEIF (IXJ%N > Z) THEN
+                       CALL CVS%SET_CONSTANT(IXJ%DAT(ONE)%X(VPOS), 3)
+    ELSE
                        CALL CVS%ALLOC(IXJ%N, 3)
                        !
                        DO K =1, IXJ%N
@@ -954,9 +939,6 @@ MODULE IXJ_INSTRUCTION!, ONLY: IXJ_STRUCTURE, IXJ_SINGLE_ENTRY
                                 CVS%DIM(  3, K) = IXJ%DAT(K)%I(IDIM3)
                                 CVS%VAL(K)      = IXJ%DAT(K)%X(VPOS )
                        END DO
-                       !
-    ELSE
-                       CALL CVS%DESTROY()
     END IF
     !
   END SUBROUTINE
