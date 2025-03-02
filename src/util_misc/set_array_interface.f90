@@ -35,6 +35,10 @@ MODULE SET_ARRAY_INTERFACE
     MODULE PROCEDURE SET_ARRAY_0D1D_DBL !SET_ARRAY(DIM1,  VAL, ARR2)
     MODULE PROCEDURE SET_ARRAY_0D1D_SNG !
     MODULE PROCEDURE SET_ARRAY_0D1D_INT !
+    MODULE PROCEDURE SET_ARRAY_3D3D_DBL_SNG
+    MODULE PROCEDURE SET_ARRAY_3D3D_SNG_DBL
+    MODULE PROCEDURE SET_ARRAY_2D2D_DBL_SNG
+    MODULE PROCEDURE SET_ARRAY_2D2D_SNG_DBL
     !
     MODULE PROCEDURE SET_ARRAY_SEQUENTIAL_1D_INT      !(DIM1, ARR2)
     MODULE PROCEDURE SET_ARRAY_SEQUENTIAL_1D_INT_START!(DIM1, ARR2, START)
@@ -218,6 +222,90 @@ MODULE SET_ARRAY_INTERFACE
     INTEGER:: I,J
     !
     DO CONCURRENT(J=1:DIM2, I=1:DIM1); ARR2(I,J) = VAL
+    END DO
+    !
+  END SUBROUTINE
+  !
+  !#############################################################################################################################################################
+  !
+  PURE SUBROUTINE SET_ARRAY_3D3D_SNG_DBL(DIM1, DIM2, DIM3, ARR1, ARR2)
+    INTEGER,                                 INTENT(IN   ):: DIM1, DIM2, DIM3
+    REAL(REAL32), DIMENSION(DIM1,DIM2,DIM3), INTENT(IN   ):: ARR1
+    REAL(REAL64), DIMENSION(DIM1,DIM2,DIM3), INTENT(  OUT):: ARR2
+    INTEGER:: I,J,K
+    REAL(REAL64):: NaN
+    NaN = IEEE_VALUE(NaN, IEEE_QUIET_NAN)
+    !
+    DO CONCURRENT(K=1:DIM3, J=1:DIM2, I=1:DIM1)
+        IF(ARR1(I,J,K) /= ARR1(I,J,K)) THEN                ! Set to NaN
+                                  ARR2(I,J,K) = NaN
+        ELSE
+                                  ARR2(I,J,K) = REAL(ARR1(I,J,K), REAL64)
+        END IF
+    END DO
+    !
+  END SUBROUTINE
+  !
+  PURE SUBROUTINE SET_ARRAY_3D3D_DBL_SNG(DIM1, DIM2, DIM3, ARR1, ARR2)
+    INTEGER,                                 INTENT(IN   ):: DIM1, DIM2, DIM3
+    REAL(REAL64), DIMENSION(DIM1,DIM2,DIM3), INTENT(IN   ):: ARR1
+    REAL(REAL32), DIMENSION(DIM1,DIM2,DIM3), INTENT(  OUT):: ARR2
+    INTEGER:: I,J,K
+    REAL(REAL32):: NaN
+    NaN = IEEE_VALUE(NaN, IEEE_QUIET_NAN)
+    !
+    DO CONCURRENT(K=1:DIM3, J=1:DIM2, I=1:DIM1)
+        IF    (ARR1(I,J,K) /= ARR1(I,J,K)  ) THEN                ! Set to NaN
+                                  ARR2(I,J,K) = NaN
+        ELSEIF(ARR1(I,J,K) < -3.40282e38_real64) THEN                ! Lower limit of Single Precision
+                                  ARR2(I,J,K) = -3.40282e38_real32
+        ELSEIF(ARR1(I,J,K) >  3.40282e38_real64) THEN
+                                  ARR2(I,J,K) =  3.40282e38_real32  ! Upper limit of Single Precision
+        ELSE
+                                  ARR2(I,J,K) = REAL(ARR1(I,J,K), REAL32)
+        END IF
+    END DO
+    !
+  END SUBROUTINE
+  !
+  !#############################################################################################################################################################
+  !
+  PURE SUBROUTINE SET_ARRAY_2D2D_SNG_DBL(DIM1, DIM2, ARR1, ARR2)
+    INTEGER,                            INTENT(IN   ):: DIM1, DIM2
+    REAL(REAL32), DIMENSION(DIM1,DIM2), INTENT(IN   ):: ARR1
+    REAL(REAL64), DIMENSION(DIM1,DIM2), INTENT(  OUT):: ARR2
+    INTEGER:: I,J
+    REAL(REAL64):: NaN
+    NaN = IEEE_VALUE(NaN, IEEE_QUIET_NAN)
+    !
+    DO CONCURRENT(J=1:DIM2, I=1:DIM1)
+        IF    (ARR1(I,J) /= ARR1(I,J)  ) THEN                 ! Set to NaN
+                                  ARR2(I,J) = NaN
+        ELSE
+                                  ARR2(I,J) = REAL(ARR1(I,J), REAL64)
+        END IF
+    END DO
+    !
+  END SUBROUTINE
+  !
+  PURE SUBROUTINE SET_ARRAY_2D2D_DBL_SNG(DIM1, DIM2, ARR1, ARR2)
+    INTEGER,                            INTENT(IN   ):: DIM1, DIM2
+    REAL(REAL64), DIMENSION(DIM1,DIM2), INTENT(IN   ):: ARR1
+    REAL(REAL32), DIMENSION(DIM1,DIM2), INTENT(  OUT):: ARR2
+    INTEGER:: I,J
+    REAL(REAL32):: NaN
+    NaN = IEEE_VALUE(NaN, IEEE_QUIET_NAN)
+    !
+    DO CONCURRENT(J=1:DIM2, I=1:DIM1)
+        IF    (ARR1(I,J) /= ARR1(I,J)  ) THEN                 ! Set to NaN
+                                  ARR2(I,J) = NaN
+        ELSEIF(ARR1(I,J) < -3.40282e38_real64) THEN               ! Lower limit of Single Precision
+                                  ARR2(I,J) = -3.40282e38_real32
+        ELSEIF(ARR1(I,J) >  3.40282e38_real64) THEN
+                                  ARR2(I,J) =  3.40282e38_real32  ! Upper limit of Single Precision
+        ELSE
+                                  ARR2(I,J) = REAL(ARR1(I,J), REAL32)
+        END IF
     END DO
     !
   END SUBROUTINE
