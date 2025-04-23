@@ -133,7 +133,7 @@ MODULE RANDOM_ROUTINES!, ONLY: RANDOM_GENERATOR, SHUFFLE, SET_FORTRAN_SEED, COIN
     MODULE PROCEDURE randSN   ! x = rand(SIGN, [seed])
   END INTERFACE
   !
-  INTERFACE SHUFFLE              ! SHUFFLE(VEC,SEED)
+  INTERFACE SHUFFLE              ! SHUFFLE(VEC,NPASS,SEED)
     MODULE PROCEDURE SHUFFLE_INT32 
     MODULE PROCEDURE SHUFFLE_INT64  
     MODULE PROCEDURE SHUFFLE_REL32
@@ -3129,12 +3129,13 @@ MODULE RANDOM_ROUTINES!, ONLY: RANDOM_GENERATOR, SHUFFLE, SET_FORTRAN_SEED, COIN
   !@@@@@@@@@@@@@@@@@@@@@@@@@@@@@@@@@@@@@@@@@@@@@@@@@@@@@@@@@@@@@@@@@@@@@@@@@@@@@@@@@@@@@@@@@@@@@@@@@@@@@@@@@@@@@@@@@@@@@@@@@
   !@@@@@@@@@@@@@@@@@@@@@@@@@@@@@@@@@@@@@@@@@@@@@@@@@@@@@@@@@@@@@@@@@@@@@@@@@@@@@@@@@@@@@@@@@@@@@@@@@@@@@@@@@@@@@@@@@@@@@@@@@
   ! 
-  SUBROUTINE SHUFFLER(I32,R64,I64,R32,CH,SEED)  
+  SUBROUTINE SHUFFLER(I32,R64,I64,R32,CH,NPASS,SEED)  
     INTEGER(INT32), dimension(:), contiguous, optional, intent(inout):: I32
     REAL   (REL64), dimension(:), contiguous, optional, intent(inout):: R64
     INTEGER(INT64), dimension(:), contiguous, optional, intent(inout):: I64
     REAL   (REL32), dimension(:), contiguous, optional, intent(inout):: R32
     CHARACTER(*),   dimension(:), contiguous, optional, intent(inout):: CH
+    INTEGER(INT32),                           optional, intent(in   ):: NPASS
     INTEGER,                                  optional, intent(in   ):: SEED
     TYPE(RANDOM_GENERATOR), ALLOCATABLE, SAVE:: rg
     !
@@ -3145,57 +3146,62 @@ MODULE RANDOM_ROUTINES!, ONLY: RANDOM_GENERATOR, SHUFFLE, SET_FORTRAN_SEED, COIN
     IF(PRESENT(SEED)) CALL SET_RANDOM_PROPERTIES_RG(rg, SEED)
     !
     if    (present(I32)) then
-                         CALL SHUFFLE_INT32_1D_RG(rg, I32)
+                         CALL SHUFFLE_INT32_1D_RG(rg, I32, NPASS)
     elseif(present(R64)) then
-                         CALL SHUFFLE_REL64_1D_RG(rg, R64)
+                         CALL SHUFFLE_REL64_1D_RG(rg, R64, NPASS)
     elseif(present(I64)) then
-                         CALL SHUFFLE_INT64_1D_RG(rg, I64)
+                         CALL SHUFFLE_INT64_1D_RG(rg, I64, NPASS)
     elseif(present(CH) ) then
-                         CALL SHUFFLE_CHAR_1D_RG(rg, CH)
+                         CALL SHUFFLE_CHAR_1D_RG(rg, CH, NPASS)
     else
-                         CALL SHUFFLE_REL32_1D_RG(rg, R32)
+                         CALL SHUFFLE_REL32_1D_RG(rg, R32, NPASS)
     end if
     !
   END SUBROUTINE
   !
   ! ------------------------------------------------------------------------------------------------------------------------------------------------------------
   !	
-  SUBROUTINE SHUFFLE_INT32(I32,SEED)  
+  SUBROUTINE SHUFFLE_INT32(I32,NPASS,SEED)  
     INTEGER(INT32), dimension(:), contiguous, intent(inout):: I32
+    INTEGER,                        optional, intent(in   ):: NPASS
     INTEGER,                        optional, intent(in   ):: SEED
-    CALL SHUFFLER(I32,SEED=SEED)  
+    CALL SHUFFLER(I32, NPASS=NPASS, SEED=SEED)  
   END SUBROUTINE
   !
   ! ------------------------------------------------------------------------------------------------------------------------------------------------------------
   !	
-  SUBROUTINE SHUFFLE_REL64(R64,SEED)  
+  SUBROUTINE SHUFFLE_REL64(R64,NPASS,SEED)  
     REAL(REL64), dimension(:), contiguous, intent(inout):: R64
+    INTEGER,                     optional, intent(in   ):: NPASS
     INTEGER,                     optional, intent(in   ):: SEED
-    CALL SHUFFLER(R64=R64,SEED=SEED)  
+    CALL SHUFFLER(R64=R64, NPASS=NPASS, SEED=SEED)  
   END SUBROUTINE
   !
   ! ------------------------------------------------------------------------------------------------------------------------------------------------------------
   !	
-  SUBROUTINE SHUFFLE_INT64(I64,SEED)  
+  SUBROUTINE SHUFFLE_INT64(I64,NPASS,SEED)  
     INTEGER(INT64), dimension(:), contiguous, intent(inout):: I64
+    INTEGER,                        optional, intent(in   ):: NPASS
     INTEGER,                        optional, intent(in   ):: SEED
-    CALL SHUFFLER(I64=I64,SEED=SEED)  
+    CALL SHUFFLER(I64=I64, NPASS=NPASS, SEED=SEED)  
   END SUBROUTINE
   !
   ! ------------------------------------------------------------------------------------------------------------------------------------------------------------
   !	
-  SUBROUTINE SHUFFLE_REL32(R32,SEED)  
+  SUBROUTINE SHUFFLE_REL32(R32,NPASS,SEED)  
     REAL   (REL32), dimension(:), contiguous, intent(inout):: R32
+    INTEGER,                        optional, intent(in   ):: NPASS
     INTEGER,                        optional, intent(in   ):: SEED
-    CALL SHUFFLER(R32=R32,SEED=SEED)  
+    CALL SHUFFLER(R32=R32, NPASS=NPASS, SEED=SEED)  
   END SUBROUTINE
   !
   ! ------------------------------------------------------------------------------------------------------------------------------------------------------------
   !	
-  SUBROUTINE SHUFFLE_CHAR(CH,SEED)  
+  SUBROUTINE SHUFFLE_CHAR(CH,NPASS,SEED)  
     CHARACTER(*), dimension(:), contiguous, intent(inout):: CH
+    INTEGER,                      optional, intent(in   ):: NPASS
     INTEGER,                      optional, intent(in   ):: SEED
-    CALL SHUFFLER(CH=CH,SEED=SEED)  
+    CALL SHUFFLER(CH=CH, NPASS=NPASS, SEED=SEED)  
   END SUBROUTINE
   !
   !@@@@@@@@@@@@@@@@@@@@@@@@@@@@@@@@@@@@@@@@@@@@@@@@@@@@@@@@@@@@@@@@@@@@@@@@@@@@@@@@@@@@@@@@@@@@@@@@@@@@@@@@@@@@@@@@@@@@@@@@@
