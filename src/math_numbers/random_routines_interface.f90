@@ -1365,11 +1365,17 @@ MODULE RANDOM_ROUTINES!, ONLY: RANDOM_GENERATOR, SHUFFLE, SET_FORTRAN_SEED, COIN
              Ud = Ud - Ux
              !
              if( Ud > nrm_iE_min ) EXIT
-             if( Ud < nrm_iE_max ) CYCLE
+             if( Ud >= nrm_iE_max ) then
+                !
+                tmp = p2to63 - REAL(Ux + Ud, rel64)
+                tmp = nrm_Y(ilay-1)*p2to63 + (nrm_Y(ilay) - nrm_Y(ilay-1))*tmp
+                if ( tmp < exp(nHALF*rnd*rnd) ) EXIT
+             end if
              !
-             tmp = p2to63 - REAL(Ux + Ud, rel64)
-             tmp = nrm_Y(ilay-1)*p2to63 + (nrm_Y(ilay) - nrm_Y(ilay-1))*tmp
-             if ( tmp < exp(nHALF*rnd*rnd) ) EXIT
+             !if( Ud < nrm_iE_max ) CYCLE
+             !tmp = p2to63 - REAL(Ux + Ud, rel64)
+             !tmp = nrm_Y(ilay-1)*p2to63 + (nrm_Y(ilay) - nrm_Y(ilay-1))*tmp
+             !if ( tmp < exp(nHALF*rnd*rnd) ) EXIT
              !
              CALL GET_RAND_INT64(s4, Ux) 
              IF( BTEST(Ux, 63) ) Ux = IAND(Ux, b63_MASK)  !Only use first 63 bits
