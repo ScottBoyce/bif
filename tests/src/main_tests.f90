@@ -981,7 +981,7 @@ SUBROUTINE test_RANDOM_ROUTINES(UT)
   REAL(qp), dimension(6):: M
   REAL(qp):: div, one, zer, mu, va
   INTEGER:: I, J, K, mxiter
-  mxiter = 1000000000
+  mxiter = 1000000000  ! 10^9
   zer = 0.0_qp
   one = 1.0_qp
   div = REAL(mxiter, qp)
@@ -989,7 +989,7 @@ SUBROUTINE test_RANDOM_ROUTINES(UT)
   !
   CALL UT%NEXT_SECTION("RANDOM_ROUTINES")
   !
-  CALL UT%NEXT_TEST("shuffle()")
+  CALL UT%NEXT_TEST("shuffle() - Sort Check")
   !
   BLOCK
       INTEGER(INT32), dimension(128):: vec
@@ -1012,7 +1012,22 @@ SUBROUTINE test_RANDOM_ROUTINES(UT)
           if( .not. passed) exit
           !
       end do
-      CALL UT%assert( passed, msg='call shuffle(vec)' )
+      !
+      if(passed) then
+      do j=1, 1000
+          call shuffle(vec, npass=4)
+          !
+          test = .false.
+          do i=1, 128
+                  k = vec(i)
+                  if(0 < k .and. k <=128) test(k) = .true.
+          end do
+          passed = all(test)
+          if( .not. passed) exit
+          !
+      end do
+      end if
+      CALL UT%assert( passed, msg='call shuffle(vec) - Sort Check' )
       !
   END BLOCK
   !
